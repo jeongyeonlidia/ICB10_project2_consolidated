@@ -1,0 +1,3 @@
+# 네이버 검색광고 키워드 도구 API 입력용 - dev(IT개발·데이터) 직무
+# 쉼표로 구분된 키워드 목록, 총 85개 (중복/띄어쓰기 변형 제거)
+자바스크립트,JavaScript,js,api,postgresql,oracle,sql,mysql,mssql,스프링,spring,스프링부트,springboot,java,자바,리액트,React,reactjs,react.js,python3,Python,파이썬,git,github,깃,깃허브,amazonwebservice,아마존웹서비스,AWS,도커,Docker,LLM,boot,Linux,k8s,Kubernetes,쿠버네티스,node,nodejs,노드제이에스,node.js,rest,Claude,next,rdbms,타입스크립트,TypeScript,ts,code,정보보안기사,정보기사,영어회화,비즈니스회화,영어 능통,비즈니스 영어,영어 가능,영어커뮤니케이션,영어회화 가능,일본어가능,jlptn1,일본어,jlptn2,일본어회화,jlpt,jpt,aws certified,aws 자격증,toeicspeaking,toeic스피킹,토익 스피킹,토스,중국어 가능,중국어 회화,hsk 5급,hsk6급,hsk,중국어,빅데이터분석기사,빅분기,데이터분석기사,sql개발자,SQLD,리눅스마스터,TOEIC,토익

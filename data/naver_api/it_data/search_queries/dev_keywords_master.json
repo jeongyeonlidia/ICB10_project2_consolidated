@@ -1,0 +1,393 @@
+{
+  "job_category": "dev",
+  "description": "IT개발·데이터 직무 네이버 API 검색 쿼리 - keyword_extraction_result_v2.json + report_v2.md 보완",
+  "generated_date": "2026-07-18",
+  "counts": {
+    "skills": 21,
+    "certifications": 10,
+    "total": 31
+  },
+  "skills": [
+    {
+      "type": "skills",
+      "representative_keyword": "JavaScript",
+      "search_group": [
+        "자바스크립트",
+        "JavaScript",
+        "js",
+        "javascript"
+      ],
+      "frequency_score": 1963.93,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "API",
+      "search_group": [
+        "api",
+        "API"
+      ],
+      "frequency_score": 1879.43,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "SQL",
+      "search_group": [
+        "postgresql",
+        "oracle",
+        "sql",
+        "mysql",
+        "mssql",
+        "SQL"
+      ],
+      "frequency_score": 1719.95,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Spring",
+      "search_group": [
+        "스프링",
+        "spring",
+        "스프링부트",
+        "Spring",
+        "springboot"
+      ],
+      "frequency_score": 1531.45,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Java",
+      "search_group": [
+        "java",
+        "Java",
+        "자바"
+      ],
+      "frequency_score": 1422.41,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "React",
+      "search_group": [
+        "리액트",
+        "React",
+        "react",
+        "reactjs",
+        "react.js"
+      ],
+      "frequency_score": 1316.6,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Python",
+      "search_group": [
+        "python3",
+        "Python",
+        "python",
+        "파이썬"
+      ],
+      "frequency_score": 1232.38,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Git",
+      "search_group": [
+        "git",
+        "github",
+        "깃",
+        "깃허브",
+        "Git"
+      ],
+      "frequency_score": 1198.78,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "AWS",
+      "search_group": [
+        "amazonwebservice",
+        "아마존웹서비스",
+        "AWS",
+        "amazon web service",
+        "aws",
+        "아마존 웹 서비스"
+      ],
+      "frequency_score": 1122.78,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Docker",
+      "search_group": [
+        "도커",
+        "Docker",
+        "docker"
+      ],
+      "frequency_score": 913.77,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "LLM",
+      "search_group": [
+        "LLM",
+        "llm"
+      ],
+      "frequency_score": 804.39,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Boot",
+      "search_group": [
+        "boot",
+        "Boot"
+      ],
+      "frequency_score": 759.86,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Linux",
+      "search_group": [
+        "Linux",
+        "linux"
+      ],
+      "frequency_score": 698.86,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Kubernetes",
+      "search_group": [
+        "k8s",
+        "Kubernetes",
+        "kubernetes",
+        "쿠버네티스"
+      ],
+      "frequency_score": 657.96,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Node.js",
+      "search_group": [
+        "node",
+        "nodejs",
+        "노드제이에스",
+        "node.js",
+        "Node.js"
+      ],
+      "frequency_score": 652.17,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "REST",
+      "search_group": [
+        "rest",
+        "REST"
+      ],
+      "frequency_score": 638.51,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Claude",
+      "search_group": [
+        "Claude",
+        "claude"
+      ],
+      "frequency_score": 607.21,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Next",
+      "search_group": [
+        "next",
+        "Next"
+      ],
+      "frequency_score": 600.99,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "RDBMS",
+      "search_group": [
+        "rdbms",
+        "RDBMS"
+      ],
+      "frequency_score": 576.7,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "TypeScript",
+      "search_group": [
+        "타입스크립트",
+        "TypeScript",
+        "typescript",
+        "ts"
+      ],
+      "frequency_score": 565.75,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "skills",
+      "representative_keyword": "Code",
+      "search_group": [
+        "code",
+        "Code"
+      ],
+      "frequency_score": 522.58,
+      "source": "result_v2.json"
+    }
+  ],
+  "certifications": [
+    {
+      "type": "certifications",
+      "representative_keyword": "정보보안기사",
+      "search_group": [
+        "정보보안기사",
+        "정보기사"
+      ],
+      "frequency_score": 50.58,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "영어회화",
+      "search_group": [
+        "영어회화",
+        "비즈니스회화",
+        "비즈니스 회화",
+        "영어 능통",
+        "비즈니스 영어",
+        "비즈니스영어",
+        "영어 가능",
+        "영어 회화",
+        "영어커뮤니케이션",
+        "영어 커뮤니케이션",
+        "영어가능",
+        "영어회화 가능",
+        "영어능통",
+        "영어회화가능"
+      ],
+      "frequency_score": 47.32,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "일본어",
+      "search_group": [
+        "일본어가능",
+        "jlptn1",
+        "jlpt n1",
+        "일본어",
+        "jlptn2",
+        "일본어회화",
+        "jlpt n2",
+        "일본어 가능",
+        "jlpt",
+        "일본어 회화",
+        "jpt"
+      ],
+      "frequency_score": 44.7,
+      "source": "result_v2.json"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "AWS Certified",
+      "search_group": [
+        "aws certified",
+        "aws 자격증",
+        "AWS Certified"
+      ],
+      "frequency_score": 25.26,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "TOEIC Speaking",
+      "search_group": [
+        "toeicspeaking",
+        "toeic스피킹",
+        "토익 스피킹",
+        "TOEIC Speaking",
+        "토스",
+        "토익스피킹",
+        "toeic speaking"
+      ],
+      "frequency_score": 15.85,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "중국어",
+      "search_group": [
+        "중국어 가능",
+        "중국어 회화",
+        "hsk 5급",
+        "hsk6급",
+        "중국어가능",
+        "hsk5급",
+        "hsk",
+        "중국어",
+        "중국어회화",
+        "hsk 6급"
+      ],
+      "frequency_score": 13.9,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "빅데이터분석기사",
+      "search_group": [
+        "빅데이터분석기사",
+        "빅분기",
+        "데이터분석기사"
+      ],
+      "frequency_score": 12.63,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "SQLD",
+      "search_group": [
+        "sql개발자",
+        "SQLD",
+        "sql 개발자",
+        "sqld"
+      ],
+      "frequency_score": 12.2,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "리눅스마스터",
+      "search_group": [
+        "리눅스마스터",
+        "리눅스 마스터"
+      ],
+      "frequency_score": 11.59,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    },
+    {
+      "type": "certifications",
+      "representative_keyword": "TOEIC",
+      "search_group": [
+        "TOEIC",
+        "토익",
+        "toeic"
+      ],
+      "frequency_score": 9.12,
+      "source": "keyword_extraction_report_v2.md (JSON 누락 보완)"
+    }
+  ]
+}

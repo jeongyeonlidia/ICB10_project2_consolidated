@@ -1,0 +1,342 @@
+{
+  "api": "네이버 데이터랩 검색어트렌드 API",
+  "note": "groupName은 최대 5개, keywords는 그룹당 최대 20개 제한 준수. startDate/endDate는 호출 시점에 채울 것.",
+  "batch_count": 7,
+  "batches": [
+    {
+      "startDate": "",
+      "endDate": "",
+      "timeUnit": "date",
+      "keywordGroups": [
+        {
+          "groupName": "JavaScript",
+          "keywords": [
+            "자바스크립트",
+            "JavaScript",
+            "js",
+            "javascript"
+          ]
+        },
+        {
+          "groupName": "API",
+          "keywords": [
+            "api",
+            "API"
+          ]
+        },
+        {
+          "groupName": "SQL",
+          "keywords": [
+            "postgresql",
+            "oracle",
+            "sql",
+            "mysql",
+            "mssql",
+            "SQL"
+          ]
+        },
+        {
+          "groupName": "Spring",
+          "keywords": [
+            "스프링",
+            "spring",
+            "스프링부트",
+            "Spring",
+            "springboot"
+          ]
+        },
+        {
+          "groupName": "Java",
+          "keywords": [
+            "java",
+            "Java",
+            "자바"
+          ]
+        }
+      ]
+    },
+    {
+      "startDate": "",
+      "endDate": "",
+      "timeUnit": "date",
+      "keywordGroups": [
+        {
+          "groupName": "React",
+          "keywords": [
+            "리액트",
+            "React",
+            "react",
+            "reactjs",
+            "react.js"
+          ]
+        },
+        {
+          "groupName": "Python",
+          "keywords": [
+            "python3",
+            "Python",
+            "python",
+            "파이썬"
+          ]
+        },
+        {
+          "groupName": "Git",
+          "keywords": [
+            "git",
+            "github",
+            "깃",
+            "깃허브",
+            "Git"
+          ]
+        },
+        {
+          "groupName": "AWS",
+          "keywords": [
+            "amazonwebservice",
+            "아마존웹서비스",
+            "AWS",
+            "amazon web service",
+            "aws",
+            "아마존 웹 서비스"
+          ]
+        },
+        {
+          "groupName": "Docker",
+          "keywords": [
+            "도커",
+            "Docker",
+            "docker"
+          ]
+        }
+      ]
+    },
+    {
+      "startDate": "",
+      "endDate": "",
+      "timeUnit": "date",
+      "keywordGroups": [
+        {
+          "groupName": "LLM",
+          "keywords": [
+            "LLM",
+            "llm"
+          ]
+        },
+        {
+          "groupName": "Boot",
+          "keywords": [
+            "boot",
+            "Boot"
+          ]
+        },
+        {
+          "groupName": "Linux",
+          "keywords": [
+            "Linux",
+            "linux"
+          ]
+        },
+        {
+          "groupName": "Kubernetes",
+          "keywords": [
+            "k8s",
+            "Kubernetes",
+            "kubernetes",
+            "쿠버네티스"
+          ]
+        },
+        {
+          "groupName": "Node.js",
+          "keywords": [
+            "node",
+            "nodejs",
+            "노드제이에스",
+            "node.js",
+            "Node.js"
+          ]
+        }
+      ]
+    },
+    {
+      "startDate": "",
+      "endDate": "",
+      "timeUnit": "date",
+      "keywordGroups": [
+        {
+          "groupName": "REST",
+          "keywords": [
+            "rest",
+            "REST"
+          ]
+        },
+        {
+          "groupName": "Claude",
+          "keywords": [
+            "Claude",
+            "claude"
+          ]
+        },
+        {
+          "groupName": "Next",
+          "keywords": [
+            "next",
+            "Next"
+          ]
+        },
+        {
+          "groupName": "RDBMS",
+          "keywords": [
+            "rdbms",
+            "RDBMS"
+          ]
+        },
+        {
+          "groupName": "TypeScript",
+          "keywords": [
+            "타입스크립트",
+            "TypeScript",
+            "typescript",
+            "ts"
+          ]
+        }
+      ]
+    },
+    {
+      "startDate": "",
+      "endDate": "",
+      "timeUnit": "date",
+      "keywordGroups": [
+        {
+          "groupName": "Code",
+          "keywords": [
+            "code",
+            "Code"
+          ]
+        },
+        {
+          "groupName": "정보보안기사",
+          "keywords": [
+            "정보보안기사",
+            "정보기사"
+          ]
+        },
+        {
+          "groupName": "영어회화",
+          "keywords": [
+            "영어회화",
+            "비즈니스회화",
+            "비즈니스 회화",
+            "영어 능통",
+            "비즈니스 영어",
+            "비즈니스영어",
+            "영어 가능",
+            "영어 회화",
+            "영어커뮤니케이션",
+            "영어 커뮤니케이션",
+            "영어가능",
+            "영어회화 가능",
+            "영어능통",
+            "영어회화가능"
+          ]
+        },
+        {
+          "groupName": "일본어",
+          "keywords": [
+            "일본어가능",
+            "jlptn1",
+            "jlpt n1",
+            "일본어",
+            "jlptn2",
+            "일본어회화",
+            "jlpt n2",
+            "일본어 가능",
+            "jlpt",
+            "일본어 회화",
+            "jpt"
+          ]
+        },
+        {
+          "groupName": "AWS Certified",
+          "keywords": [
+            "aws certified",
+            "aws 자격증",
+            "AWS Certified"
+          ]
+        }
+      ]
+    },
+    {
+      "startDate": "",
+      "endDate": "",
+      "timeUnit": "date",
+      "keywordGroups": [
+        {
+          "groupName": "TOEIC Speaking",
+          "keywords": [
+            "toeicspeaking",
+            "toeic스피킹",
+            "토익 스피킹",
+            "TOEIC Speaking",
+            "토스",
+            "토익스피킹",
+            "toeic speaking"
+          ]
+        },
+        {
+          "groupName": "중국어",
+          "keywords": [
+            "중국어 가능",
+            "중국어 회화",
+            "hsk 5급",
+            "hsk6급",
+            "중국어가능",
+            "hsk5급",
+            "hsk",
+            "중국어",
+            "중국어회화",
+            "hsk 6급"
+          ]
+        },
+        {
+          "groupName": "빅데이터분석기사",
+          "keywords": [
+            "빅데이터분석기사",
+            "빅분기",
+            "데이터분석기사"
+          ]
+        },
+        {
+          "groupName": "SQLD",
+          "keywords": [
+            "sql개발자",
+            "SQLD",
+            "sql 개발자",
+            "sqld"
+          ]
+        },
+        {
+          "groupName": "리눅스마스터",
+          "keywords": [
+            "리눅스마스터",
+            "리눅스 마스터"
+          ]
+        }
+      ]
+    },
+    {
+      "startDate": "",
+      "endDate": "",
+      "timeUnit": "date",
+      "keywordGroups": [
+        {
+          "groupName": "TOEIC",
+          "keywords": [
+            "TOEIC",
+            "토익",
+            "toeic"
+          ]
+        }
+      ]
+    }
+  ]
+}

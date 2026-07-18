@@ -21,6 +21,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
 import re
+import json
 import itertools
 from collections import Counter
 
@@ -290,6 +291,85 @@ def load_naver_cafe_data():
     return None, None
 
 @st.cache_data
+def load_it_dev_company_demand():
+    """IT개발·데이터 직무 기업 요구 스펙 (keyword_extraction_result_v2.json, dev 카테고리)."""
+    paths = [
+        "data/keyword_extraction_result_v2.json",
+        "../data/keyword_extraction_result_v2.json",
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            try:
+                with open(p, encoding="utf-8") as f:
+                    raw = json.load(f)
+                dev_groups = raw["results"]["dev"]["keyword_groups"]
+                rows = [{
+                    "representative_keyword": g["representative_keyword"],
+                    "type": g["type"],
+                    "company_demand_raw": g["frequency_score"],
+                } for g in dev_groups]
+                return pd.DataFrame(rows), p
+            except Exception:
+                pass
+    return None, None
+
+
+@st.cache_data
+def load_it_dev_jobseeker_content():
+    """IT개발·데이터 직무 네이버 취업 준비 콘텐츠 키워드 집계 (keyword_content_summary.csv)."""
+    paths = [
+        "data/naver_api/it_data/processed/keyword_content_summary.csv",
+        "../data/naver_api/it_data/processed/keyword_content_summary.csv",
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            try:
+                return pd.read_csv(p, encoding="utf-8-sig"), p
+            except Exception:
+                pass
+    return None, None
+
+
+@st.cache_data
+def load_it_dev_content_sample():
+    """IT개발·데이터 직무 네이버 취업 관련 콘텐츠 원문 (it_job_related_content.csv)."""
+    paths = [
+        "data/naver_api/it_data/processed/it_job_related_content.csv",
+        "../data/naver_api/it_data/processed/it_job_related_content.csv",
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            try:
+                return pd.read_csv(p, encoding="utf-8-sig"), p
+            except Exception:
+                pass
+    return None, None
+
+
+def build_it_dev_gap_table(df_company, df_jobseeker):
+    """기업 요구(TF-IDF) vs 구직자 관심(문서수)을 skills/certifications 그룹별 0~100 min-max 정규화 후 병합."""
+    merged = pd.merge(
+        df_company,
+        df_jobseeker[["representative_keyword", "unique_document_count",
+                      "blog_document_count", "cafe_document_count", "kin_document_count"]],
+        on="representative_keyword", how="inner"
+    ).rename(columns={"unique_document_count": "jobseeker_content_raw"})
+
+    def minmax_by_type(df, col, out_col):
+        result = df.copy()
+        for t in result["type"].unique():
+            mask = result["type"] == t
+            vmin, vmax = result.loc[mask, col].min(), result.loc[mask, col].max()
+            result.loc[mask, out_col] = 50.0 if vmax == vmin else (result.loc[mask, col] - vmin) / (vmax - vmin) * 100
+        return result
+
+    merged = minmax_by_type(merged, "company_demand_raw", "company_demand_score")
+    merged = minmax_by_type(merged, "jobseeker_content_raw", "jobseeker_content_score")
+    merged["gap_score"] = merged["company_demand_score"] - merged["jobseeker_content_score"]
+    return merged
+
+
+@st.cache_data
 def load_saramin_db():
     paths = [
         "saramin/data/saramin_search_jobs.db",
@@ -325,6 +405,12 @@ df_real_mart, real_mart_path = load_real_mismatch_mart()
 df_naver, naver_path = load_naver_cafe_data()
 df_saramin, saramin_path = load_saramin_db()
 df_turnover, turnover_path = load_turnover_datamart()
+
+# IT개발·데이터 직무 네이버 실데이터 (1차 연동)
+df_it_company, it_company_path = load_it_dev_company_demand()
+df_it_jobseeker, it_jobseeker_path = load_it_dev_jobseeker_content()
+df_it_content, it_content_path = load_it_dev_content_sample()
+df_it_gap = build_it_dev_gap_table(df_it_company, df_it_jobseeker) if (df_it_company is not None and df_it_jobseeker is not None) else None
 
 
 # =====================================================================
@@ -371,6 +457,11 @@ if turnover_path:
     st.sidebar.success(f"✅ 이직위험마트 (실제): {turnover_path}")
 else:
     st.sidebar.warning("⚠️ 이직위험마트 미발견 → Mock 데이터 사용")
+
+if it_jobseeker_path and it_company_path:
+    st.sidebar.success(f"✅ IT개발·데이터 네이버 실데이터: {it_jobseeker_path}")
+else:
+    st.sidebar.warning("⚠️ IT개발·데이터 네이버 실데이터 미발견 → 해당 섹션 비활성화")
 
 
 # 현재 직무의 데이터프레임 결정
@@ -433,7 +524,10 @@ with tab0:
     with col_m2:
         st.metric(label="🏢 이직위험 분석 기업 수", value=f"{len(df_turnover):,} 개사" if df_turnover is not None else "600 개사", delta="실제 데이터 연동")
     with col_m3:
-        st.metric(label="💬 네이버 카페 여론 글", value=f"{len(df_naver):,} 건" if df_naver is not None else "100 건", delta="실제 데이터 연동")
+        if selected_job == "데이터분석가/AI엔지니어" and df_it_content is not None:
+            st.metric(label="💬 네이버 취업 준비 콘텐츠 (IT개발·데이터)", value=f"{len(df_it_content):,} 건", delta="실제 데이터 연동")
+        else:
+            st.metric(label="💬 네이버 카페 여론 글", value=f"{len(df_naver):,} 건" if df_naver is not None else "100 건", delta="실제 데이터 연동")
     with col_m4:
         st.metric(label="⚙️ 분석 대상 핵심 역량", value="11 개 스킬셋", delta="실무 역량 중심")
 
@@ -674,6 +768,7 @@ with tab0:
             node_x = [np.cos(a) for a in angles]
             node_y = [np.sin(a) for a in angles]
 
+
             edge_x, edge_y = [], []
             for a, b in pairs:
                 ai, bi = node_idx[a], node_idx[b]
@@ -762,12 +857,18 @@ with tab0:
         else:
             st.info("스킬을 선택하십시오.")
             
-        # 추가 요구사항: 네이버 카페 구직자 여론 키워드 분석
+        # 추가 요구사항: 네이버 취업 준비 콘텐츠 분석 (실데이터 연동)
         st.write("---")
-        st.subheader("④ 네이버 카페 구직자 여론 키워드 분석 (TF-IDF)")
-        st.markdown("구직자들이 취업 커뮤니티(네이버 카페)에서 주로 언급하는 자격증 및 수험 정보 핵심 키워드 중요도 분석 결과입니다.")
-        
-        if df_naver is not None:
+        st.subheader("④ 네이버 취업 준비 콘텐츠 분석 (TF-IDF)")
+        st.markdown("구직자들이 취업 준비 과정에서 네이버 블로그·카페·지식iN에 남긴 글의 핵심 키워드 중요도 분석 결과입니다.")
+
+        naver_text_df, naver_text_col, naver_text_source_label = None, "제목", None
+        if selected_job == "데이터분석가/AI엔지니어" and df_it_content is not None:
+            naver_text_df, naver_text_col, naver_text_source_label = df_it_content, "title", it_content_path
+        elif df_naver is not None:
+            naver_text_df, naver_text_col, naver_text_source_label = df_naver, "제목", naver_path
+
+        if naver_text_df is not None:
             from sklearn.feature_extraction.text import TfidfVectorizer
             korean_stopwords = {
                 '하는', '있다', '합니다', '대한', '있는', '준비', '시험', '데이터', '분석', '분석가',
@@ -781,7 +882,7 @@ with tab0:
                     stop_words=list(korean_stopwords),
                     max_features=100
                 )
-                tfidf_matrix = vectorizer_title.fit_transform(df_naver['제목'].fillna(''))
+                tfidf_matrix = vectorizer_title.fit_transform(naver_text_df[naver_text_col].fillna(''))
                 feature_names = vectorizer_title.get_feature_names_out()
                 mean_tfidf = np.asarray(tfidf_matrix.mean(axis=0)).ravel()
                 df_tfidf = pd.DataFrame({'word': feature_names, 'tfidf': mean_tfidf}).sort_values(by='tfidf', ascending=False).head(15)
@@ -803,6 +904,8 @@ with tab0:
                     height=450
                 )
                 st.plotly_chart(fig_text, use_container_width=True)
+                if naver_text_source_label:
+                    st.caption(f"✅ 실데이터 연동: {naver_text_source_label} ({len(naver_text_df):,}건)")
             except Exception as e:
                 st.error(f"텍스트 TF-IDF 분석 중 오류 발생: {e}")
         else:
@@ -830,11 +933,137 @@ with tab0:
             mock_badge()
             
         st.markdown(
-            "**🧐 데이터 해석 및 비즈니스 시사점 (카페 여론 분석):**\n\n"
-            "네이버 취업 카페 게시글 제목을 대상으로 TF-IDF 텍스트 마이닝을 수행한 결과, 'ADsP', 'SQLD', '빅데이터분석기사'와 같은 단기 자격증 취득 및 난이도, 비전공자 진입 관련 키워드가 지배적인 비중을 차지합니다. "
+            "**🧐 데이터 해석 및 비즈니스 시사점 (취업 준비 콘텐츠 분석):**\n\n"
+            "네이버 취업 준비 콘텐츠(블로그·카페·지식iN)를 대상으로 TF-IDF 텍스트 마이닝을 수행한 결과, 'ADsP', 'SQLD', '빅데이터분석기사'와 같은 단기 자격증 취득 및 난이도, 비전공자 진입 관련 키워드가 지배적인 비중을 차지합니다. "
             "이는 구직자들이 실무 포트폴리오 빌딩보다 정량적 자격 취득을 통해 취업 장벽을 돌파하려는 심리가 팽배함을 보여주는 정량적 여론 지표입니다. "
             "기업의 실무 역량 선호 트렌드와 달리, 구직자 시장은 수험 및 독학 정보 공유에 편중되어 있어 정량적 스펙 인플레이션 현상이 지속될 것임을 시사합니다."
         )
+
+    # =====================================================================
+    # IT개발·데이터 직무: 기업 요구 vs 네이버 취업 준비 관심도 비교 (1차 실데이터 연동)
+    # =====================================================================
+    if selected_job == "데이터분석가/AI엔지니어":
+        st.write("---")
+        st.write("### 🔍 IT개발·데이터 — 기업 요구 vs 네이버 취업 준비 관심도 비교 (1차 실데이터 버전)")
+        st.caption(
+            "ℹ️ 구직자 관심도는 실제 구직자 수가 아니라 네이버 취업 관련 콘텐츠에서 "
+            "해당 키워드가 등장한 상대적 수준입니다."
+        )
+
+        if df_it_gap is not None:
+            col_it1, col_it2 = st.columns(2)
+
+            with col_it1:
+                st.subheader("① 기업 요구 스펙 TOP10")
+                top_company = df_it_company.sort_values("company_demand_raw", ascending=False).head(10)
+                fig_top_company = go.Figure()
+                fig_top_company.add_trace(go.Bar(
+                    x=top_company["company_demand_raw"][::-1],
+                    y=top_company["representative_keyword"][::-1],
+                    orientation="h",
+                    marker_color="#fb7185",
+                    hovertemplate="스펙: %{y}<br>가중 TF-IDF: %{x:,.1f}<extra></extra>"
+                ))
+                fig_top_company.update_layout(
+                    title="<b>기업 공고 가중 TF-IDF 스코어 TOP10</b>",
+                    xaxis_title="가중 TF-IDF 스코어",
+                    plot_bgcolor="rgba(255,255,255,0.9)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    height=420
+                )
+                st.plotly_chart(fig_top_company, use_container_width=True)
+                st.caption(f"✅ 실데이터 연동: {it_company_path}")
+
+            with col_it2:
+                st.subheader("② 네이버 취업 준비 관심 스펙 TOP10")
+                top_jobseeker = df_it_jobseeker.sort_values("unique_document_count", ascending=False).head(10)
+                fig_top_jobseeker = go.Figure()
+                fig_top_jobseeker.add_trace(go.Bar(x=top_jobseeker["representative_keyword"], y=top_jobseeker["blog_document_count"], name="블로그", marker_color="#60a5fa"))
+                fig_top_jobseeker.add_trace(go.Bar(x=top_jobseeker["representative_keyword"], y=top_jobseeker["cafe_document_count"], name="카페", marker_color="#34d399"))
+                fig_top_jobseeker.add_trace(go.Bar(x=top_jobseeker["representative_keyword"], y=top_jobseeker["kin_document_count"], name="지식iN", marker_color="#fbbf24"))
+                fig_top_jobseeker.update_layout(
+                    title="<b>네이버 취업 준비 콘텐츠 문서수 TOP10 (source별)</b>",
+                    barmode="stack",
+                    xaxis_title="스펙/키워드",
+                    yaxis_title="문서 수 (건)",
+                    plot_bgcolor="rgba(255,255,255,0.9)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    height=420,
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(fig_top_jobseeker, use_container_width=True)
+                st.caption(f"✅ 실데이터 연동: {it_jobseeker_path}")
+
+            st.write("---")
+            st.subheader("③ 기업 요구도 vs 구직자 관심도 비교 (0~100 정규화)")
+            st.caption("skills(기술/자격증 스택)와 certifications(자격증·어학)는 스코어 분포 차이가 커서 그룹별로 각각 min-max 정규화했습니다.")
+            type_filter = st.radio("비교 대상 유형", ["skills", "certifications"], horizontal=True, key="it_gap_type_filter")
+            df_compare = df_it_gap[df_it_gap["type"] == type_filter].sort_values("company_demand_score", ascending=False)
+
+            fig_compare = go.Figure()
+            fig_compare.add_trace(go.Bar(
+                x=df_compare["representative_keyword"], y=df_compare["company_demand_score"],
+                name="기업 요구도 (0~100)", marker_color="#fb7185"
+            ))
+            fig_compare.add_trace(go.Bar(
+                x=df_compare["representative_keyword"], y=df_compare["jobseeker_content_score"],
+                name="구직자 관심도 (0~100)", marker_color="#818cf8"
+            ))
+            fig_compare.update_layout(
+                barmode="group",
+                xaxis_title="스펙/키워드",
+                yaxis_title="정규화 스코어 (0~100)",
+                plot_bgcolor="rgba(255,255,255,0.9)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                height=420,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+            st.plotly_chart(fig_compare, use_container_width=True)
+
+            st.dataframe(
+                df_it_gap[["representative_keyword", "type", "company_demand_raw", "company_demand_score",
+                           "jobseeker_content_raw", "jobseeker_content_score", "gap_score"]]
+                .sort_values("gap_score", ascending=False).round(1),
+                use_container_width=True, hide_index=True
+            )
+
+            st.write("---")
+            st.subheader("④ GAP 분석")
+            top_company_gap = df_it_gap.sort_values("gap_score", ascending=False).head(5)
+            top_jobseeker_gap = df_it_gap.sort_values("gap_score", ascending=True).head(5)
+
+            col_gap1, col_gap2 = st.columns(2)
+            with col_gap1:
+                st.markdown("""
+                <div style="background:linear-gradient(135deg,#fee2e2,#fca5a5);border-radius:14px;
+                padding:20px;border:2px solid #ef4444;margin-bottom:8px;">
+                <h4 style="color:#7f1d1d;margin:0 0 6px 0;font-size:16px;">🔺 기업 요구도가 상대적으로 높은 키워드 TOP5</h4>
+                <p style="color:#7f1d1d;font-size:12px;margin:0;">기업 요구 대비 구직자 관심이 낮음</p>
+                </div>
+                """, unsafe_allow_html=True)
+                st.dataframe(
+                    top_company_gap[["representative_keyword", "type", "company_demand_score", "jobseeker_content_score", "gap_score"]].round(1),
+                    use_container_width=True, hide_index=True
+                )
+            with col_gap2:
+                st.markdown("""
+                <div style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);border-radius:14px;
+                padding:20px;border:2px solid #6366f1;margin-bottom:8px;">
+                <h4 style="color:#312e81;margin:0 0 6px 0;font-size:16px;">🔻 구직자 관심도가 상대적으로 높은 키워드 TOP5</h4>
+                <p style="color:#312e81;font-size:12px;margin:0;">구직자 관심 대비 기업 요구가 낮음</p>
+                </div>
+                """, unsafe_allow_html=True)
+                st.dataframe(
+                    top_jobseeker_gap[["representative_keyword", "type", "company_demand_score", "jobseeker_content_score", "gap_score"]].round(1),
+                    use_container_width=True, hide_index=True
+                )
+
+            st.caption(
+                "⚠️ 1차 실데이터 연동 버전(시각화 확인용)입니다. LLM/'지원' 등 일부 키워드의 중의성 보정을 포함한 추가 데이터 정제는 후속 작업에서 진행할 예정입니다."
+            )
+        else:
+            st.warning("⚠️ IT개발·데이터 네이버 실데이터 파일을 찾을 수 없어 이 섹션을 표시할 수 없습니다.")
+            mock_badge()
 
 
 # =====================================================================

@@ -246,7 +246,10 @@ def build_it_dev_gap_table(df_company, df_jobseeker):
 
 @st.cache_data
 def load_saramin_db():
+    """기획/전략 직무로 스크랩된 실제 사람인 채용공고 DB (1,000건, company/title/career/education/sectors/detail_content)."""
     paths = [
+        "data/saramin_search_jobs.db",
+        "../data/saramin_search_jobs.db",
         "saramin/data/saramin_search_jobs.db",
         "../saramin/data/saramin_search_jobs.db",
     ]
@@ -260,6 +263,45 @@ def load_saramin_db():
             except Exception:
                 pass
     return None, None
+
+
+@st.cache_data
+def load_it_dev_recruit_data():
+    """IT개발·데이터(dev) 직무 실제 채용공고 (recruit_processed.db, 1,000건).
+    load_saramin_db()와 동일한 컬럼(company/title/link/career/education/sectors/detail_content)으로 매핑해 반환."""
+    paths = [
+        "data/recruit_processed.db",
+        "../data/recruit_processed.db",
+    ]
+    for p in paths:
+        if os.path.exists(p):
+            try:
+                conn = sqlite3.connect(p)
+                df = pd.read_sql("SELECT * FROM recruit_cleaned WHERE job_category='dev'", conn)
+                conn.close()
+                df = df.rename(columns={
+                    "company_name": "company",
+                    "education_level": "education",
+                    "experience_level": "career",
+                    "job_sector": "sectors",
+                })
+                df["detail_content"] = (
+                    df["cleaned_requirement"].fillna("") + " " + df["cleaned_preferential"].fillna("")
+                )
+                return df, p
+            except Exception:
+                pass
+    return None, None
+
+
+def get_saramin_mart(job_name):
+    """선택된 직무에 실제로 존재하는 채용공고 실데이터를 반환. 없으면 (None, None)."""
+    if job_name == "기획/전략" and df_saramin is not None:
+        return df_saramin, saramin_path
+    if job_name == "데이터분석가/AI엔지니어" and df_it_recruit is not None:
+        return df_it_recruit, it_recruit_path
+    return None, None
+
 
 @st.cache_data
 def load_turnover_datamart():
@@ -279,6 +321,7 @@ def load_turnover_datamart():
 df_real_mart, real_mart_path = load_real_mismatch_mart()
 df_naver, naver_path = load_naver_cafe_data()
 df_saramin, saramin_path = load_saramin_db()
+df_it_recruit, it_recruit_path = load_it_dev_recruit_data()
 df_turnover, turnover_path = load_turnover_datamart()
 
 # IT개발·데이터 직무 네이버 실데이터 (1차 연동)
@@ -311,22 +354,25 @@ if selected_job == "기획/전략":
 
 st.sidebar.write("---")
 
+# 현재 직무에 실제로 연동 가능한 채용공고 실데이터 결정
+df_saramin_job, saramin_job_path = get_saramin_mart(selected_job)
+
 # 데이터 소스 상태 표시
 st.sidebar.subheader("📡 데이터 소스 현황")
 if real_mart_path:
     st.sidebar.success(f"✅ 수급마트 (실제): {real_mart_path}")
 else:
-    st.sidebar.warning("⚠️ 실제 수급마트 미발견 → 데이터 연동 필요")
+    st.sidebar.warning("⚠️ 실제 수급마트 미발견 → 데이터 연동 필요 (자동 생성된 automated_total_mismatch_mart.csv는 이전 mock 값과 동일해 사용하지 않음)")
 
 if naver_path:
     st.sidebar.success(f"✅ 네이버카페 (실제): {naver_path}")
 else:
     st.sidebar.warning("⚠️ 네이버 카페 데이터 미발견 → 데이터 연동 필요")
 
-if saramin_path:
-    st.sidebar.success(f"✅ 사람인 DB (실제): {saramin_path}")
+if saramin_job_path:
+    st.sidebar.success(f"✅ 채용공고 실데이터 [{selected_job}]: {saramin_job_path}")
 else:
-    st.sidebar.warning("⚠️ 사람인 DB 미발견 → 데이터 연동 필요")
+    st.sidebar.warning(f"⚠️ [{selected_job}] 채용공고 실데이터 미발견 → 데이터 연동 필요 (현재는 기획/전략, 데이터분석가/AI엔지니어만 연동)")
 
 if turnover_path:
     st.sidebar.success(f"✅ 이직위험마트 (실제): {turnover_path}")
@@ -392,10 +438,10 @@ with tab0:
     st.write("### 📊 실시간 분석 데이터셋 규모")
     col_m1, col_m3 = st.columns(2)
     with col_m1:
-        if df_saramin is not None:
-            st.metric(label="📄 사람인 채용공고 수", value=f"{len(df_saramin):,} 건", delta="실제 데이터 연동")
+        if df_saramin_job is not None:
+            st.metric(label=f"📄 [{selected_job}] 채용공고 수", value=f"{len(df_saramin_job):,} 건", delta="실제 데이터 연동")
         else:
-            st.metric(label="📄 사람인 채용공고 수", value="데이터 없음", delta="연동 필요", delta_color="off")
+            st.metric(label=f"📄 [{selected_job}] 채용공고 수", value="데이터 없음", delta="연동 필요", delta_color="off")
     with col_m3:
         if selected_job == "데이터분석가/AI엔지니어" and df_it_content is not None:
             st.metric(label="💬 네이버 취업 준비 콘텐츠 (IT개발·데이터)", value=f"{len(df_it_content):,} 건", delta="실제 데이터 연동")
@@ -444,14 +490,14 @@ with tab0:
     st.write("---")
     st.write("### 📈 거시적 고용 시장 트렌드 & 노동시장 인사이트")
 
-    if df_saramin is not None:
+    if df_saramin_job is not None:
         st.markdown(
-            "사람인 공고 데이터를 분석하여, 학력 요구와 경력 선호 현황을 시각화합니다."
+            f"**[{selected_job}]** 실제 채용공고 데이터를 분석하여, 학력 요구와 경력 선호 현황을 시각화합니다."
         )
         col_tr1, col_tr2 = st.columns(2)
 
         with col_tr1:
-            edu_dist = df_saramin['education'].value_counts()
+            edu_dist = df_saramin_job['education'].value_counts()
             fig_edu_pie = go.Figure()
             fig_edu_pie.add_trace(go.Pie(
                 labels=edu_dist.index,
@@ -461,16 +507,16 @@ with tab0:
                 hovertemplate="학력 요건: %{label}<br>비율: %{percent}<br>공고 수: %{value}건<extra></extra>"
             ))
             fig_edu_pie.update_layout(
-                title="<b>학력 요구사항 분포</b>",
+                title=f"<b>[{selected_job}] 학력 요구사항 분포</b>",
                 height=380,
                 margin=dict(t=50, b=20, l=20, r=20),
                 legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
             )
             st.plotly_chart(fig_edu_pie, use_container_width=True)
-            st.caption(f"✅ 실데이터 연동: {saramin_path}")
+            st.caption(f"✅ 실데이터 연동: {saramin_job_path}")
 
         with col_tr2:
-            career_dist = df_saramin['career'].value_counts().head(7)
+            career_dist = df_saramin_job['career'].value_counts().head(7)
             fig_career_bar = go.Figure()
             fig_career_bar.add_trace(go.Bar(
                 x=career_dist.index,
@@ -479,16 +525,16 @@ with tab0:
                 hovertemplate="경력 요건: %{x}<br>공고 수: %{y}건<extra></extra>"
             ))
             fig_career_bar.update_layout(
-                title="<b>채용 경력 요구 요건 분포</b>",
+                title=f"<b>[{selected_job}] 채용 경력 요구 요건 분포</b>",
                 xaxis_title="경력 구분",
                 yaxis_title="공고 수 (건)",
                 height=380,
                 margin=dict(t=50, b=20, l=20, r=20)
             )
             st.plotly_chart(fig_career_bar, use_container_width=True)
-            st.caption(f"✅ 실데이터 연동: {saramin_path}")
+            st.caption(f"✅ 실데이터 연동: {saramin_job_path}")
     else:
-        st.info("📭 **데이터 연동 필요** — 사람인 채용공고 DB(saramin_search_jobs.db)가 아직 연동되지 않았습니다.")
+        st.info(f"📭 **데이터 연동 필요** — [{selected_job}] 직무의 실제 채용공고 데이터가 아직 연동되지 않았습니다. (현재는 기획/전략, 데이터분석가/AI엔지니어만 연동)")
 
 
 # =====================================================================
@@ -833,8 +879,8 @@ with tab1:
         "보유하신 경력/학력/자격증/툴/실무 경험을 토대로 "
         "**실제 기업 공고 조건과 다차원적으로 비교**하여 점수를 진단합니다."
     )
-    if df_mart is None:
-        st.caption("ℹ️ 현재 직무는 실데이터 수급 마트가 연동되지 않아, 아래 진단은 보유 스펙 비율 기반 자체 채점 로직으로 계산됩니다 (사람인 공고 매칭은 기획/전략 직무에서만 가능).")
+    if df_saramin_job is None:
+        st.caption(f"ℹ️ 현재 [{selected_job}] 직무는 실제 채용공고 실데이터가 연동되지 않아, 아래 진단은 보유 스펙 비율 기반 자체 채점 로직으로 계산됩니다 (실공고 매칭은 기획/전략, 데이터분석가/AI엔지니어 직무에서만 가능).")
 
     # 스킬풀 가져오기
     specs = JOB_SPECS_POOL.get(selected_job, {"licenses": [], "tools": [], "experiences": [], "synonyms": {}})
@@ -905,10 +951,10 @@ with tab1:
     user_skills = user_licenses + user_tools + user_experiences
 
     if diagnose_clicked or user_skills:
-        # 스코어링 알고리즘 작동 (실제 사람인 DB가 있으면 공고 1,000건과 매칭, 없으면 모의 매칭)
-        if selected_job == "기획/전략" and df_saramin is not None:
+        # 스코어링 알고리즘 작동 (선택 직무의 실제 채용공고 실데이터가 있으면 매칭, 없으면 보유 스펙 비율 기반 산출)
+        if df_saramin_job is not None:
             total_scores = []
-            for _, row in df_saramin.iterrows():
+            for _, row in df_saramin_job.iterrows():
                 # 경력/학력 스코어
                 req_career = parse_career_years(row.get("career", ""))
                 career_score = 100 if user_career_val >= req_career else 0
@@ -973,8 +1019,8 @@ with tab1:
         with col_std1:
             st.markdown("#### 📊 직무 적합도 점수 산정 기준")
             st.markdown(
-                ("본 자가진단의 종합 스코어는 실제 사람인 채용 공고 텍스트 매칭율을 토대로 "
-                 if selected_job == "기획/전략" and df_saramin is not None else
+                (f"본 자가진단의 종합 스코어는 [{selected_job}] 실제 채용 공고 텍스트 매칭율을 토대로 "
+                 if df_saramin_job is not None else
                  "본 자가진단의 종합 스코어는 (실데이터 매칭 전까지) 보유 스펙 비율 기반 자체 채점 로직으로 ") +
                 "**5개 차원의 가중치 합산(각 20% 씩)**으로 계산됩니다."
             )

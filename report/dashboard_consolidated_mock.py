@@ -446,87 +446,20 @@ def mock_badge():
 
 
 # =====================================================================
-# 4. 메인 타이틀 및 4 탭 구성 (GNB 레이아웃 스타일 적용)
+# 4. 메인 타이틀 및 4 탭 구성
 # =====================================================================
-# CSS 주입으로 Streamlit 탭을 GNB 바 스타일로 변경
+st.title("🤖 취업 시장 다차원 EDA 및 직무 적합도 진단 솔루션 (SaaS)")
 st.markdown(
-    """
-    <style>
-    /* 탭 전체 바 디자인 - GNB 헤더 영역 */
-    div[role="tablist"] {
-        background-color: #ffffff !important;
-        padding: 12px 24px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
-        border-bottom: none !important;
-        gap: 12px !important;
-        margin-bottom: 25px !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-
-    /* 개별 탭 버튼 스타일 */
-    button[role="tab"] {
-        font-size: 15px !important;
-        font-weight: 700 !important;
-        color: #4b5563 !important;
-        background-color: transparent !important;
-        border: none !important;
-        border-radius: 9999px !important;
-        padding: 8px 18px !important;
-        transition: all 0.2s ease-in-out !important;
-    }
-
-    /* 마우스 호버 시 */
-    button[role="tab"]:hover {
-        color: #1d4ed8 !important;
-        background-color: #f3f4f6 !important;
-    }
-
-    /* 활성화된 (선택된) 탭 스타일 - 파란색 둥근 배경 */
-    button[role="tab"][aria-selected="true"] {
-        color: #ffffff !important;
-        background-color: #0f62fe !important;
-        box-shadow: 0 4px 12px -1px rgba(15, 98, 254, 0.3) !important;
-    }
-
-    /* Streamlit 기본 선택선 제거 */
-    div[role="tablist"] button[role="tab"] div[data-baseweb="tab-highlight-line"] {
-        display: none !important;
-    }
-    div[data-baseweb="tab-border"] {
-        display: none !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
+    f"**현재 관제 직무**: `{selected_job}` | "
+    "사람인 공고 1,000건(수요) + 네이버 카페/통합검색 API(공급) 다차원 매칭"
 )
-
-# 상단 로고 및 타이틀바 (사진 GNB 좌측 영역 재현)
-col_title, col_search = st.columns([7, 3])
-with col_title:
-    st.markdown(
-        "<div style='display: flex; align-items: center; gap: 12px; margin-top: 5px; margin-bottom: 15px;'>"
-        "<span style='font-size: 36px; line-height: 1;'>🥊</span>"
-        "<span style='font-size: 28px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px;'>카드 파이터</span>"
-        "<span style='font-size: 14px; font-weight: 500; color: #64748b; background-color: #f1f5f9; padding: 4px 8px; border-radius: 6px; margin-left: 8px;'>대시보드</span>"
-        "</div>",
-        unsafe_allow_html=True
-    )
-with col_search:
-    # 우측 상단 검색 바 (사진 GNB 우측 영역 재현)
-    search_keyword = st.text_input(
-        label="search_input",
-        label_visibility="collapsed",
-        placeholder="쇼핑, 프리미엄 등 관심 혜택을 검색해보세요!",
-        key="gnb_search"
-    )
+st.write("---")
 
 tab0, tab1, tab2, tab3 = st.tabs([
-    "🏠 홈",
-    "💳 전체카드",
-    "🪙 캐시백",
-    "🏬 할인가맹점 & 카드 연구소"
+    "🏠 홈: 취업 마켓 다차원 EDA",
+    "💡 구직자: 스펙 자가진단 및 스코어링",
+    "🏢 인사팀: 수급 Gap 분석 및 JD 최적화",
+    "⚠️ 기업 이직위험 & 채용건전성 분석"
 ])
 
 
@@ -534,19 +467,6 @@ tab0, tab1, tab2, tab3 = st.tabs([
 # 탭 0. 홈 (Intro): 전 직무 미스매치 종합 현황
 # =====================================================================
 with tab0:
-    # 사진 속 "준비중" 일러스트 및 박스 형태 레이아웃 재현
-    st.markdown(
-        """
-        <div style='display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; background-color: #f8fafc; border-radius: 16px; margin-bottom: 30px; border: 1px dashed #cbd5e1; box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.02);'>
-            <div style='font-size: 64px; margin-bottom: 10px;'>🏗️</div>
-            <div style='background-color: #0f62fe; color: white; padding: 6px 20px; border-radius: 9999px; font-size: 14px; font-weight: 800; margin-bottom: 15px; display: inline-block; box-shadow: 0 2px 4px 0 rgba(15,98,254,0.25);'>준비중</div>
-            <h2 style='font-size: 26px; font-weight: 800; color: #1e293b; margin: 0 0 10px 0; letter-spacing: -0.5px;'>홈 화면을 준비하고 있어요</h2>
-            <p style='font-size: 15px; color: #64748b; margin: 0; font-weight: 500;'>더 멋진 메인 페이지로 곧 찾아올게요!</p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
     st.header("🏠 홈: 취업 마켓 다차원 EDA 센터")
     st.markdown(
         "우리 플랫폼은 **기획, 인사, 회계, 감사, 마케팅, 데이터분석가/AI엔지니어**까지 "

@@ -481,7 +481,7 @@ with tab0:
     st.subheader(f"1️⃣ PART 1. 🏢 기업 채용 수요 EDA — [{selected_job}]")
     st.markdown(
         f"""사람인 채용공고 DB 데이터에서 **[{selected_job}]** 직무 관련 수집 건수를 추출하여 
-기업들이 공고에 실제로 명시하는 **기본 필수 자격 요건**과 **우대사항(Preferential)**의 요구 비중을 다차원 시각화합니다."""
+기업들이 공고에 실제로 명시하는 **기본 필수 자격 요건**과 **우대사항(Preferential)**의 요구 비중을 분석 및 시각화합니다."""
     )
 
     # 📊 채용 조건 유형 라디오 토글 스위치
@@ -559,63 +559,80 @@ with tab0:
             })
 
     df_p1_active = pd.DataFrame(p1_rows)
+    mode_label = p1_req_mode.split(' ')[0]
 
-    col_p1_1, col_p1_2 = st.columns([1.1, 1.0])
+    # 흰색이 듬뿍 섞인 아주 연하고 부드러운 우유빛 파스텔 컬러
+    if "필수" in p1_req_mode:
+        fill_color = "#93c5fd"    # 연한 소프트 파스텔 블루
+        border_color = "#60a5fa"
+    elif "우대" in p1_req_mode:
+        fill_color = "#fde68a"    # 연한 소프트 크림 앰버
+        border_color = "#f59e0b"
+    else:
+        fill_color = "#c084fc"    # 연한 소프트 라벤더
+        border_color = "#a855f7"
+
+    col_p1_1, col_p1_2 = st.columns(2)
 
     with col_p1_1:
-        st.write(f"#### 🗺️ [{selected_job}] 역량 카테고리별 계층 분포 (Treemap)")
+        st.write(f"#### 📊 [{selected_job}] 역량 카테고리별 요구 비중 ({mode_label})")
         
-        tree_labels = [selected_job] + list(cat_dict.keys()) + df_p1_active['skill'].tolist()
-        tree_parents = [""] + [selected_job]*len(cat_dict) + df_p1_active['category'].tolist()
-        tree_values = [df_p1_active['count'].sum()] + [df_p1_active[df_p1_active['category']==c]['count'].sum() for c in cat_dict.keys()] + df_p1_active['count'].tolist()
+        df_cat = df_p1_active.groupby("category")["count"].sum().reset_index().sort_values("count", ascending=True)
+        
+        x_cat = df_cat['count'].tolist()
+        y_cat = df_cat['category'].tolist()
+        max_x_cat = max(x_cat) if x_cat else 100
 
-        fig_tree = go.Figure(go.Treemap(
-            labels=tree_labels,
-            parents=tree_parents,
-            values=tree_values,
-            textinfo="label+value+percent parent",
-            marker=dict(
-                colorscale='Blues' if "필수" in p1_req_mode else ('YlOrBr' if "우대" in p1_req_mode else 'Purples')
-            ),
-            hovertemplate="카테고리/역량: %{label}<br>명시 공고 수: %{value}건<br>상위 대비 비중: %{percentParent:.1%}<extra></extra>"
+        fig_cat = go.Figure()
+        fig_cat.add_trace(go.Bar(
+            x=x_cat,
+            y=y_cat,
+            orientation='h',
+            marker=dict(color=fill_color, line=dict(color=border_color, width=1.5)),
+            hovertemplate="카테고리: %{y}<br>명시 공고 수: %{x}건<extra></extra>",
+            text=[f"{x}건" for x in x_cat],
+            textposition="auto",
+            insidetextfont=dict(size=12, color="#1e293b")
         ))
         
-        fig_tree.update_layout(
-            title=f"<b>[{selected_job}] 조건별 역량 요구 계층 구조 ({p1_req_mode.split(' ')[0]})</b>",
-            height=420,
-            margin=dict(t=40, b=20, l=10, r=10)
+        fig_cat.update_layout(
+            title=f"<b>[{selected_job}] 대분류 카테고리 합계 ({mode_label})</b>",
+            xaxis=dict(title="공고 명시 총 횟수 (건)", range=[0, max_x_cat * 1.18]),
+            yaxis_title="역량 카테고리",
+            height=400,
+            plot_bgcolor="rgba(248,250,252,0.8)",
+            margin=dict(t=40, b=30, l=90, r=20)
         )
-        st.plotly_chart(fig_tree, use_container_width=True)
+        st.plotly_chart(fig_cat, use_container_width=True)
 
     with col_p1_2:
-        mode_label = p1_req_mode.split(' ')[0]
         st.write(f"#### 🎯 [{selected_job}] 핵심 역량 명시 건수 TOP 10 ({mode_label})")
         
         df_p1_top10 = df_p1_active.sort_values("count", ascending=False).head(10)
         
-        bar_color = "#3b82f6" if "필수" in p1_req_mode else ("#f59e0b" if "우대" in p1_req_mode else "#6366f1")
-        
-        x_vals = df_p1_top10['count'].tolist()[::-1]
-        y_vals = df_p1_top10['skill'].tolist()[::-1]
-        max_x = max(x_vals) if x_vals else 100
+        x_top = df_p1_top10['count'].tolist()[::-1]
+        y_top = df_p1_top10['skill'].tolist()[::-1]
+        max_x_top = max(x_top) if x_top else 100
 
         fig_p1_bar = go.Figure()
         fig_p1_bar.add_trace(go.Bar(
-            x=x_vals,
-            y=y_vals,
+            x=x_top,
+            y=y_top,
             orientation='h',
-            marker_color=bar_color,
+            marker=dict(color=fill_color, line=dict(color=border_color, width=1.5)),
             hovertemplate="역량: %{y}<br>명시 공고 수: %{x}건<extra></extra>",
-            text=[f"{x}건" for x in x_vals],
-            textposition="auto"
+            text=[f"{x}건" for x in x_top],
+            textposition="auto",
+            insidetextfont=dict(size=12, color="#1e293b")
         ))
         
         fig_p1_bar.update_layout(
-            title=f"<b>[{selected_job}] 채용 공고 내 요구/우대 건수 ({mode_label})</b>",
-            xaxis=dict(title="공고 명시 횟수 (건)", range=[0, max_x * 1.15]),
+            title=f"<b>[{selected_job}] 세부 역량 요구 TOP 10 ({mode_label})</b>",
+            xaxis=dict(title="공고 명시 횟수 (건)", range=[0, max_x_top * 1.18]),
             yaxis_title="역량/자격 요건",
-            height=420,
-            margin=dict(t=40, b=20, l=80, r=20)
+            height=400,
+            plot_bgcolor="rgba(248,250,252,0.8)",
+            margin=dict(t=40, b=30, l=90, r=20)
         )
         st.plotly_chart(fig_p1_bar, use_container_width=True)
 

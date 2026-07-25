@@ -586,6 +586,7 @@ with tab0:
     if is_skill_mock:
         mock_badge()
 
+    st.caption("✅ **[PART 1 DATA SOURCE]** — 사람인 채용공고 크롤링 데이터베이스 (`recruit_processed.db` | `recruit_cleaned` 5개 직무 총 5,000건 공고 기반)")
     st.write("---")
 
     # =====================================================================
@@ -764,6 +765,7 @@ with tab0:
         )
         st.caption("✅ **[REAL DATA]** — 네이버 API 파이프라인 연동 데이터 (`naver_weekly_insights.json`)")
 
+    st.caption("✅ **[PART 2 DATA SOURCE]** — 네이버 데이터랩 API 주간 트렌드 & 네이버 취업 카페 커뮤니티 유입 데이터 (`naver_weekly_insights.json` | 5개 직무 실시간 관심도 연동)")
     st.write("---")
 
     # =====================================================================

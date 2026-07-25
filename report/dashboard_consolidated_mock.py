@@ -53,43 +53,74 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
     if dict_freq and WordCloud is not None:
         try:
             cmap = 'Blues' if is_blue else 'YlOrBr'
-            wc = WordCloud(font_path=font_path, width=500, height=320, background_color='white', colormap=cmap).generate_from_frequencies(dict_freq)
+            wc = WordCloud(
+                font_path=font_path,
+                width=500,
+                height=320,
+                background_color='white',
+                colormap=cmap,
+                margin=4,
+                prefer_horizontal=0.95,
+                relative_scaling=0.35,
+                max_font_size=42,
+                min_font_size=11,
+                random_state=42
+            ).generate_from_frequencies(dict_freq)
             return wc.to_array()
         except Exception:
             pass
             
-    # PIL Fallback 이미지 생성
+    # PIL Fallback 충돌 검사 기반 이미지 생성 (글자 겹침 100% 방지)
     from PIL import Image, ImageDraw, ImageFont
     width, height = 500, 320
     img = Image.new('RGB', (width, height), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
     
-    sorted_words = sorted(dict_freq.items(), key=lambda x: x[1], reverse=True)[:25] if dict_freq else []
+    sorted_words = sorted(dict_freq.items(), key=lambda x: x[1], reverse=True)[:35] if dict_freq else []
     if not sorted_words:
         return img
         
     max_score = max(w[1] for w in sorted_words) if max(w[1] for w in sorted_words) > 0 else 1.0
-    positions = [
-        (180, 120), (40, 40), (280, 50), (40, 180), (280, 190),
-        (100, 240), (320, 250), (20, 100), (360, 110), (160, 40),
-        (220, 240), (60, 140), (290, 140), (140, 180), (240, 100)
-    ]
+    drawn_boxes = []
     
-    for idx, (word, score) in enumerate(sorted_words[:15]):
+    grid_coords = []
+    for r in range(0, 140, 12):
+        for angle_deg in range(0, 360, 20):
+            rad = math.radians(angle_deg)
+            x = int(230 + r * 1.3 * math.cos(rad))
+            y = int(140 + r * 0.9 * math.sin(rad))
+            if 10 <= x <= 420 and 10 <= y <= 280:
+                grid_coords.append((x, y))
+
+    for word, score in sorted_words:
         ratio = score / max_score
-        font_size = int(18 + ratio * 30)
+        font_size = int(14 + ratio * 26)
         try:
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             font = ImageFont.load_default()
             
-        pos = positions[idx % len(positions)]
-        if is_blue:
-            color = (int(30 + ratio*20), int(90 + ratio*90), int(180 + ratio*70))
-        else:
-            color = (int(210 + ratio*45), int(110 + ratio*80), int(20 + ratio*30))
-            
-        draw.text(pos, word, fill=color, font=font)
+        bbox = draw.textbbox((0, 0), word, font=font)
+        w_width = bbox[2] - bbox[0]
+        w_height = bbox[3] - bbox[1]
+        
+        for (cx, cy) in grid_coords:
+            box = (cx - 3, cy - 3, cx + w_width + 3, cy + w_height + 3)
+            if box[0] < 5 or box[1] < 5 or box[2] > width - 5 or box[3] > height - 5:
+                continue
+            overlap = False
+            for db in drawn_boxes:
+                if not (box[2] < db[0] or box[0] > db[2] or box[3] < db[1] or box[1] > db[3]):
+                    overlap = True
+                    break
+            if not overlap:
+                if is_blue:
+                    color = (int(30 + ratio*20), int(90 + ratio*90), int(180 + ratio*70))
+                else:
+                    color = (int(210 + ratio*45), int(110 + ratio*80), int(20 + ratio*30))
+                draw.text((cx, cy), word, fill=color, font=font)
+                drawn_boxes.append(box)
+                break
         
     return img
 
@@ -662,19 +693,7 @@ with tab0:
     # ---------------------------------------------------------------------
     # TF-IDF 및 불용어 고속 정제 헬퍼
     # ---------------------------------------------------------------------
-    P1_STOPWORDS = set([
-        '4년', '4년제', '대졸', '대학교졸업', '초대졸', '학력', '학력무관', '석사', '박사',
-        '졸업', '학위', '대학교', '대학', '대학원', '고졸', '전공', '학점', '재학', '수료',
-        '또는', '있는', '있으신', '경험자', '모집', '우수자', '경험이', '관련', '이상',
-        '우대', '기타', '작성', '제출', '포함', '가능자', '업무', '경험', '능력', '보유자',
-        '스킬', '담당', '직무', '성실', '원활', '커뮤니케이션', '우대사항', '필수', '자격',
-        '조건', '사항', '경력', '신입', '부문', '채용', '지원', '가지', '통해', '기반',
-        '수행', '분야', '상세', '확인', '내용', '진행', '이하', '미만', '서비스', '관리',
-        '구축', '운영', '개발', '분석', '기획', '전략', '지원자', '우대함', '가능', '관련학',
-        '관련학과', '소지자', '보유', '능숙자', '우대조건', '하여', '따른', '위한', '대해',
-        '따라', '통한', '있는자', '가능한', '자로서', '등의', '및', '관련된', '3년', '5년',
-        '1년', '2년', '10년', '무관', '년'
-    ])
+    P1_STOPWORDS = set(['2년', '업무내용', '우대', '초대졸', '이하', '우수자', '대해', '원활', '보유하신', '대구', '4년제', '해당직무', '5년', '보유자', '경험이', '학점', '이상', '등의', '가능', '능력', '경험자', '학력', '부산', '석사', '확인', '위한', '대학교졸업', '상세', '진행', '통해', '가능자', '관리', '소지자', '따라', '학위', '필수요건', '대학원', '관련학', '우대조건', '자로서', '자격요건', '능숙자', '기반', '대학교', '개발', '인천', '관련', '분석', '및', '무관', '자격', '있는자', '성실', '대학', '10년', '수료', '담당', '커뮤니케이션', '따른', '우대사항', '작성', '있는', '수행', '경력', '있으신', '관련된', '직무', '분야', '3년', '요건', '필수', '전략', '지원자', '구축', '근무지', '하여', '조건', '기획', '부문', '1년', '관련학과', '담당자', '서비스', '서울', '전공', '판교', '기타', '재학', '경력자', '경험', '대졸', '통한', '지원', '채용', '보유', '보유역량', '우대함', '제출', '고졸', '가지', '박사', '모집', '업무', '년', '사항', '졸업', '경기', '대한', '관련업무', '가능한', '학력무관', '운영', '근무', '내용', '미만', '4년', '기본요건', '포함', '가능하신', '또는', '신입', '스킬'])
 
     def clean_p1_text(text):
         if not text or pd.isna(text):

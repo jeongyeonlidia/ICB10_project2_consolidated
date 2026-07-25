@@ -594,8 +594,32 @@ with tab0:
     st.subheader(f"2️⃣ PART 2. 💬 구직자 관심도 & 여론 EDA — [{selected_job}]")
     st.markdown(
         f"""네이버 데이터랩 API 주간 트렌드와 취업 카페 게시글 텍스트를 통해 **[{selected_job}]** 관련 구직자들의 
-**실제 검색 관심도 시계열** 및 **커뮤니티 여론 키워드**를 다차원 분석합니다."""
+**실제 검색 관심도 시계열** 및 **커뮤니티 여론 키워드**를 분석합니다."""
     )
+
+    # 📊 스킬 카테고리 토글 스위치 (옵션 3 구현)
+    skill_category_mode = st.radio(
+        "📊 분석할 스킬 유형 카테고리 선택",
+        ["🛠️ 직무특화 하드스킬 & 전문자격증", "🌐 범용/소프트 스킬 (어학, 컴활, OA)", "🔄 전체 통합"],
+        horizontal=True,
+        key=f"p2_category_mode_{selected_job}"
+    )
+
+    HARD_SKILLS_BY_JOB = {
+        "기획/전략": ["SQLD", "ADsP", "Figma", "GA4", "CFA", "CPA", "컴퓨터활용능력"],
+        "인사/노무": ["공인노무사", "PHR/SPHR", "직업상담사", "ERP(인사)", "노동법 대응", "조직문화", "Workday"],
+        "회계/재무": ["전산세무", "전산회계", "세무사", "공인회계사", "재경관리사", "미국회계사", "ERP 정보관리사", "SAP(회계)"],
+        "마케팅": ["GA4", "Google Ads", "Meta Ads", "SEO/SEM", "검색광고마케터", "SQLD", "CRM 마케팅"],
+        "데이터분석가/AI엔지니어": ["Python", "SQL", "Tableau", "TensorFlow", "PyTorch", "빅데이터분석기사", "ADsP", "AWS"]
+    }
+
+    GENERAL_SKILLS_BY_JOB = {
+        "기획/전략": ["커뮤니케이션", "협업", "영어", "Excel", "PPT작성법", "문서작성"],
+        "인사/노무": ["커뮤니케이션", "Excel", "협업", "영어", "엑셀", "문서작성"],
+        "회계/재무": ["Excel", "엑셀", "커뮤니케이션", "협업", "영어", "OA실무"],
+        "마케팅": ["커뮤니케이션", "협업", "영어", "Excel", "PPT작성법", "콘텐츠기획"],
+        "데이터분석가/AI엔지니어": ["협업", "커뮤니케이션", "영어", "Excel", "A/B테스트", "문서작성"]
+    }
 
     is_naver_api_real = df_weekly_insights is not None
     job_mapping = {
@@ -607,22 +631,34 @@ with tab0:
     }
     mapped_job = job_mapping.get(selected_job)
 
+    # 선택된 카테고리에 따른 스킬 필터링
+    if "하드스킬" in skill_category_mode:
+        target_category_skills = HARD_SKILLS_BY_JOB.get(selected_job, [])
+    elif "범용" in skill_category_mode:
+        target_category_skills = GENERAL_SKILLS_BY_JOB.get(selected_job, [])
+    else:
+        target_category_skills = HARD_SKILLS_BY_JOB.get(selected_job, []) + GENERAL_SKILLS_BY_JOB.get(selected_job, [])
+
     if is_naver_api_real and mapped_job:
         df_job_weekly = df_weekly_insights[df_weekly_insights["job"] == mapped_job]
-        available_skills = [k for k in df_job_weekly["keyword"].unique().tolist() if k not in ["전기기능사", "건축기사"]]
+        raw_api_skills = df_job_weekly["keyword"].unique().tolist()
+        # 카테고리 필터 적용
+        available_skills = [k for k in target_category_skills if k in raw_api_skills]
+        if not available_skills:
+            available_skills = target_category_skills
     else:
         df_job_weekly = pd.DataFrame()
-        available_skills = cur_skills if cur_skills else ["SQLD", "ADsP", "Figma", "GA4", "CPA", "CFA"]
+        available_skills = target_category_skills
 
     col_p2_1, col_p2_2 = st.columns([1.3, 1.0])
 
     with col_p2_1:
-        st.write("#### 📈 주간 구직자 검색 관심도 트렌드 (네이버 API)")
+        st.write(f"#### 📈 주간 관심도 트렌드 ({skill_category_mode.split(' ')[1]})")
         vol_skills = st.multiselect(
             "시계열 분석 스킬 선택",
             available_skills,
             default=available_skills,
-            key=f"p2_skills_select_{selected_job}"
+            key=f"p2_skills_select_{selected_job}_{skill_category_mode}"
         )
 
         fig_vol = go.Figure()
@@ -664,7 +700,7 @@ with tab0:
                         line=dict(width=2)
                     ))
             fig_vol.update_layout(
-                title=dict(text=f"🟢 [{selected_job}] 주간 구직 검색량 변화 추이", font=dict(size=14, color="#028b3e"), y=0.98, x=0, xanchor="left"),
+                title=dict(text=f"🟢 [{selected_job}] 주간 구직 검색량 변화 추이 ({skill_category_mode.split(' ')[1]})", font=dict(size=14, color="#028b3e"), y=0.98, x=0, xanchor="left"),
                 xaxis_title="주차 시작일 (월요일)",
                 yaxis_title="상대적 검색 비율 (Trend Ratio)",
                 plot_bgcolor="rgba(240,253,244,0.3)",
@@ -686,10 +722,10 @@ with tab0:
             )
 
     with col_p2_2:
-        st.write("#### 🗣️ 네이버 취업 카페 게시글 핵심 관심 키워드 TOP 10")
+        st.write(f"#### 🗣️ 네이버 취업 카페 언급량 TOP 10 ({skill_category_mode.split(' ')[1]})")
         if df_naver is not None and '제목' in df_naver.columns:
             cafe_titles = df_naver['제목'].dropna().tolist()
-            job_kw_list = cur_skills + [selected_job.split("/")[0]]
+            job_kw_list = target_category_skills
             kw_freq = {}
             for kw in job_kw_list:
                 cnt = sum(1 for title in cafe_titles if kw.lower() in title.lower())
@@ -698,11 +734,11 @@ with tab0:
             is_cafe_mock = False
         else:
             mock_cafe_dict = {
-                "기획/전략": [("SQLD독학", 340), ("ADsP기출", 280), ("Figma포폴", 240), ("역기획서", 190), ("GA4자격증", 170), ("사업기획", 130), ("서비스로그", 110), ("M&A스터디", 90), ("CPA난이도", 70), ("컴활1급", 60)],
-                "인사/노무": [("노무사2차", 380), ("근로기준법", 310), ("HRD인강", 260), ("PHR시험", 220), ("조직문화", 180), ("연말정산", 150), ("채용면접", 120), ("ERP인사", 100), ("Workday", 80), ("급여계산", 60)],
-                "회계/재무": [("CPA1차결과", 410), ("세무사유예", 350), ("재경관리사", 310), ("IFRS실무", 270), ("SAP교육", 220), ("더존사용법", 180), ("AICPA수강", 140), ("법인세신고", 110), ("VBA독학", 90), ("자금운용", 70)],
-                "마케팅": [("GA4활용법", 450), ("구글애즈", 380), ("검광마합격", 330), ("SEO최적화", 290), ("퍼포먼스마케팅", 240), ("메타광고", 200), ("CRM푸시", 160), ("허브스팟", 120), ("브랜드전략", 90), ("포트폴리오", 70)],
-                "데이터분석가/AI엔지니어": [("빅분기실기", 490), ("ADsP요약", 420), ("파이썬코테", 360), ("SQLD합격", 310), ("태블로대시보드", 260), ("PyTorch튜토리얼", 210), ("ETL파이프라인", 170), ("AWS자격증", 140), ("A/B테스트", 110), ("ML모델링", 80)]
+                "기획/전략": [("SQLD독학", 340), ("ADsP기출", 280), ("Figma포폴", 240), ("역기획서", 190), ("GA4자격증", 170), ("커뮤니케이션", 130), ("Excel함수", 110), ("PPT제안서", 90), ("CPA난이도", 70), ("컴활1급", 60)],
+                "인사/노무": [("노무사2차", 380), ("근로기준법", 310), ("HRD인강", 260), ("PHR시험", 220), ("조직문화", 180), ("커뮤니케이션", 150), ("Excel실무", 120), ("ERP인사", 100), ("Workday", 80), ("급여계산", 60)],
+                "회계/재무": [("CPA1차결과", 410), ("세무사유예", 350), ("재경관리사", 310), ("IFRS실무", 270), ("SAP교육", 220), ("더존사용법", 180), ("ExcelVBA", 140), ("법인세신고", 110), ("OA실무", 90), ("자금운용", 70)],
+                "마케팅": [("GA4활용법", 450), ("구글애즈", 380), ("검광마합격", 330), ("SEO최적화", 290), ("퍼포먼스마케팅", 240), ("메타광고", 200), ("CRM푸시", 160), ("커뮤니케이션", 120), ("PPT작성", 90), ("포트폴리오", 70)],
+                "데이터분석가/AI엔지니어": [("빅분기실기", 490), ("ADsP요약", 420), ("파이썬코테", 360), ("SQLD합격", 310), ("태블로대시보드", 260), ("PyTorch튜토리얼", 210), ("협업툴", 170), ("AWS자격증", 140), ("A/B테스트", 110), ("ML모델링", 80)]
             }
             df_cafe_kw = pd.DataFrame(mock_cafe_dict.get(selected_job, mock_cafe_dict["기획/전략"]), columns=['keyword', 'freq'])
             is_cafe_mock = True
@@ -722,7 +758,7 @@ with tab0:
         )
         st.plotly_chart(fig_cafe, use_container_width=True)
         st.markdown(
-            "**🧐 여론 인사이트:** 수험 및 자격 취득 팁, 실무 포트폴리오 유의사항 관련 글이 커뮤니티의 지배적 주제입니다."
+            "**🧐 여론 인사이트:** 선택된 스킬 카테고리에 대한 구직자 커뮤니티 정보 공유 및 수험 글 비중입니다."
         )
         if is_cafe_mock:
             mock_badge()

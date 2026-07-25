@@ -615,10 +615,10 @@ with tab0:
     with col_p2_1:
         st.write("#### 📈 주간 구직자 검색 관심도 트렌드 (네이버 API)")
         vol_skills = st.multiselect(
-            "시계열 분석 스킬 선택 (최대 4개)",
+            "시계열 분석 스킬 선택",
             available_skills,
-            default=available_skills[:min(3, len(available_skills))],
-            key="p2_skills_select"
+            default=available_skills,
+            key=f"p2_skills_select_{selected_job}"
         )
 
         fig_vol = go.Figure()
@@ -631,7 +631,7 @@ with tab0:
                     mode="lines", name="직무 전체 평균",
                     line=dict(color="#64748b", width=1.5, dash="dot")
                 ))
-                naver_colors = ["#03c75a", "#028b3e", "#2563eb", "#d97706"]
+                naver_colors = ["#03c75a", "#028b3e", "#2563eb", "#d97706", "#9333ea", "#ec4899", "#06b6d4", "#f97316", "#84cc16", "#6366f1"]
                 for idx, sk in enumerate(vol_skills):
                     sk_df = df_job_weekly[df_job_weekly["keyword"] == sk]
                     if not sk_df.empty:

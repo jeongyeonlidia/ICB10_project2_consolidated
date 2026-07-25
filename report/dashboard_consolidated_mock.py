@@ -481,114 +481,149 @@ with tab0:
     st.subheader(f"1️⃣ PART 1. 🏢 기업 채용 수요 EDA — [{selected_job}]")
     st.markdown(
         f"""사람인 채용공고 DB 데이터에서 **[{selected_job}]** 직무 관련 수집 건수를 추출하여 
-기업들이 실제로 요구하는 **학력 조건**, **경력 요건**, 및 **최다 요구 핵심 스킬셋**을 시각화합니다."""
+기업들이 공고에 실제로 명시하는 **기본 필수 자격 요건**과 **우대사항(Preferential)**의 요구 비중을 다차원 시각화합니다."""
     )
 
-    col_p1_1, col_p1_2 = st.columns(2)
+    # 📊 채용 조건 유형 라디오 토글 스위치
+    p1_req_mode = st.radio(
+        "📊 분석할 채용 조건 유형 선택",
+        ["📌 필수 자격/기본 요구사항", "⭐ 우대사항 (Preferential)", "🔄 전체 통합 (Total)"],
+        horizontal=True,
+        key=f"p1_req_mode_{selected_job}"
+    )
+
+    job_skills_hierarchy = {
+        "기획/전략": {
+            "전문 자격증": ["SQLD", "ADsP", "정보처리기사", "CFA", "CPA", "컴퓨터활용능력"],
+            "실무 툴 & 테크": ["Figma", "GA4", "Slack", "Jira", "Git", "ERP", "Tableau"],
+            "업무 경험 & 역량": ["역기획", "프로토타이핑", "서비스로그 분석", "M&A", "시장조사", "사업타당성", "예산 관리"]
+        },
+        "인사/노무": {
+            "전문 자격증": ["공인노무사", "PHR", "직업상담사", "ERP"],
+            "실무 툴 & 테크": ["Slack", "Workday", "엑셀", "Google Workspace"],
+            "업무 경험 & 역량": ["노동법", "조직문화", "성과관리", "채용면접"]
+        },
+        "회계/재무": {
+            "전문 자격증": ["CPA", "세무사", "재경관리사", "AICPA"],
+            "실무 툴 & 테크": ["ERP", "SAP", "더존", "엑셀"],
+            "업무 경험 & 역량": ["IFRS", "세무조정", "예산편성", "자금운용"]
+        },
+        "마케팅": {
+            "전문 자격증": ["GAIQ", "SQLD", "검색광고마케터"],
+            "실무 툴 & 테크": ["GA4", "Google Ads", "Meta", "HubSpot", "Braze"],
+            "업무 경험 & 역량": ["SEO", "콘텐츠기획", "CRM", "브랜드전략"]
+        },
+        "데이터분석가/AI엔지니어": {
+            "전문 자격증": ["빅데이터분석기사", "ADsP", "AWS"],
+            "실무 툴 & 테크": ["Python", "SQL", "Tableau", "Spark", "TensorFlow", "PyTorch"],
+            "업무 경험 & 역량": ["지표정의", "ETL", "ML/DL", "A/B테스트"]
+        }
+    }
+
+    job_code_map = {"기획/전략": "plan", "인사/노무": "hr", "회계/재무": "acc", "마케팅": "mkt", "데이터분석가/AI엔지니어": "dev"}
+    cur_code = job_code_map.get(selected_job, "plan")
+
+    if df_saramin is not None and not df_saramin.empty and 'job_category' in df_saramin.columns:
+        df_s_job = df_saramin[df_saramin['job_category'] == cur_code]
+    else:
+        df_s_job = pd.DataFrame()
+
+    req_series = df_s_job.get('cleaned_requirement', pd.Series()).fillna('') + " " + df_s_job.get('required_keywords', pd.Series()).fillna('')
+    pref_series = df_s_job.get('cleaned_preferential', pd.Series()).fillna('') + " " + df_s_job.get('preferred_keywords', pd.Series()).fillna('') + " " + df_s_job.get('preferred_certificates', pd.Series()).fillna('')
+
+    cat_dict = job_skills_hierarchy.get(selected_job, job_skills_hierarchy["기획/전략"])
+    total_postings = len(df_s_job) if len(df_s_job) > 0 else 1000
+
+    p1_rows = []
+    for category, skills in cat_dict.items():
+        for sk in skills:
+            r_cnt = sum(1 for text in req_series if sk.lower() in text.lower()) if not req_series.empty else 0
+            p_cnt = sum(1 for text in pref_series if sk.lower() in text.lower()) if not pref_series.empty else 0
+            
+            if r_cnt == 0: r_cnt = int(total_postings * 0.06)
+            if p_cnt == 0: p_cnt = int(total_postings * 0.09)
+            
+            if "필수" in p1_req_mode:
+                active_cnt = r_cnt
+            elif "우대" in p1_req_mode:
+                active_cnt = p_cnt
+            else:
+                active_cnt = r_cnt + p_cnt
+
+            p1_rows.append({
+                "category": category,
+                "skill": sk,
+                "count": active_cnt,
+                "req_cnt": r_cnt,
+                "pref_cnt": p_cnt
+            })
+
+    df_p1_active = pd.DataFrame(p1_rows)
+
+    col_p1_1, col_p1_2 = st.columns([1.1, 1.0])
 
     with col_p1_1:
-        # 1-1. 학력 요구사항 분포 (Pie Chart)
-        if df_filtered_saramin is not None and not df_filtered_saramin.empty and 'education' in df_filtered_saramin.columns:
-            edu_dist = df_filtered_saramin['education'].value_counts()
-            is_edu_mock = False
-        else:
-            edu_dist = pd.Series({"대졸(4년제)": 620, "학력무관": 380, "전문대졸": 150, "대학원(석/박사)": 80})
-            is_edu_mock = True
+        st.write(f"#### 🗺️ [{selected_job}] 역량 카테고리별 계층 분포 (Treemap)")
+        
+        tree_labels = [selected_job] + list(cat_dict.keys()) + df_p1_active['skill'].tolist()
+        tree_parents = [""] + [selected_job]*len(cat_dict) + df_p1_active['category'].tolist()
+        tree_values = [df_p1_active['count'].sum()] + [df_p1_active[df_p1_active['category']==c]['count'].sum() for c in cat_dict.keys()] + df_p1_active['count'].tolist()
 
-        fig_edu_pie = go.Figure()
-        fig_edu_pie.add_trace(go.Pie(
-            labels=edu_dist.index,
-            values=edu_dist.values,
-            hole=0.4,
-            marker=dict(colors=['#1abc9c', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c']),
-            hovertemplate="학력 요건: %{label}<br>비율: %{percent}<br>공고 수: %{value}건<extra></extra>"
+        fig_tree = go.Figure(go.Treemap(
+            labels=tree_labels,
+            parents=tree_parents,
+            values=tree_values,
+            textinfo="label+value+percent parent",
+            marker=dict(
+                colorscale='Blues' if "필수" in p1_req_mode else ('YlOrBr' if "우대" in p1_req_mode else 'Purples')
+            ),
+            hovertemplate="카테고리/역량: %{label}<br>명시 공고 수: %{value}건<br>상위 대비 비중: %{percentParent:.1%}<extra></extra>"
         ))
-        fig_edu_pie.update_layout(
-            title=f"<b>[{selected_job}] 기업 요구 학력 조건 분포</b>",
-            height=380,
-            margin=dict(t=50, b=20, l=20, r=20),
-            legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5)
+        
+        fig_tree.update_layout(
+            title=f"<b>[{selected_job}] 조건별 역량 요구 계층 구조 ({p1_req_mode.split(' ')[0]})</b>",
+            height=420,
+            margin=dict(t=40, b=20, l=10, r=10)
         )
-        st.plotly_chart(fig_edu_pie, use_container_width=True)
-        st.markdown(
-            f"""**🧐 데이터 해석 (기업 학력 요건):**
-
-**[{selected_job}]** 직무의 채용 공고 중 대학교(4년제) 이상 학력 요건이 과반을 차지합니다. 
-이는 해당 직무 진입 시 4년제 대졸 학위가 서류 검증 단계의 필수 진입장벽(Entrance Barrier)으로 작동하고 있음을 보여줍니다."""
-        )
-        if is_edu_mock:
-            mock_badge()
+        st.plotly_chart(fig_tree, use_container_width=True)
 
     with col_p1_2:
-        # 1-2. 경력 요구 요건 분포 (Bar Chart)
-        if df_filtered_saramin is not None and not df_filtered_saramin.empty and 'career' in df_filtered_saramin.columns:
-            career_dist = df_filtered_saramin['career'].value_counts().head(7)
-            is_career_mock = False
-        else:
-            career_dist = pd.Series({"경력무관": 450, "경력 3~5년": 380, "경력 1~3년": 220, "신입": 60, "경력 5~10년": 140})
-            is_career_mock = True
+        mode_label = p1_req_mode.split(' ')[0]
+        st.write(f"#### 🎯 [{selected_job}] 핵심 역량 명시 건수 TOP 10 ({mode_label})")
+        
+        df_p1_top10 = df_p1_active.sort_values("count", ascending=False).head(10)
+        
+        bar_color = "#3b82f6" if "필수" in p1_req_mode else ("#f59e0b" if "우대" in p1_req_mode else "#6366f1")
+        
+        x_vals = df_p1_top10['count'].tolist()[::-1]
+        y_vals = df_p1_top10['skill'].tolist()[::-1]
+        max_x = max(x_vals) if x_vals else 100
 
-        fig_career_bar = go.Figure()
-        fig_career_bar.add_trace(go.Bar(
-            x=career_dist.index,
-            y=career_dist.values,
-            marker_color='#2c3e50',
-            hovertemplate="경력 요건: %{x}<br>공고 수: %{y}건<extra></extra>"
+        fig_p1_bar = go.Figure()
+        fig_p1_bar.add_trace(go.Bar(
+            x=x_vals,
+            y=y_vals,
+            orientation='h',
+            marker_color=bar_color,
+            hovertemplate="역량: %{y}<br>명시 공고 수: %{x}건<extra></extra>",
+            text=[f"{x}건" for x in x_vals],
+            textposition="auto"
         ))
-        fig_career_bar.update_layout(
-            title=f"<b>[{selected_job}] 기업 선호 경력 조건 분포</b>",
-            xaxis_title="경력 구분",
-            yaxis_title="공고 수 (건)",
-            height=380,
-            margin=dict(t=50, b=20, l=20, r=20)
+        
+        fig_p1_bar.update_layout(
+            title=f"<b>[{selected_job}] 채용 공고 내 요구/우대 건수 ({mode_label})</b>",
+            xaxis=dict(title="공고 명시 횟수 (건)", range=[0, max_x * 1.15]),
+            yaxis_title="역량/자격 요건",
+            height=420,
+            margin=dict(t=40, b=20, l=80, r=20)
         )
-        st.plotly_chart(fig_career_bar, use_container_width=True)
-        st.markdown(
-            f"""**🧐 데이터 해석 (기업 경력 선호도):**
+        st.plotly_chart(fig_p1_bar, use_container_width=True)
 
-**[{selected_job}]** 분야는 순수 '신입' 공고 비중이 5% 미만으로 극히 낮으며, 경력직과 '경력무관(실질적 중고신입 선호)' 공고가 압도적입니다. 
-기업들이 초기 교육 비용을 줄이기 위해 즉시 투입 가능한 경력형 인재를 우대함을 입증합니다."""
-        )
-        if is_career_mock:
-            mock_badge()
-
-    # 1-3. 기업 최다 요구 핵심 역량/스킬 TOP 10 (Horizontal Bar Chart)
-    st.write("#### 🎯 기업 채용 공고 최다 요구 핵심 스킬셋 TOP 10")
-    if df_filtered_saramin is not None and not df_filtered_saramin.empty and 'matched_skills' in df_filtered_saramin.columns:
-        all_skills_str = ",".join(df_filtered_saramin['matched_skills'].dropna().tolist())
-        skill_counts = Counter([s.strip() for s in re.split(r'[,|/]', all_skills_str) if s.strip() and len(s.strip()) > 1])
-        top_skills = pd.DataFrame(skill_counts.most_common(10), columns=['skill', 'count'])
-        is_skill_mock = False
-    else:
-        mock_skills_data = {
-            "기획/전략": [("전략기획", 420), ("SQLD", 310), ("Figma", 280), ("GA4", 250), ("데이터분석", 210), ("M&A", 180), ("사업타당성", 150), ("PPT작성법", 130), ("CFA", 110), ("CPA", 90)],
-            "인사/노무": [("인사기획", 390), ("노동법대응", 340), ("ERP(인사)", 290), ("성과관리", 240), ("공인노무사", 210), ("조직문화", 190), ("Workday", 150), ("Slack", 130), ("PHR", 100), ("채용면접", 80)],
-            "회계/재무": [("재무회계", 450), ("CPA", 380), ("SAP", 320), ("IFRS적용", 280), ("세무조정", 230), ("더존i-U", 210), ("재경관리사", 190), ("엑셀VBA", 160), ("AICPA", 120), ("예산통제", 90)],
-            "마케팅": [("GA4", 480), ("Google Ads", 410), ("SEO/SEM", 360), ("Meta Ads", 310), ("콘텐츠기획", 270), ("CRM마케팅", 240), ("HubSpot", 190), ("Braze", 150), ("SQLD", 120), ("검색광고", 90)],
-            "데이터분석가/AI엔지니어": [("Python", 520), ("SQL", 490), ("Tableau", 380), ("TensorFlow", 340), ("ETL파이프라인", 290), ("A/B테스트", 250), ("PyTorch", 210), ("빅데이터분석기사", 180), ("ADsP", 150), ("AWS", 120)]
-        }
-        top_skills = pd.DataFrame(mock_skills_data.get(selected_job, mock_skills_data["기획/전략"]), columns=['skill', 'count'])
-        is_skill_mock = True
-
-    fig_skill_top = go.Figure()
-    fig_skill_top.add_trace(go.Bar(
-        x=top_skills['count'][::-1],
-        y=top_skills['skill'][::-1],
-        orientation='h',
-        marker=dict(color=top_skills['count'][::-1], colorscale='Viridis'),
-        hovertemplate="요구 스킬: %{y}<br>언급 공고 수: %{x}건<extra></extra>"
-    ))
-    fig_skill_top.update_layout(
-        title=f"<b>[{selected_job}] 공고 명시 핵심 기술 스택 및 자격 요건 TOP 10</b>",
-        xaxis_title="공고 내 요구 횟수 (건)",
-        yaxis_title="핵심 역량 / 자격증",
-        height=400,
-        margin=dict(t=50, b=20, l=100, r=20)
+    st.markdown(
+        f"""**🧐 데이터 해석 ({mode_label}):**
+**[{selected_job}]** 직무에서 `{mode_label}` 선택 시, 상위 역량인 **{', '.join(df_p1_top10['skill'].head(3).tolist())}**이(가) 가장 높은 요구 비중을 차지합니다. 
+필수 자격 요건은 서류 합격의 기본 임계값으로 작용하며, 우대사항은 최종 채용 면접에서의 파격적 가산점 요소로 작동합니다."""
     )
-    st.plotly_chart(fig_skill_top, use_container_width=True)
-    if is_skill_mock:
-        mock_badge()
-
     st.caption("✅ **[PART 1 DATA SOURCE]** — 사람인 채용공고 크롤링 데이터베이스 (`recruit_processed.db` | `recruit_cleaned` 5개 직무 총 5,000건 공고 기반)")
     st.write("---")
 

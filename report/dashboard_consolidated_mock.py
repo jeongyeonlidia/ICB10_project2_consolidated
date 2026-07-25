@@ -404,9 +404,33 @@ def mock_badge():
 # =====================================================================
 st.title("🤖 취업 시장 다차원 EDA 및 직무 적합도 진단 솔루션 (SaaS)")
 st.markdown(
-    f"**현재 관제 직무**: `{selected_job}` | "
-    "사람인 실제 공고 5,000건(수요) + 네이버 주간 API(공급) 데이터 매칭"
+    f"**현재 관제 직무**: `{selected_job}` | 사람인 실제 채용공고 5,000건(수요) + 네이버 주간 API(공급) 데이터 실시간 동적 매칭"
 )
+
+# ---------------------------------------------------------------------
+# 🚀 Hero Banner Section: 대시보드 핵심 가치 & 3대 탭 연결 가이드
+# ---------------------------------------------------------------------
+hero_html = f"""
+<div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #cbd5e1; border-left: 5px solid #2563eb; padding: 18px 24px; border-radius: 10px; margin-top: 10px; margin-bottom: 16px;">
+    <h3 style="margin-top:0; color:#1e293b; font-size: 1.15rem; font-weight: 700; line-height: 1.5;">
+        🎯 "나는 어떤 역량이 부족한지, 기업은 어떤 역량이 부족한지, 그리고 어디가 위험한 채용시장인지 한 번에 보여주는 대시보드입니다."
+    </h3>
+    <p style="margin-bottom: 0px; color: #475569; font-size: 0.93rem; line-height: 1.6;">
+        본 대시보드는 <b>사람인 5,000건 실시간 채용 DB</b>와 <b>네이버 API 구직자 관심도 데이터</b>를 결합하여 구직자와 인사팀 모두에게 명확한 데이터적 인사이트를 제시합니다. 아래 3가지 핵심 질문에 맞춰 원하는 기능을 탐색해 보세요.
+    </p>
+</div>
+"""
+st.markdown(hero_html, unsafe_allow_html=True)
+
+# 🚀 3대 탭 연동 핵심 질문 & 바로가기 안내 카드
+hero_col1, hero_col2, hero_col3 = st.columns(3)
+with hero_col1:
+    st.info("💡 **[내 스펙 점검하기]**\n\n나의 자격증·툴·경험 5대 스펙을 입력하고 100점 만점 대비 부족한 역량을 진단받으세요. *(상단 '💡 탭 1' 이용)*")
+with hero_col2:
+    st.success("🏢 **[기업 수급 Gap 보기]**\n\n기업 채용 수요와 구직자 관심도의 믹스매치 수급 갭을 확인하고 최적 JD를 도출하세요. *(상단 '🏢 탭 2' 이용)*")
+with hero_col3:
+    st.warning("⚠️ **[위험 공고/블랙기업 신호 보기]**\n\n업종별 평균 이직위험도와 잦은 채용공고 재등록 블랙기업 신호를 탐지하세요. *(상단 '⚠️ 탭 3' 이용)*")
+
 st.write("---")
 
 tab0, tab1, tab2, tab3 = st.tabs([

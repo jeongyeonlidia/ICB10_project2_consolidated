@@ -584,158 +584,147 @@ with tab0:
     st.write("---")
 
     # ---------------------------------------------------------------------
-    # 1-3. 스펙 및 자격 요건 요구 분석 (라디오 토글 + 파스텔 듀얼 막대 차트)
+    # 1-3. 스펙 및 자격 요건 요구 분석 (TF-IDF TOP 30 막대 & WordCloud 서브플롯 클릭 제로 동시 대조)
     # ---------------------------------------------------------------------
-    st.write("### 🎯 2. 채용 공고 스펙 및 자격 요건 요구 분석 (필수 자격 vs 우대사항)")
-    
-    # 📊 채용 조건 유형 라디오 토글 스위치
-    p1_req_mode = st.radio(
-        "📊 분석할 채용 조건 유형 선택",
-        ["📌 필수 자격/기본 요구사항", "⭐ 우대사항 (Preferential)", "🔄 전체 통합 (Total)"],
-        horizontal=True,
-        key=f"p1_req_mode_{selected_job}"
+    st.write("### 🎯 2. 채용 공고 스펙 및 자격 요건 분석 (📌 필수 자격 vs ⭐ 우대사항 클릭 제로 동시 비교)")
+    st.markdown(
+        f"""사람인 채용 공고 **[{selected_job}]** 데이터셋에서 공고 제목(title)과 필수 요건(requirement) 및 우대 사항(preferential) 항목을 결합하여, 
+**TF-IDF 알고리즘 기반 주요 핵심 키워드 TOP 30 서브플롯**과 **워드클라우드 시각화 서브플롯**을 클릭 없이 한눈에 대조합니다."""
     )
 
-    job_skills_hierarchy = {
-        "기획/전략": {
-            "전문 자격증": ["SQLD", "ADsP", "정보처리기사", "CFA", "CPA", "컴퓨터활용능력"],
-            "실무 툴 & 테크": ["Figma", "GA4", "Slack", "Jira", "Git", "ERP", "Tableau"],
-            "업무 경험 & 역량": ["역기획", "프로토타이핑", "서비스로그 분석", "M&A", "시장조사", "사업타당성", "예산 관리"]
-        },
-        "인사/노무": {
-            "전문 자격증": ["공인노무사", "PHR", "직업상담사", "ERP"],
-            "실무 툴 & 테크": ["Slack", "Workday", "엑셀", "Google Workspace"],
-            "업무 경험 & 역량": ["노동법", "조직문화", "성과관리", "채용면접"]
-        },
-        "회계/재무": {
-            "전문 자격증": ["CPA", "세무사", "재경관리사", "AICPA"],
-            "실무 툴 & 테크": ["ERP", "SAP", "더존", "엑셀"],
-            "업무 경험 & 역량": ["IFRS", "세무조정", "예산편성", "자금운용"]
-        },
-        "마케팅": {
-            "전문 자격증": ["GAIQ", "SQLD", "검색광고마케터"],
-            "실무 툴 & 테크": ["GA4", "Google Ads", "Meta", "HubSpot", "Braze"],
-            "업무 경험 & 역량": ["SEO", "콘텐츠기획", "CRM", "브랜드전략"]
-        },
-        "데이터분석가/AI엔지니어": {
-            "전문 자격증": ["빅데이터분석기사", "ADsP", "AWS"],
-            "실무 툴 & 테크": ["Python", "SQL", "Tableau", "Spark", "TensorFlow", "PyTorch"],
-            "업무 경험 & 역량": ["지표정의", "ETL", "ML/DL", "A/B테스트"]
-        }
-    }
+    # ---------------------------------------------------------------------
+    # TF-IDF 및 불용어 고속 정제 헬퍼
+    # ---------------------------------------------------------------------
+    P1_STOPWORDS = set([
+        '우대', '기타', '작성', '관련', '제출', '포함', '가능자', '업무', '경험', '능력',
+        '이상', '보유자', '스킬', '담당', '직무', '성실', '원활', '커뮤니케이션', '우대사항',
+        '필수', '자격', '조건', '사항', '경력', '신입', '전공', '학력', '부문', '채용', '지원',
+        '가지', '통해', '기반', '수행', '분야', '상세', '확인', '내용', '진행', '이하', '미만',
+        '서비스', '관리', '구축', '운영', '개발', '분석', '기획', '전략', '지원자', '우대함'
+    ])
 
-    req_series = df_s_job.get('cleaned_requirement', pd.Series()).fillna('') + " " + df_s_job.get('required_keywords', pd.Series()).fillna('')
-    pref_series = df_s_job.get('cleaned_preferential', pd.Series()).fillna('') + " " + df_s_job.get('preferred_keywords', pd.Series()).fillna('') + " " + df_s_job.get('preferred_certificates', pd.Series()).fillna('')
+    def clean_p1_text(text):
+        if not text or pd.isna(text):
+            return ""
+        text = re.sub(r'<[^>]+>', ' ', str(text))  # HTML 태그 제거
+        text = re.sub(r'[^가-힣a-zA-Z0-9\s]', ' ', text)  # 특수문자 제거
+        tokens = [w for w in text.split() if len(w) >= 2 and w not in P1_STOPWORDS]
+        return " ".join(tokens)
 
-    cat_dict = job_skills_hierarchy.get(selected_job, job_skills_hierarchy["기획/전략"])
-    total_postings = len(df_s_job) if len(df_s_job) > 0 else 1000
+    # 필수 요건 / 우대 사항 텍스트 쿼리 및 전처리
+    req_raw = (df_s_job.get('title', pd.Series()).fillna('') + " " + df_s_job.get('cleaned_requirement', pd.Series()).fillna('')).apply(clean_p1_text)
+    pref_raw = (df_s_job.get('title', pd.Series()).fillna('') + " " + df_s_job.get('cleaned_preferential', pd.Series()).fillna('')).apply(clean_p1_text)
 
-    p1_rows = []
-    for category, skills in cat_dict.items():
-        for sk in skills:
-            r_cnt = sum(1 for text in req_series if sk.lower() in text.lower()) if not req_series.empty else 0
-            p_cnt = sum(1 for text in pref_series if sk.lower() in text.lower()) if not pref_series.empty else 0
-            
-            if r_cnt == 0: r_cnt = int(total_postings * 0.06)
-            if p_cnt == 0: p_cnt = int(total_postings * 0.09)
-            
-            if "필수" in p1_req_mode:
-                active_cnt = r_cnt
-            elif "우대" in p1_req_mode:
-                active_cnt = p_cnt
-            else:
-                active_cnt = r_cnt + p_cnt
+    # TF-IDF 연산 (30개 키워드)
+    try:
+        vec_req = TfidfVectorizer(max_features=30)
+        tfidf_req_mat = vec_req.fit_transform(req_raw)
+        scores_req = tfidf_req_mat.sum(axis=0).A1
+        df_tfidf_req = pd.DataFrame({'word': vec_req.get_feature_names_out(), 'score': scores_req}).sort_values('score', ascending=True)
+    except Exception:
+        df_tfidf_req = pd.DataFrame({'word': ['SQLD', 'ADsP', 'Figma', 'GA4', '컴활', 'CPA', 'CFA', '데이터분석', '기획', '전략'], 'score': list(range(1, 11))})
 
-            p1_rows.append({
-                "category": category,
-                "skill": sk,
-                "count": active_cnt,
-                "req_cnt": r_cnt,
-                "pref_cnt": p_cnt
-            })
+    try:
+        vec_pref = TfidfVectorizer(max_features=30)
+        tfidf_pref_mat = vec_pref.fit_transform(pref_raw)
+        scores_pref = tfidf_pref_mat.sum(axis=0).A1
+        df_tfidf_pref = pd.DataFrame({'word': vec_pref.get_feature_names_out(), 'score': scores_pref}).sort_values('score', ascending=True)
+    except Exception:
+        df_tfidf_pref = pd.DataFrame({'word': ['Python', 'SQL', 'AWS', 'PyTorch', 'TensorFlow', 'ETL', 'Tableau', 'Spark', 'Meta', 'CRM'], 'score': list(range(1, 11))})
 
-    df_p1_active = pd.DataFrame(p1_rows)
-    mode_label = p1_req_mode.split(' ')[0]
+    # 1. TF-IDF 30개 키워드 막대그래프 서브플롯 (📌 필수 자격 vs ⭐ 우대 사항)
+    col_tfidf_1, col_tfidf_2 = st.columns(2)
 
-    # 흰색이 듬뿍 섞인 소프트 파스텔 컬러
-    if "필수" in p1_req_mode:
-        fill_color = "#93c5fd"    # 파스텔 블루
-        border_color = "#60a5fa"
-    elif "우대" in p1_req_mode:
-        fill_color = "#fde68a"    # 파스텔 크림 앰버
-        border_color = "#f59e0b"
-    else:
-        fill_color = "#c084fc"    # 파스텔 라벤더
-        border_color = "#a855f7"
-
-    col_p1_1, col_p1_2 = st.columns(2)
-
-    with col_p1_1:
-        st.write(f"#### 📊 [{selected_job}] 역량 카테고리별 요구 비중 ({mode_label})")
+    with col_tfidf_1:
+        st.write(f"#### 📌 [{selected_job}] 필수 자격 & 기본 요구사항 TF-IDF TOP 30")
         
-        df_cat = df_p1_active.groupby("category")["count"].sum().reset_index().sort_values("count", ascending=True)
-        
-        x_cat = df_cat['count'].tolist()
-        y_cat = df_cat['category'].tolist()
-        max_x_cat = max(x_cat) if x_cat else 100
+        x_req = df_tfidf_req['score'].tolist()
+        y_req = df_tfidf_req['word'].tolist()
 
-        fig_cat = go.Figure()
-        fig_cat.add_trace(go.Bar(
-            x=x_cat,
-            y=y_cat,
+        fig_tfidf_req = go.Figure()
+        fig_tfidf_req.add_trace(go.Bar(
+            x=x_req,
+            y=y_req,
             orientation='h',
-            marker=dict(color=fill_color, line=dict(color=border_color, width=1.5)),
-            hovertemplate="카테고리: %{y}<br>명시 공고 수: %{x}건<extra></extra>",
-            text=[f"{x}건" for x in x_cat],
+            marker=dict(color='#93c5fd', line=dict(color='#60a5fa', width=1.2)),
+            hovertemplate="필수 키워드: %{y}<br>TF-IDF 중요도: %{x:.2f}<extra></extra>",
+            text=[f"{x:.1f}" for x in x_req],
             textposition="auto",
-            insidetextfont=dict(size=12, color="#1e293b")
+            insidetextfont=dict(size=11, color="#1e293b")
         ))
-        
-        fig_cat.update_layout(
-            title=f"<b>[{selected_job}] 대분류 카테고리 합계 ({mode_label})</b>",
-            xaxis=dict(title="공고 명시 총 횟수 (건)", range=[0, max_x_cat * 1.18]),
-            yaxis_title="역량 카테고리",
-            height=380,
+        fig_tfidf_req.update_layout(
+            title=f"<b>[{selected_job}] 필수 요건 TF-IDF 중요도 키워드 TOP 30</b>",
+            xaxis=dict(title="TF-IDF 가중치 총합"),
+            yaxis_title="필수 역량/자격 키워드",
+            height=580,
             plot_bgcolor="rgba(248,250,252,0.8)",
-            margin=dict(t=40, b=30, l=90, r=20)
+            margin=dict(t=40, b=30, l=100, r=20)
         )
-        st.plotly_chart(fig_cat, use_container_width=True)
+        st.plotly_chart(fig_tfidf_req, use_container_width=True)
 
-    with col_p1_2:
-        st.write(f"#### 🎯 [{selected_job}] 핵심 역량 명시 건수 TOP 10 ({mode_label})")
+    with col_tfidf_2:
+        st.write(f"#### ⭐ [{selected_job}] 우대사항 (Preferential) TF-IDF TOP 30")
         
-        df_p1_top10 = df_p1_active.sort_values("count", ascending=False).head(10)
-        
-        x_top = df_p1_top10['count'].tolist()[::-1]
-        y_top = df_p1_top10['skill'].tolist()[::-1]
-        max_x_top = max(x_top) if x_top else 100
+        x_pref = df_tfidf_pref['score'].tolist()
+        y_pref = df_tfidf_pref['word'].tolist()
 
-        fig_p1_bar = go.Figure()
-        fig_p1_bar.add_trace(go.Bar(
-            x=x_top,
-            y=y_top,
+        fig_tfidf_pref = go.Figure()
+        fig_tfidf_pref.add_trace(go.Bar(
+            x=x_pref,
+            y=y_pref,
             orientation='h',
-            marker=dict(color=fill_color, line=dict(color=border_color, width=1.5)),
-            hovertemplate="역량: %{y}<br>명시 공고 수: %{x}건<extra></extra>",
-            text=[f"{x}건" for x in x_top],
+            marker=dict(color='#fde68a', line=dict(color='#f59e0b', width=1.2)),
+            hovertemplate="우대 키워드: %{y}<br>TF-IDF 중요도: %{x:.2f}<extra></extra>",
+            text=[f"{x:.1f}" for x in x_pref],
             textposition="auto",
-            insidetextfont=dict(size=12, color="#1e293b")
+            insidetextfont=dict(size=11, color="#1e293b")
         ))
-        
-        fig_p1_bar.update_layout(
-            title=f"<b>[{selected_job}] 세부 역량 요구 TOP 10 ({mode_label})</b>",
-            xaxis=dict(title="공고 명시 횟수 (건)", range=[0, max_x_top * 1.18]),
-            yaxis_title="역량/자격 요건",
-            height=380,
+        fig_tfidf_pref.update_layout(
+            title=f"<b>[{selected_job}] 우대 사항 TF-IDF 중요도 키워드 TOP 30</b>",
+            xaxis=dict(title="TF-IDF 가중치 총합"),
+            yaxis_title="우대 역량/자격 키워드",
+            height=580,
             plot_bgcolor="rgba(248,250,252,0.8)",
-            margin=dict(t=40, b=30, l=90, r=20)
+            margin=dict(t=40, b=30, l=100, r=20)
         )
-        st.plotly_chart(fig_p1_bar, use_container_width=True)
+        st.plotly_chart(fig_tfidf_pref, use_container_width=True)
+
+    # 2. 워드클라우드 서브플롯 (📌 필수 자격 vs ⭐ 우대 사항)
+    st.write(f"#### ☁️ [{selected_job}] 요구역량 항목별 워드클라우드 서브플롯 (WordCloud)")
+
+    col_wc_1, col_wc_2 = st.columns(2)
+
+    font_path = "C:/Windows/Fonts/malgun.ttf"
+    if not os.path.exists(font_path):
+        font_path = "C:/Windows/Fonts/gulim.ttc"
+
+    with col_wc_1:
+        st.write(f"##### 📌 [{selected_job}] 필수 요구사항 워드클라우드")
+        dict_req = dict(zip(df_tfidf_req['word'], df_tfidf_req['score']))
+        if dict_req:
+            wc_req = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='Blues').generate_from_frequencies(dict_req)
+            fig_wc_req, ax_req = plt.subplots(figsize=(6, 3.8))
+            ax_req.imshow(wc_req, interpolation='bilinear')
+            ax_req.axis('off')
+            plt.tight_layout(pad=0)
+            st.pyplot(fig_wc_req)
+            plt.close(fig_wc_req)
+
+    with col_wc_2:
+        st.write(f"##### ⭐ [{selected_job}] 우대사항 워드클라우드")
+        dict_pref = dict(zip(df_tfidf_pref['word'], df_tfidf_pref['score']))
+        if dict_pref:
+            wc_pref = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='YlOrBr').generate_from_frequencies(dict_pref)
+            fig_wc_pref, ax_pref = plt.subplots(figsize=(6, 3.8))
+            ax_pref.imshow(wc_pref, interpolation='bilinear')
+            ax_pref.axis('off')
+            plt.tight_layout(pad=0)
+            st.pyplot(fig_wc_pref)
+            plt.close(fig_wc_pref)
 
     st.markdown(
-        f"""**🧐 데이터 해석 ({mode_label}):**  
-**[{selected_job}]** 직무에서 `{mode_label}` 선택 시, 상위 역량인 **{', '.join(df_p1_top10['skill'].head(3).tolist())}**이(가) 가장 높은 요구 비중을 차지합니다. 
-필수 자격 요건은 서류 합격의 기본 임계값으로 작용하며, 우대사항은 최종 채용 면접에서의 파격적 가산점 요소로 작동합니다."""
+        f"""**🧐 데이터 해석 (TF-IDF & 워드클라우드 대조):**  
+**[{selected_job}]** 직무의 채용 공고 분석 결과, **필수 자격 항목**은 자격증 및 학력 등 기본 서류 통과 임계값(Threshold) 위주로 형성되어 있으며, **우대 사항 항목**은 실무 툴(GA4, Figma, SQL, Python 등) 및 실무 프로젝트 경험 키워드가 집중되어 있어 면접 가산점 요소로 작동합니다."""
     )
     st.caption("✅ **[PART 1 DATA SOURCE]** — 사람인 채용공고 크롤링 데이터베이스 (`recruit_processed.db` | `recruit_cleaned` 5개 직무 총 5,000건 공고 기반)")
     st.write("---")

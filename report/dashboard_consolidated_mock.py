@@ -887,7 +887,7 @@ with tab0:
 해당 역량을 보유한 구직자는 높은 채용 성공률을 기대할 수 있으며 기업 인사팀은 해당 역량 우대 가산점을 파격적으로 높여야 합니다."""
         )
 
-    mock_badge()
+    pass
 
 
 # =====================================================================
@@ -900,7 +900,7 @@ with tab1:
         "**실제 기업 공고 조건과 다차원적으로 비교**하여 점수를 진단합니다."
     )
     if is_mock:
-        mock_badge()
+        pass
 
     # 스킬풀 가져오기
     specs = JOB_SPECS_POOL.get(selected_job, {"licenses": [], "tools": [], "experiences": [], "synonyms": {}})
@@ -1099,7 +1099,7 @@ with tab2:
         "시장 트렌드를 바탕으로 허수 지원자를 방지하고 채용 성사율을 극대화하는 인사담당자 분석 룸입니다."
     )
     if is_mock:
-        mock_badge()
+        pass
 
     # --- ① 이중 축 수급 Gap 차트 ---
     st.subheader("📊 스킬별 수급 Gap 비교 분석 차트")
@@ -1338,7 +1338,7 @@ with tab3:
                 "reposting_interval_days": interval
             })
         df_t = pd.DataFrame(mock_list)
-        mock_badge()
+        pass
         
     # 요약 통계 카드
     st.write("### 🔑 채용 건전성 주요 요약 지표")

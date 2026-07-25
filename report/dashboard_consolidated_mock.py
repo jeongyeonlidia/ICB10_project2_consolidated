@@ -46,6 +46,23 @@ except ImportError:
 # ---------------------------------------------------------------------
 # 하이브리드 워드클라우드 실물 이미지 생성 헬퍼 (st.image 100% 출력 보장)
 # ---------------------------------------------------------------------
+def make_dynamic_color_func(dict_orig_scores, is_blue=True):
+    max_val = max(dict_orig_scores.values()) if dict_orig_scores else 1.0
+    min_val = min(dict_orig_scores.values()) if dict_orig_scores else 0.0
+    def dynamic_color_func(word, font_size, position, orientation, random_state=None, **kwargs):
+        val = dict_orig_scores.get(word, min_val)
+        ratio = (val - min_val) / (max_val - min_val + 1e-6)
+        if is_blue:
+            hue = int(212 - ratio * 12)
+            sat = int(40 + ratio * 55)
+            light = int(75 - ratio * 53)
+        else:
+            hue = int(42 - ratio * 18)
+            sat = int(45 + ratio * 50)
+            light = int(76 - ratio * 50)
+        return f"hsl({hue}, {sat}%, {light}%)"
+    return dynamic_color_func
+
 def generate_real_wordcloud_img(dict_freq, is_blue=True):
     font_path = "C:/Windows/Fonts/malgun.ttf"
     if not os.path.exists(font_path):
@@ -53,25 +70,33 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
         
     if dict_freq and WordCloud is not None:
         try:
-            cmap = 'Blues' if is_blue else 'YlOrBr'
+            # 비선형 파워 스케일링으로 TF-IDF 상위/하위 단어 크기 격차 극대화
+            max_s = max(dict_freq.values())
+            min_s = min(dict_freq.values())
+            scaled_dict = {}
+            for w, s in dict_freq.items():
+                norm = (s - min_s) / (max_s - min_s + 1e-6)
+                scaled_dict[w] = (norm ** 1.8) * 100 + 5.0
+                
+            color_fn = make_dynamic_color_func(dict_freq, is_blue=is_blue)
             wc = WordCloud(
                 font_path=font_path,
                 width=500,
                 height=320,
                 background_color='white',
-                colormap=cmap,
-                margin=4,
-                prefer_horizontal=0.95,
-                relative_scaling=0.35,
-                max_font_size=42,
-                min_font_size=11,
+                color_func=color_fn,
+                margin=6,
+                prefer_horizontal=0.9,
+                relative_scaling=0.65,
+                max_font_size=58,
+                min_font_size=12,
                 random_state=42
-            ).generate_from_frequencies(dict_freq)
+            ).generate_from_frequencies(scaled_dict)
             return wc.to_array()
         except Exception:
             pass
             
-    # PIL Fallback 충돌 검사 기반 이미지 생성 (글자 겹침 100% 방지)
+    # PIL Fallback 충돌 검사 & 비선형 명도/크기 스케일링 기반 이미지 생성
     import math
     from PIL import Image, ImageDraw, ImageFont
     width, height = 500, 320
@@ -81,6 +106,56 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
     sorted_words = sorted(dict_freq.items(), key=lambda x: x[1], reverse=True)[:35] if dict_freq else []
     if not sorted_words:
         return img
+        
+    max_score = max(w[1] for w in sorted_words) if max(w[1] for w in sorted_words) > 0 else 1.0
+    min_score = min(w[1] for w in sorted_words)
+    drawn_boxes = []
+    
+    grid_coords = []
+    for r in range(0, 140, 12):
+        for angle_deg in range(0, 360, 20):
+            rad = math.radians(angle_deg)
+            x = int(230 + r * 1.3 * math.cos(rad))
+            y = int(140 + r * 0.9 * math.sin(rad))
+            if 10 <= x <= 420 and 10 <= y <= 280:
+                grid_coords.append((x, y))
+
+    for word, score in sorted_words:
+        ratio = (score - min_score) / (max_score - min_score + 1e-6)
+        ratio_p = ratio ** 1.8
+        font_size = int(12 + ratio_p * 38)
+        try:
+            font = ImageFont.truetype(font_path, font_size)
+        except Exception:
+            font = ImageFont.load_default()
+            
+        bbox = draw.textbbox((0, 0), word, font=font)
+        w_width = bbox[2] - bbox[0]
+        w_height = bbox[3] - bbox[1]
+        
+        for (cx, cy) in grid_coords:
+            box = (cx - 3, cy - 3, cx + w_width + 3, cy + w_height + 3)
+            if box[0] < 5 or box[1] < 5 or box[2] > width - 5 or box[3] > height - 5:
+                continue
+            overlap = False
+            for db in drawn_boxes:
+                if not (box[2] < db[0] or box[0] > db[2] or box[3] < db[1] or box[1] > db[3]):
+                    overlap = True
+                    break
+            if not overlap:
+                if is_blue:
+                    r_val = int(200 - ratio_p * 170)
+                    g_val = int(210 - ratio_p * 120)
+                    b_val = int(245 - ratio_p * 65)
+                else:
+                    r_val = int(240 - ratio_p * 60)
+                    g_val = int(220 - ratio_p * 140)
+                    b_val = int(180 - ratio_p * 150)
+                draw.text((cx, cy), word, fill=(r_val, g_val, b_val), font=font)
+                drawn_boxes.append(box)
+                break
+        
+    return img
         
     max_score = max(w[1] for w in sorted_words) if max(w[1] for w in sorted_words) > 0 else 1.0
     drawn_boxes = []
@@ -695,7 +770,7 @@ with tab0:
     # ---------------------------------------------------------------------
     # TF-IDF 및 불용어 고속 정제 헬퍼
     # ---------------------------------------------------------------------
-    P1_STOPWORDS = set(['2년', '업무내용', '우대', '초대졸', '이하', '우수자', '대해', '원활', '보유하신', '대구', '4년제', '해당직무', '5년', '보유자', '경험이', '학점', '이상', '등의', '가능', '능력', '경험자', '학력', '부산', '석사', '확인', '위한', '대학교졸업', '상세', '진행', '통해', '가능자', '관리', '소지자', '따라', '학위', '필수요건', '대학원', '관련학', '우대조건', '자로서', '자격요건', '능숙자', '기반', '대학교', '개발', '인천', '관련', '분석', '및', '무관', '자격', '있는자', '성실', '대학', '10년', '수료', '담당', '커뮤니케이션', '따른', '우대사항', '작성', '있는', '수행', '경력', '있으신', '관련된', '직무', '분야', '3년', '요건', '필수', '전략', '지원자', '구축', '근무지', '하여', '조건', '기획', '부문', '1년', '관련학과', '담당자', '서비스', '서울', '전공', '판교', '기타', '재학', '경력자', '경험', '대졸', '통한', '지원', '채용', '보유', '보유역량', '우대함', '제출', '고졸', '가지', '박사', '모집', '업무', '년', '사항', '졸업', '경기', '대한', '관련업무', '가능한', '학력무관', '운영', '근무', '내용', '미만', '4년', '기본요건', '포함', '가능하신', '또는', '신입', '스킬'])
+    P1_STOPWORDS = set(['경기', '대학졸업', '우대', '해당직무', '대학원', '1년', '구축', '인턴', '4년제', '본사', 'and', '담당', '분석', '작성', '통해', '소지자', '있는자', '보유하신', '요건', '대구', '가지', '채용', '가능자', 'finance', '우대사항', '관련', '2년', '대학교졸업', '진행', '보유역량', '계약직', '제출', '보유자', '수행', '하여', '관리', '년', '정규직', '7년', '졸업', '우수자', '서울', '업무내용', '공고', '지원자', '3년', '성실', '자격', '능력', '기타', '기본요건', '모집', '가능', '관련학', '전공', '내용', '가능하신', '사항', '이상', '스킬', '자격요건', '서비스', '예정자', '커뮤니케이션', '신입', '부문', '포함', '근무', '관련업무', '박사', '선택', '따라', '학점', '및', '또는', '대졸', '등의', '학위', '부산', '우대함', '원활', '학력', '있는', '지원', '기반', '재학', '전략', '담당자', '운영', '필수', '판교', '고등학교졸업이상', '개발', '고졸', '경험이', '있으신', '관련학과', '가능한', '직무', '지원가능', '통한', '파견직', '5년', '사용', '위한', '경험', '수료', '대해', '석사', '경력자', '대한', '상세', '경험자', '미만', '자로서', '경력', '초대졸', '4년', '이하', '무관', '근무지', '분야', '확인', '따른', '학력무관', '조건', '10년', '업무', '보유', '기획', '관련된', '필수요건', '능숙자', '대학', '대학교', '우대조건', '인천'])
 
     def clean_p1_text(text):
         if not text or pd.isna(text):

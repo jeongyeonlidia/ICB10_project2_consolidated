@@ -665,16 +665,62 @@ with tab0:
     }
     cur_skills = skills_pool_by_job.get(selected_job, [])
 
+    # 네이버 API 데이터 카운트 필터링 연동
+    job_weekly_map = {
+        "기획/전략": "기획(plan)",
+        "인사/노무": "인사(hr)",
+        "회계/재무": "회계(acc)",
+        "마케팅": "마케팅(mkt)",
+        "데이터분석가/AI엔지니어": "개발(dev)"
+    }
+    cur_w_code = job_weekly_map.get(selected_job, "기획(plan)")
+    if df_weekly_insights is not None and not df_weekly_insights.empty and 'job' in df_weekly_insights.columns:
+        df_w_sub = df_weekly_insights[df_weekly_insights['job'] == cur_w_code]
+        naver_cnt = len(df_w_sub)
+    else:
+        naver_cnt = 2088
+
+    # 수급 미스매치 지수 동적 산출 (기업 수요 대비 구직자 관심도 편차)
+    mismatches = []
+    if df_filtered_saramin is not None and not df_filtered_saramin.empty:
+        content_series = (df_filtered_saramin.get('title', pd.Series()).fillna('') + " " +
+                          df_filtered_saramin.get('cleaned_requirement', pd.Series()).fillna('') + " " +
+                          df_filtered_saramin.get('cleaned_preferential', pd.Series()).fillna('') + " " +
+                          df_filtered_saramin.get('matched_skills', pd.Series()).fillna(''))
+    else:
+        content_series = pd.Series()
+
+    for sk in cur_skills:
+        d_cnt = sum(1 for text in content_series if sk.lower() in text.lower()) if not content_series.empty else 100
+        if df_weekly_insights is not None and not df_weekly_insights.empty:
+            w_match = df_w_sub[df_w_sub['keyword'] == sk] if 'df_w_sub' in locals() else pd.DataFrame()
+            s_val = w_match['cafe_weekly_count'].mean() if not w_match.empty else 150
+        else:
+            s_val = 150
+        
+        m_val = abs(d_cnt - s_val) / (d_cnt + s_val + 1) * 100
+        mismatches.append(m_val)
+
+    mismatch_score = float(np.mean(mismatches)) if mismatches else 74.2
+
+    if mismatch_score >= 90.0:
+        mismatch_delta = "🚨 초고위험 불균형"
+    elif mismatch_score >= 80.0:
+        mismatch_delta = "⚠️ 고위험 불균형"
+    elif mismatch_score >= 60.0:
+        mismatch_delta = "🟡 보통 불균형"
+    else:
+        mismatch_delta = "🟢 안정 수급"
+
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
         st.metric(label=f"🏢 [{selected_job}] 공고 수", value=f"{saramin_count:,} 건", delta="사람인 DB 연동")
     with col_m2:
-        naver_cnt = len(df_weekly_insights) if df_weekly_insights is not None else 850
         st.metric(label=f"💬 [{selected_job}] 네이버 API 데이터", value=f"{naver_cnt:,} 건", delta="주간 트렌드 연동")
     with col_m3:
         st.metric(label=f"⚙️ 핵심 요구 스킬 수", value=f"{len(cur_skills)} 개 항목", delta="실무 역량 중심")
     with col_m4:
-        st.metric(label=f"⚠️ 수급 미스매치 지수", value="74.2 점", delta="고위험 수급불균형", delta_color="inverse")
+        st.metric(label=f"⚠️ 수급 미스매치 지수", value=f"{mismatch_score:.1f} 점", delta=mismatch_delta, delta_color="inverse")
 
     st.write("---")
 

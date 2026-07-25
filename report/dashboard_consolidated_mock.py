@@ -283,7 +283,7 @@ def load_saramin_db():
             try:
                 conn = sqlite3.connect(p)
                 if "recruit_processed.db" in p:
-                    df = pd.read_sql("SELECT * FROM recruit_skill_flags", conn)
+                    df = pd.read_sql("SELECT * FROM recruit_cleaned", conn)
                     # 기존 대시보드 스키마 명칭과의 맵핑 호환성 보정
                     df.rename(columns={
                         'education_level': 'education',
@@ -431,18 +431,22 @@ with tab0:
     st.write("### 📊 실시간 분석 데이터셋 & 직무 지표 요약")
     
     SARAMIN_JOB_MAP = {
-        "기획/전략": "영업·사업개발",
-        "인사/노무": "인사·HR·총무",
-        "회계/재무": "회계·재무·경영관리",
-        "마케팅": "마케팅·CRM",
-        "데이터분석가/AI엔지니어": "IT개발·데이터",
+        "기획/전략": ("plan", "영업·사업개발"),
+        "인사/노무": ("hr", "인사·HR·총무"),
+        "회계/재무": ("acc", "회계·재무·경영관리"),
+        "마케팅": ("mkt", "마케팅·CRM"),
+        "데이터분석가/AI엔지니어": ("dev", "IT개발·데이터"),
     }
-    mapped_saramin_job = SARAMIN_JOB_MAP.get(selected_job)
+    mapped_code, mapped_sector = SARAMIN_JOB_MAP.get(selected_job, ("", ""))
     df_filtered_saramin = None
     saramin_count = 0
-    if df_saramin is not None and mapped_saramin_job:
-        df_filtered_saramin = df_saramin[df_saramin['sectors'] == mapped_saramin_job]
-        saramin_count = len(df_filtered_saramin)
+    if df_saramin is not None:
+        if 'job_category' in df_saramin.columns:
+            df_filtered_saramin = df_saramin[df_saramin['job_category'] == mapped_code]
+        elif 'sectors' in df_saramin.columns:
+            df_filtered_saramin = df_saramin[df_saramin['sectors'] == mapped_sector]
+        if df_filtered_saramin is not None:
+            saramin_count = len(df_filtered_saramin)
     else:
         saramin_count = 1250
         

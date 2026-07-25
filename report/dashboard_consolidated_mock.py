@@ -318,16 +318,19 @@ def load_turnover_datamart():
 def load_naver_weekly_insights():
     paths = [
         os.path.join(_PROJECT_ROOT, "data", "integrated", "naver_weekly_insights.json"),
-        "project2/data/integrated/naver_weekly_insights.json",
+        os.path.join(_WORKSPACE_ROOT, "icb10proj2-consolidated", "data", "integrated", "naver_weekly_insights.json"),
+        os.path.join(_WORKSPACE_ROOT, "data", "integrated", "naver_weekly_insights.json"),
+        "icb10proj2-consolidated/data/integrated/naver_weekly_insights.json",
         "data/integrated/naver_weekly_insights.json",
         "../data/integrated/naver_weekly_insights.json",
         os.path.join(_PROJECT_ROOT, "data", "naver-api_20260718.json"),
-        "project2/data/naver-api_20260718.json",  # fallback
     ]
     for p in paths:
         if os.path.exists(p):
             try:
                 df = pd.read_json(p)
+                if 'keyword' in df.columns:
+                    df['keyword'] = df['keyword'].astype(str).str.strip()
                 return df, p
             except Exception:
                 pass
@@ -640,12 +643,11 @@ with tab0:
     else:
         target_category_skills = HARD_SKILLS_BY_JOB.get(selected_job, []) + GENERAL_SKILLS_BY_JOB.get(selected_job, [])
 
-    if is_naver_api_real and mapped_job:
+    if is_naver_api_real and mapped_job and df_weekly_insights is not None and not df_weekly_insights.empty:
         df_job_weekly = df_weekly_insights[df_weekly_insights["job"] == mapped_job]
-        raw_api_skills = df_job_weekly["keyword"].unique().tolist()
-        # 카테고리 필터 적용
+        raw_api_skills = [str(k).strip() for k in df_job_weekly["keyword"].unique()]
         available_skills = [k for k in target_category_skills if k in raw_api_skills]
-        if not available_skills:
+        if not available_skills or len(available_skills) < len(target_category_skills):
             available_skills = target_category_skills
     else:
         df_job_weekly = pd.DataFrame()
@@ -729,8 +731,9 @@ with tab0:
         # 1. naver_weekly_insights.json 실제 데이터 연동 및 필터링
         if is_naver_api_real and mapped_job and df_weekly_insights is not None and not df_weekly_insights.empty:
             df_job_cafe = df_weekly_insights[df_weekly_insights["job"] == mapped_job]
-            if target_category_skills:
-                df_job_cafe = df_job_cafe[df_job_cafe["keyword"].isin(target_category_skills)]
+            active_filter = vol_skills if (vol_skills and len(vol_skills) > 0) else target_category_skills
+            if active_filter:
+                df_job_cafe = df_job_cafe[df_job_cafe["keyword"].isin(active_filter)]
 
             if not df_job_cafe.empty:
                 # 2. 키워드별 카페 유입량(cafe_weekly_count) 총합계 및 TOP 10 정렬

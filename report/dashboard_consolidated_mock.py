@@ -70,31 +70,35 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
         
     if dict_freq and WordCloud is not None:
         try:
-            # 비선형 파워 스케일링으로 TF-IDF 상위/하위 단어 크기 격차 극대화
+            # pow(1.5) 스케일링: 상위~하위 단어 모두 캔버스를 꽉 채우면서
+            # 중요도 차이가 글자 크기로 명확히 드러나도록 설계
             max_s = max(dict_freq.values())
             min_s = min(dict_freq.values())
             scaled_dict = {}
             for w, s in dict_freq.items():
                 norm = (s - min_s) / (max_s - min_s + 1e-6)
-                scaled_dict[w] = (norm ** 1.8) * 100 + 5.0
+                scaled_dict[w] = (norm ** 1.5) * 500 + 15.0
                 
             color_fn = make_dynamic_color_func(dict_freq, is_blue=is_blue)
             wc = WordCloud(
                 font_path=font_path,
-                width=500,
-                height=320,
+                width=700,
+                height=420,
                 background_color='white',
                 color_func=color_fn,
-                margin=6,
-                prefer_horizontal=0.9,
-                relative_scaling=0.65,
-                max_font_size=58,
-                min_font_size=12,
-                random_state=42
+                margin=2,               # 자간 최소화
+                prefer_horizontal=0.65, # 수평/수직 혼합으로 공간 극대 활용
+                relative_scaling=0.35,  # 낙은 값: 작은 단어도 충분한 크기로 레이아웃 보완
+                max_font_size=72,       # 최상위 단어 대형 표출
+                min_font_size=9,        # 최하위 단어 미세 크기
+                max_words=200,          # 더 많은 단어로 캔버스 벀 코 채우기
+                random_state=42,
+                collocations=False      # 중복 2-gram 방지
             ).generate_from_frequencies(scaled_dict)
             return wc.to_array()
         except Exception:
             pass
+
             
     # PIL Fallback 충돌 검사 & 비선형 명도/크기 스케일링 기반 이미지 생성
     import math

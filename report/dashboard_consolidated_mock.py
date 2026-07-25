@@ -910,16 +910,23 @@ with tab0:
         )
         st.plotly_chart(fig_quad, use_container_width=True)
         st.markdown(
-            f"""**💡 4분면 해석 가이드:**
-
-- **좌상단(🔥 구인난 영역)**: 기업 수요는 높으나 구직자 공급이 극히 부족한 즉시 채용 적합 스킬
-- **우하단(⚠️ 인플레이션 영역)**: 자격증 취득 등 구직자 공급만 과도하게 쏠린 수급 불균형 영역"""
+            """**💡 4분면 및 수급 갭 상태 해석 가이드:**
+- **🔥 극심한 구인난 (파스텔 코랄 핑크)**: 기업 수요는 높으나 구직자 공급이 부족하여 즉시 채용 우대가 적용되는 핵심 역량
+- **⚠️ 스펙 인플레이션 (파스텔 라벤더 보라)**: 기업의 실제 채용 수요 대비 구직자의 자격증 취득 및 수험 관심이 과도하게 쏠려 **'스펙만 과열되고 채용 연결 효율은 떨어지는 현상'**을 의미합니다.
+- **공급 과잉 (파스텔 하늘색)**: 기업 공고 수요 대비 취업 커뮤니티 및 게시글 유입이 상회하는 역량
+- **안정 수급 (파스텔 민트 그린)**: 기업 수요와 구직자 관심도가 비교적 적절한 균형을 이루는 영역"""
         )
 
     with col_p3_2:
         st.write(f"#### ⚖️ [{selected_job}] 핵심 역량별 수급 Gap 지수")
         
-        colors = ['#ef4444' if t == "🔥 극심한 구인난" else '#3b82f6' for t in df_gap['type']]
+        PASTEL_COLOR_MAP = {
+            "🔥 극심한 구인난": "#fca5a5",  # 우유섞인 soft rose
+            "스펙 인플레이션": "#c084fc",    # 우유섞인 soft lavender
+            "공급 과잉": "#93c5fd",        # 우유섞인 soft sky blue
+            "안정 수급": "#86efac"         # 우유섞인 soft mint green
+        }
+        colors = [PASTEL_COLOR_MAP.get(t, "#cbd5e1") for t in df_gap['type']]
         fig_gap_bar = go.Figure()
         fig_gap_bar.add_trace(go.Bar(
             x=df_gap['gap'],

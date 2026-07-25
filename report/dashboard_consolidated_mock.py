@@ -22,6 +22,7 @@ from plotly.subplots import make_subplots
 import os
 import re
 import itertools
+import math
 from collections import Counter
 try:
     import matplotlib.pyplot as plt
@@ -71,6 +72,7 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
             pass
             
     # PIL Fallback 충돌 검사 기반 이미지 생성 (글자 겹침 100% 방지)
+    import math
     from PIL import Image, ImageDraw, ImageFont
     width, height = 500, 320
     img = Image.new('RGB', (width, height), color=(255, 255, 255))

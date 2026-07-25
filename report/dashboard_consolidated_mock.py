@@ -23,7 +23,10 @@ import os
 import re
 import itertools
 from collections import Counter
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 
 try:
     from wordcloud import WordCloud

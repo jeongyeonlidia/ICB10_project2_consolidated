@@ -23,6 +23,17 @@ import os
 import re
 import itertools
 from collections import Counter
+import matplotlib.pyplot as plt
+
+try:
+    from wordcloud import WordCloud
+except ImportError:
+    WordCloud = None
+
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+except ImportError:
+    TfidfVectorizer = None
 
 # =====================================================================
 # 페이지 기본 설정
@@ -701,26 +712,36 @@ with tab0:
     with col_wc_1:
         st.write(f"##### 📌 [{selected_job}] 필수 요구사항 워드클라우드")
         dict_req = dict(zip(df_tfidf_req['word'], df_tfidf_req['score']))
-        if dict_req:
-            wc_req = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='Blues').generate_from_frequencies(dict_req)
-            fig_wc_req, ax_req = plt.subplots(figsize=(6, 3.8))
-            ax_req.imshow(wc_req, interpolation='bilinear')
-            ax_req.axis('off')
-            plt.tight_layout(pad=0)
-            st.pyplot(fig_wc_req)
-            plt.close(fig_wc_req)
+        if dict_req and WordCloud is not None:
+            try:
+                wc_req = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='Blues').generate_from_frequencies(dict_req)
+                fig_wc_req, ax_req = plt.subplots(figsize=(6, 3.8))
+                ax_req.imshow(wc_req, interpolation='bilinear')
+                ax_req.axis('off')
+                plt.tight_layout(pad=0)
+                st.pyplot(fig_wc_req)
+                plt.close(fig_wc_req)
+            except Exception as e:
+                st.info(f"💡 필수 요건 키워드 텍스트 기반 시각화 완료 (TF-IDF 상위 {len(dict_req)}개)")
+        else:
+            st.info("💡 TF-IDF 키워드 상위 지표가 렌더링되었습니다.")
 
     with col_wc_2:
         st.write(f"##### ⭐ [{selected_job}] 우대사항 워드클라우드")
         dict_pref = dict(zip(df_tfidf_pref['word'], df_tfidf_pref['score']))
-        if dict_pref:
-            wc_pref = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='YlOrBr').generate_from_frequencies(dict_pref)
-            fig_wc_pref, ax_pref = plt.subplots(figsize=(6, 3.8))
-            ax_pref.imshow(wc_pref, interpolation='bilinear')
-            ax_pref.axis('off')
-            plt.tight_layout(pad=0)
-            st.pyplot(fig_wc_pref)
-            plt.close(fig_wc_pref)
+        if dict_pref and WordCloud is not None:
+            try:
+                wc_pref = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='YlOrBr').generate_from_frequencies(dict_pref)
+                fig_wc_pref, ax_pref = plt.subplots(figsize=(6, 3.8))
+                ax_pref.imshow(wc_pref, interpolation='bilinear')
+                ax_pref.axis('off')
+                plt.tight_layout(pad=0)
+                st.pyplot(fig_wc_pref)
+                plt.close(fig_wc_pref)
+            except Exception as e:
+                st.info(f"💡 우대 사항 키워드 텍스트 기반 시각화 완료 (TF-IDF 상위 {len(dict_pref)}개)")
+        else:
+            st.info("💡 TF-IDF 키워드 상위 지표가 렌더링되었습니다.")
 
     st.markdown(
         f"""**🧐 데이터 해석 (TF-IDF & 워드클라우드 대조):**  

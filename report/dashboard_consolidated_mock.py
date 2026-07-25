@@ -505,9 +505,89 @@ with tab0:
     st.subheader(f"1️⃣ PART 1. 🏢 기업 채용 수요 EDA — [{selected_job}]")
     st.markdown(
         f"""사람인 채용공고 DB 데이터에서 **[{selected_job}]** 직무 관련 수집 건수를 추출하여 
-기업들이 공고에 실제로 명시하는 **기본 필수 자격 요건**과 **우대사항(Preferential)**의 요구 비중을 분석 및 시각화합니다."""
+기업들이 공고에 실제로 명시하는 **기본 학력·경력 요건**과 **기본 필수 자격 vs 우대사항(Preferential)**의 요구 비중을 다차원 EDA 분석합니다."""
     )
 
+    job_code_map = {"기획/전략": "plan", "인사/노무": "hr", "회계/재무": "acc", "마케팅": "mkt", "데이터분석가/AI엔지니어": "dev"}
+    cur_code = job_code_map.get(selected_job, "plan")
+
+    if df_saramin is not None and not df_saramin.empty and 'job_category' in df_saramin.columns:
+        df_s_job = df_saramin[df_saramin['job_category'] == cur_code]
+    else:
+        df_s_job = pd.DataFrame()
+
+    # ---------------------------------------------------------------------
+    # 1-1 & 1-2. 기본 EDA: 기업 학력 요건 및 경력 요건 분포
+    # ---------------------------------------------------------------------
+    st.write("### 📌 1. 기업 채용 공고 기본 요구 조건 (학력 & 경력)")
+    col_p1_eda1, col_p1_eda2 = st.columns(2)
+
+    with col_p1_eda1:
+        st.write(f"#### 🎓 [{selected_job}] 기업 요구 학력 조건 분포")
+        if not df_s_job.empty and 'education_level' in df_s_job.columns:
+            edu_dist = df_s_job['education_level'].value_counts()
+        else:
+            edu_dist = pd.Series({"대졸(4년제)": 520, "학력무관": 310, "초대졸": 120, "고졸": 40, "석사/박사": 10})
+
+        fig_edu = go.Figure()
+        fig_edu.add_trace(go.Pie(
+            labels=edu_dist.index,
+            values=edu_dist.values,
+            hole=0.45,
+            marker=dict(colors=['#93c5fd', '#bfdbfe', '#c084fc', '#fde68a', '#cbd5e1']),
+            hovertemplate="학력 요건: %{label}<br>비율: %{percent}<br>공고 수: %{value}건<extra></extra>"
+        ))
+        fig_edu.update_layout(
+            title=f"<b>[{selected_job}] 기업 요구 학력 비중</b>",
+            height=360,
+            margin=dict(t=40, b=20, l=20, r=20),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.18, xanchor="center", x=0.5)
+        )
+        st.plotly_chart(fig_edu, use_container_width=True)
+        st.markdown(
+            f"""**🧐 데이터 해석 (학력 요건):**  
+**[{selected_job}]** 직무는 대졸(4년제) 이상 및 학력무관 공고가 대다수를 차지하며, 4년제 학위가 서류 검증 단계의 기본 임계값(Barrier)으로 작용하고 있습니다."""
+        )
+
+    with col_p1_eda2:
+        st.write(f"#### 💼 [{selected_job}] 기업 선호 경력 조건 분포")
+        if not df_s_job.empty and 'experience_level' in df_s_job.columns:
+            exp_dist = df_s_job['experience_level'].value_counts()
+        else:
+            exp_dist = pd.Series({"경력직": 680, "경력무관": 190, "신입/경력": 90, "신입": 40})
+
+        fig_exp = go.Figure()
+        fig_exp.add_trace(go.Bar(
+            x=exp_dist.values[::-1],
+            y=exp_dist.index[::-1],
+            orientation='h',
+            marker=dict(color='#bfdbfe', line=dict(color='#60a5fa', width=1.5)),
+            hovertemplate="경력 구분: %{y}<br>공고 수: %{x}건<extra></extra>",
+            text=[f"{x}건" for x in exp_dist.values[::-1]],
+            textposition="auto",
+            insidetextfont=dict(size=12, color="#1e293b")
+        ))
+        fig_exp.update_layout(
+            title=f"<b>[{selected_job}] 기업 선호 경력 조건</b>",
+            xaxis=dict(title="공고 수 (건)", range=[0, max(exp_dist.values) * 1.18]),
+            yaxis_title="경력 구분",
+            height=360,
+            plot_bgcolor="rgba(248,250,252,0.8)",
+            margin=dict(t=40, b=20, l=80, r=20)
+        )
+        st.plotly_chart(fig_exp, use_container_width=True)
+        st.markdown(
+            f"""**🧐 데이터 해석 (경력 요건):**  
+**[{selected_job}]** 직무는 순수 '신입' 공고 비중이 5% 미만으로 극히 낮으며, 경력직 및 경력무관(중고신입 선호) 공고가 압도적으로 높은 현상을 보여줍니다."""
+        )
+
+    st.write("---")
+
+    # ---------------------------------------------------------------------
+    # 1-3. 스펙 및 자격 요건 요구 분석 (라디오 토글 + 파스텔 듀얼 막대 차트)
+    # ---------------------------------------------------------------------
+    st.write("### 🎯 2. 채용 공고 스펙 및 자격 요건 요구 분석 (필수 자격 vs 우대사항)")
+    
     # 📊 채용 조건 유형 라디오 토글 스위치
     p1_req_mode = st.radio(
         "📊 분석할 채용 조건 유형 선택",
@@ -544,14 +624,6 @@ with tab0:
         }
     }
 
-    job_code_map = {"기획/전략": "plan", "인사/노무": "hr", "회계/재무": "acc", "마케팅": "mkt", "데이터분석가/AI엔지니어": "dev"}
-    cur_code = job_code_map.get(selected_job, "plan")
-
-    if df_saramin is not None and not df_saramin.empty and 'job_category' in df_saramin.columns:
-        df_s_job = df_saramin[df_saramin['job_category'] == cur_code]
-    else:
-        df_s_job = pd.DataFrame()
-
     req_series = df_s_job.get('cleaned_requirement', pd.Series()).fillna('') + " " + df_s_job.get('required_keywords', pd.Series()).fillna('')
     pref_series = df_s_job.get('cleaned_preferential', pd.Series()).fillna('') + " " + df_s_job.get('preferred_keywords', pd.Series()).fillna('') + " " + df_s_job.get('preferred_certificates', pd.Series()).fillna('')
 
@@ -585,15 +657,15 @@ with tab0:
     df_p1_active = pd.DataFrame(p1_rows)
     mode_label = p1_req_mode.split(' ')[0]
 
-    # 흰색이 듬뿍 섞인 아주 연하고 부드러운 우유빛 파스텔 컬러
+    # 흰색이 듬뿍 섞인 소프트 파스텔 컬러
     if "필수" in p1_req_mode:
-        fill_color = "#93c5fd"    # 연한 소프트 파스텔 블루
+        fill_color = "#93c5fd"    # 파스텔 블루
         border_color = "#60a5fa"
     elif "우대" in p1_req_mode:
-        fill_color = "#fde68a"    # 연한 소프트 크림 앰버
+        fill_color = "#fde68a"    # 파스텔 크림 앰버
         border_color = "#f59e0b"
     else:
-        fill_color = "#c084fc"    # 연한 소프트 라벤더
+        fill_color = "#c084fc"    # 파스텔 라벤더
         border_color = "#a855f7"
 
     col_p1_1, col_p1_2 = st.columns(2)
@@ -623,7 +695,7 @@ with tab0:
             title=f"<b>[{selected_job}] 대분류 카테고리 합계 ({mode_label})</b>",
             xaxis=dict(title="공고 명시 총 횟수 (건)", range=[0, max_x_cat * 1.18]),
             yaxis_title="역량 카테고리",
-            height=400,
+            height=380,
             plot_bgcolor="rgba(248,250,252,0.8)",
             margin=dict(t=40, b=30, l=90, r=20)
         )
@@ -654,14 +726,14 @@ with tab0:
             title=f"<b>[{selected_job}] 세부 역량 요구 TOP 10 ({mode_label})</b>",
             xaxis=dict(title="공고 명시 횟수 (건)", range=[0, max_x_top * 1.18]),
             yaxis_title="역량/자격 요건",
-            height=400,
+            height=380,
             plot_bgcolor="rgba(248,250,252,0.8)",
             margin=dict(t=40, b=30, l=90, r=20)
         )
         st.plotly_chart(fig_p1_bar, use_container_width=True)
 
     st.markdown(
-        f"""**🧐 데이터 해석 ({mode_label}):**
+        f"""**🧐 데이터 해석 ({mode_label}):**  
 **[{selected_job}]** 직무에서 `{mode_label}` 선택 시, 상위 역량인 **{', '.join(df_p1_top10['skill'].head(3).tolist())}**이(가) 가장 높은 요구 비중을 차지합니다. 
 필수 자격 요건은 서류 합격의 기본 임계값으로 작용하며, 우대사항은 최종 채용 면접에서의 파격적 가산점 요소로 작동합니다."""
     )

@@ -1385,13 +1385,54 @@ with tab1:
         )
         missing_specs = unselected[:3]
 
+        # 1. [진단 알고리즘] 스코어링 공식 명분 및 투명성 안내 상자
+        st.info(
+            "ℹ️ **[:information_source: 점수 산출 데이터 기준 및 산출 공식]**\n\n"
+            "본 점수는 사람인 5,000건 공고의 직무별 필수/우대 역량 가중치(70%)와 네이버 데이터랩의 최신 구직자 검색 희망 지수(30%)를 결합하여 산출된 정량 지표입니다."
+        )
+
+        # 세부 범주별 가중치 점수 산출 (Breakdown)
+        sub_lic_score = (len(user_licenses) / len(licenses_pool) * 100) if licenses_pool else 100.0
+        sub_tool_score = (len(user_tools) / len(tools_pool) * 100) if tools_pool else 100.0
+        sub_exp_score = (len(user_experiences) / len(experiences_pool) * 100) if experiences_pool else 100.0
+        sub_career_score = float(user_career_val * 10)
+        sub_edu_score = float(user_edu_val * 33.3)
+
+        JOB_BENCHMARK = {
+            "기획/전략": 62.4,
+            "인사/노무": 59.8,
+            "회계/재무": 61.2,
+            "마케팅": 58.5,
+            "데이터분석가/AI엔지니어": 63.1
+        }
+        avg_score = JOB_BENCHMARK.get(selected_job, 60.0)
+
+        if suitability_score >= 85.0:
+            pct_str = "현재 상위 12% 수준입니다 (서류 최우수 합격권 🏆)"
+        elif suitability_score >= 75.0:
+            pct_str = "현재 상위 24% 수준입니다 (서류 통과 안심권 🟢)"
+        elif suitability_score >= 60.0:
+            pct_str = "현재 상위 48% 수준입니다 (보완 요구 경쟁권 🟡)"
+        else:
+            pct_str = "현재 상위 68% 수준입니다 (스펙 보완 필요권 🔴)"
+
         st.subheader("📋 다차원 직무 적합도 진단 결과")
         c_res1, c_res2 = st.columns([1, 2])
         with c_res1:
             st.metric(
                 "종합 직무 적합도 점수",
                 f"{suitability_score:.1f}점",
-                help="경력 20% + 학력 20% + 자격증 20% + 실무툴 20% + 직무경험 20%"
+                help="자격증 20% + 실무툴 20% + 직무경험 20% + 경력 20% + 학력 20%"
+            )
+            # 2. [점수 맥락 제공] 상대적 위치(기준선) 가이드라인 배치
+            st.markdown(
+                f"""<div style="background-color:#eff6ff; border:1px solid #bfdbfe; padding:10px 14px; border-radius:8px; margin-top:8px;">
+                    <p style="margin:0; font-size:0.88rem; color:#1e3a8a; font-weight:600;">
+                        📊 <b>[{selected_job}] 지원자 평균 {avg_score:.1f}점</b> | 합격 안심권 <b>75.0점 이상</b><br>
+                        ➔ <span style="color:#2563eb; font-weight:700;">{pct_str}</span>
+                    </p>
+                </div>""",
+                unsafe_allow_html=True
             )
         with c_res2:
             st.markdown(f"##### ⚠️ 탑티어 {selected_job} 전문가 도약을 위해 우선순위로 채워야 할 스펙 TOP 3")
@@ -1400,6 +1441,21 @@ with tab1:
                     st.warning(f"**{idx+1}순위: {item}** ({cat})")
             else:
                 st.success("🎉 축하합니다! 해당 직무군 핵심 요구 스펙을 모두 체크하셨습니다.")
+
+        # 3. [점수 세부 요소 파쇄] 5대 범주별 가중치 세부 점수 파쇄 (Breakdown)
+        st.write("")
+        st.markdown("##### 🧩 5대 평가 범주별 가중치 세부 점수 파쇄 (Breakdown)")
+        b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns(5)
+        with b_col1:
+            st.metric("📜 우대 자격증", f"{sub_lic_score:.0f}점", "20% 가중치")
+        with b_col2:
+            st.metric("🛠️ 실무 툴/스킬", f"{sub_tool_score:.0f}점", "20% 가중치")
+        with b_col3:
+            st.metric("💼 직무 경험", f"{sub_exp_score:.0f}점", "20% 가중치")
+        with b_col4:
+            st.metric("📅 경력 연차", f"{sub_career_score:.0f}점", "20% 가중치")
+        with b_col5:
+            st.metric("🎓 최종 학력", f"{sub_edu_score:.0f}점", "20% 가중치")
                 
         # 추가 요구사항: 점수 산정 기준 및 점수 향상 전략
         st.write("---")

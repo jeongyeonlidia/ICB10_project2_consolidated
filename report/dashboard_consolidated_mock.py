@@ -41,6 +41,59 @@ except ImportError:
 # =====================================================================
 # 페이지 기본 설정
 # =====================================================================
+
+# ---------------------------------------------------------------------
+# 하이브리드 워드클라우드 실물 이미지 생성 헬퍼 (st.image 100% 출력 보장)
+# ---------------------------------------------------------------------
+def generate_real_wordcloud_img(dict_freq, is_blue=True):
+    font_path = "C:/Windows/Fonts/malgun.ttf"
+    if not os.path.exists(font_path):
+        font_path = "C:/Windows/Fonts/gulim.ttc"
+        
+    if dict_freq and WordCloud is not None:
+        try:
+            cmap = 'Blues' if is_blue else 'YlOrBr'
+            wc = WordCloud(font_path=font_path, width=500, height=320, background_color='white', colormap=cmap).generate_from_frequencies(dict_freq)
+            return wc.to_array()
+        except Exception:
+            pass
+            
+    # PIL Fallback 이미지 생성
+    from PIL import Image, ImageDraw, ImageFont
+    width, height = 500, 320
+    img = Image.new('RGB', (width, height), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    
+    sorted_words = sorted(dict_freq.items(), key=lambda x: x[1], reverse=True)[:25] if dict_freq else []
+    if not sorted_words:
+        return img
+        
+    max_score = max(w[1] for w in sorted_words) if max(w[1] for w in sorted_words) > 0 else 1.0
+    positions = [
+        (180, 120), (40, 40), (280, 50), (40, 180), (280, 190),
+        (100, 240), (320, 250), (20, 100), (360, 110), (160, 40),
+        (220, 240), (60, 140), (290, 140), (140, 180), (240, 100)
+    ]
+    
+    for idx, (word, score) in enumerate(sorted_words[:15]):
+        ratio = score / max_score
+        font_size = int(18 + ratio * 30)
+        try:
+            font = ImageFont.truetype(font_path, font_size)
+        except Exception:
+            font = ImageFont.load_default()
+            
+        pos = positions[idx % len(positions)]
+        if is_blue:
+            color = (int(30 + ratio*20), int(90 + ratio*90), int(180 + ratio*70))
+        else:
+            color = (int(210 + ratio*45), int(110 + ratio*80), int(20 + ratio*30))
+            
+        draw.text(pos, word, fill=color, font=font)
+        
+    return img
+
+
 st.set_page_config(
     page_title="마스터 통합 채용 미스매치 & 자가진단 대시보드",
     page_icon="🤖",
@@ -721,36 +774,14 @@ with tab0:
     with col_wc_1:
         st.write(f"##### 📌 [{selected_job}] 필수 요구사항 워드클라우드")
         dict_req = dict(zip(df_tfidf_req['word'], df_tfidf_req['score']))
-        if dict_req and WordCloud is not None:
-            try:
-                wc_req = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='Blues').generate_from_frequencies(dict_req)
-                fig_wc_req, ax_req = plt.subplots(figsize=(6, 3.8))
-                ax_req.imshow(wc_req, interpolation='bilinear')
-                ax_req.axis('off')
-                plt.tight_layout(pad=0)
-                st.pyplot(fig_wc_req)
-                plt.close(fig_wc_req)
-            except Exception as e:
-                st.info(f"💡 필수 요건 키워드 텍스트 기반 시각화 완료 (TF-IDF 상위 {len(dict_req)}개)")
-        else:
-            st.info("💡 TF-IDF 키워드 상위 지표가 렌더링되었습니다.")
+        img_req = generate_real_wordcloud_img(dict_req, is_blue=True)
+        st.image(img_req, use_container_width=True)
 
     with col_wc_2:
         st.write(f"##### ⭐ [{selected_job}] 우대사항 워드클라우드")
         dict_pref = dict(zip(df_tfidf_pref['word'], df_tfidf_pref['score']))
-        if dict_pref and WordCloud is not None:
-            try:
-                wc_pref = WordCloud(font_path=font_path, width=450, height=280, background_color='white', colormap='YlOrBr').generate_from_frequencies(dict_pref)
-                fig_wc_pref, ax_pref = plt.subplots(figsize=(6, 3.8))
-                ax_pref.imshow(wc_pref, interpolation='bilinear')
-                ax_pref.axis('off')
-                plt.tight_layout(pad=0)
-                st.pyplot(fig_wc_pref)
-                plt.close(fig_wc_pref)
-            except Exception as e:
-                st.info(f"💡 우대 사항 키워드 텍스트 기반 시각화 완료 (TF-IDF 상위 {len(dict_pref)}개)")
-        else:
-            st.info("💡 TF-IDF 키워드 상위 지표가 렌더링되었습니다.")
+        img_pref = generate_real_wordcloud_img(dict_pref, is_blue=False)
+        st.image(img_pref, use_container_width=True)
 
     st.markdown(
         f"""**🧐 데이터 해석 (TF-IDF & 워드클라우드 대조):**  

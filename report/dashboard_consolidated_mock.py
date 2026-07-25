@@ -1429,7 +1429,8 @@ with tab1:
                 f"""<div style="background-color:#eff6ff; border:1px solid #bfdbfe; padding:10px 14px; border-radius:8px; margin-top:8px;">
                     <p style="margin:0; font-size:0.88rem; color:#1e3a8a; font-weight:600;">
                         📊 <b>[{selected_job}] 지원자 평균 {avg_score:.1f}점</b> | 합격 안심권 <b>75.0점 이상</b><br>
-                        ➔ <span style="color:#2563eb; font-weight:700;">{pct_str}</span>
+                        ➔ <span style="color:#2563eb; font-weight:700;">{pct_str}</span><br>
+                        <span style="font-size:0.78rem; color:#64748b; font-weight:normal;">(※ 기준: 합격자 개인 이력서 DB가 아닌, 사람인 5,000건 기업 공고 요건의 75% 이상을 동시 충족하는 시장 상위 25% 정량 충족률 기준입니다)</span>
                     </p>
                 </div>""",
                 unsafe_allow_html=True

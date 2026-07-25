@@ -609,10 +609,10 @@ with tab0:
 
     if is_naver_api_real and mapped_job:
         df_job_weekly = df_weekly_insights[df_weekly_insights["job"] == mapped_job]
-        available_skills = df_job_weekly["keyword"].unique().tolist()
+        available_skills = [k for k in df_job_weekly["keyword"].unique().tolist() if k not in ["전기기능사", "건축기사"]]
     else:
         df_job_weekly = pd.DataFrame()
-        available_skills = cur_skills[:6] if cur_skills else ["SQLD", "ADsP", "Figma", "GA4", "CPA", "CFA"]
+        available_skills = cur_skills if cur_skills else ["SQLD", "ADsP", "Figma", "GA4", "CPA", "CFA"]
 
     col_p2_1, col_p2_2 = st.columns([1.3, 1.0])
 

@@ -812,20 +812,17 @@ with tab0:
     }
 
     skills_for_gap = {
-        "기획/전략": [("SQLD", 150), ("ADsP", 120), ("Figma", 280), ("GA4", 250), ("CFA", 180), ("CPA", 210), ("컴퓨터활용능력", 320)],
-        "인사/노무": [("공인노무사", 340), ("PHR/SPHR", 180), ("직업상담사", 210), ("ERP(인사)", 290), ("노동법 대응", 380), ("조직문화", 260), ("Workday", 150)],
-        "회계/재무": [("전산세무", 350), ("전산회계", 380), ("세무사", 280), ("공인회계사", 410), ("재경관리사", 230), ("미국회계사", 120), ("ERP 정보관리사", 290), ("SAP(회계)", 320)],
-        "마케팅": [("GA4", 480), ("Google Ads", 410), ("Meta Ads", 360), ("SEO/SEM", 390), ("검색광고마케터", 240), ("SQLD", 180), ("CRM 마케팅", 290)],
-        "데이터분석가/AI엔지니어": [("Python", 520), ("SQL", 490), ("Tableau", 380), ("TensorFlow", 340), ("PyTorch", 310), ("빅데이터분석기사", 250), ("ADsP", 210), ("AWS", 280)]
+        "기획/전략": ["컴퓨터활용능력", "M&A", "Figma", "CPA", "CFA", "GA4", "ADsP", "SQLD"],
+        "인사/노무": ["ERP", "조직문화", "노동법", "공인노무사", "성과관리", "Workday", "직업상담사", "PHR"],
+        "회계/재무": ["ERP", "세무사", "전산회계", "SAP", "전산세무", "IFRS", "재경관리사", "공인회계사"],
+        "마케팅": ["CRM", "Meta", "GA4", "SEO", "검색광고마케터", "Google Ads", "HubSpot", "SQLD"],
+        "데이터분석가/AI엔지니어": ["SQL", "Python", "AWS", "PyTorch", "TensorFlow", "ETL", "Tableau", "ADsP"]
     }
 
     cur_code = job_code_map.get(selected_job, "plan")
     cur_w_code = job_weekly_map.get(selected_job, "기획(plan)")
-    cur_skills_info = skills_for_gap.get(selected_job, skills_for_gap["기획/전략"])
+    cur_skills_list = skills_for_gap.get(selected_job, skills_for_gap["기획/전략"])
 
-    gap_rows = []
-    
-    # DB 및 JSON 실제 데이터 기반 연동
     if df_saramin is not None and not df_saramin.empty and 'job_category' in df_saramin.columns:
         df_s_sub = df_saramin[df_saramin['job_category'] == cur_code]
     else:
@@ -836,42 +833,47 @@ with tab0:
     else:
         df_w_sub = pd.DataFrame()
 
-    for sk_name, default_d in cur_skills_info:
-        # 1. Demand (기업 수요 수) 계산
-        if not df_s_sub.empty:
-            content_series = df_s_sub.get('detail_content', df_s_sub.get('matched_skills', pd.Series())).fillna('')
-            d_cnt = sum(1 for text in content_series if sk_name.lower() in text.lower())
-            if d_cnt < 30:
-                d_cnt = default_d
+    content_series = (df_s_sub.get('title', pd.Series()).fillna('') + " " +
+                      df_s_sub.get('cleaned_requirement', pd.Series()).fillna('') + " " +
+                      df_s_sub.get('cleaned_preferential', pd.Series()).fillna('') + " " +
+                      df_s_sub.get('matched_skills', pd.Series()).fillna('') + " " +
+                      df_s_sub.get('required_keywords', pd.Series()).fillna('') + " " +
+                      df_s_sub.get('preferred_keywords', pd.Series()).fillna('') + " " +
+                      df_s_sub.get('preferred_certificates', pd.Series()).fillna(''))
+
+    SLATE_COLOR_MAP = {
+        "🔥 극심한 구인난": "#e11d48",  # 차분한 슬레이트 크림슨
+        "스펙 인플레이션": "#7c3aed",    # 차분한 슬레이트 라벤더 보라
+        "공급 과잉": "#0284c7",        # 차분한 슬레이트 오션 블루
+        "안정 수급": "#059669"         # 차분한 슬레이트 에메랄드 그린
+    }
+
+    gap_rows = []
+    for sk in cur_skills_list:
+        d_cnt = sum(1 for text in content_series if sk.lower() in text.lower())
+        w_match = df_w_sub[df_w_sub['keyword'] == sk] if not df_w_sub.empty else pd.DataFrame()
+        
+        if not w_match.empty and len(w_match) > 0:
+            s_weekly_avg = int(w_match['cafe_weekly_count'].mean())
         else:
-            d_cnt = default_d
+            s_weekly_avg = 360
 
-        # 2. Supply (구직자 관심/공급 수) 계산
-        if not df_w_sub.empty:
-            w_match = df_w_sub[df_w_sub['keyword'] == sk_name]
-            if not w_match.empty:
-                s_cnt = int(w_match['cafe_weekly_count'].sum())
-            else:
-                s_cnt = int(d_cnt * np.random.uniform(20.0, 35.0))
-        else:
-            s_cnt = int(d_cnt * 25)
+        gap_val = d_cnt - s_weekly_avg
 
-        gap_val = d_cnt - s_cnt
-
-        # 3. 미스매치 유형 자동 판별
-        if d_cnt >= 280 and s_cnt < 9700:
+        if gap_val >= 20:
             m_type = "🔥 극심한 구인난"
-        elif s_cnt >= 10500 and d_cnt < 250:
-            m_type = "스펙 인플레이션"
-        elif s_cnt >= 11500:
+        elif gap_val >= -100:
+            m_type = "안정 수급"
+        elif gap_val >= -300:
             m_type = "공급 과잉"
         else:
-            m_type = "안정 수급"
+            m_type = "스펙 인플레이션"
 
         gap_rows.append({
-            "skill": sk_name,
+            "skill": sk,
             "demand": d_cnt,
-            "supply": s_cnt,
+            "supply": s_weekly_avg * 29,  # 총 누적 공급
+            "weekly_supply": s_weekly_avg,
             "gap": gap_val,
             "type": m_type
         })
@@ -885,73 +887,81 @@ with tab0:
         fig_quad = go.Figure()
         
         fig_quad.add_trace(go.Scatter(
-            x=df_gap['supply'],
+            x=df_gap['weekly_supply'],
             y=df_gap['demand'],
             mode='markers+text',
             text=df_gap['skill'],
             textposition="top center",
             marker=dict(
-                size=df_gap['demand'] / 10 + 12,
-                color=df_gap['gap'],
-                colorscale='RdBu',
-                showscale=True,
-                colorbar=dict(title="Gap Index")
+                size=df_gap['demand'] / 8 + 14,
+                color=[SLATE_COLOR_MAP.get(t, "#475569") for t in df_gap['type']],
+                showscale=False
             ),
-            hovertemplate="스킬: %{text}<br>구직자 공급: %{x}건<br>기업 수요: %{y}건<extra></extra>"
+            hovertemplate="스킬: %{text}<br>주간 관심공급: %{x}건<br>기업 채용수요: %{y}건<extra></extra>"
         ))
         
         fig_quad.update_layout(
             title=f"<b>[{selected_job}] 역량별 수요(Y) vs 공급(X) 4분면 위치</b>",
-            xaxis_title="구직자 관심/공급 수 (건)",
-            yaxis_title="기업 채용 수요 수 (건)",
+            xaxis_title="구직자 주간 평균 관심/공급 수 (건)",
+            yaxis_title="기업 채용 공고 수요 수 (건)",
             height=420,
             plot_bgcolor="rgba(248,250,252,0.8)",
             margin=dict(t=50, b=30, l=30, r=30)
         )
         st.plotly_chart(fig_quad, use_container_width=True)
+        
+        # 좌측 4분면 맵 전용 해석 가이드
         st.markdown(
-            """**💡 4분면 및 수급 갭 상태 해석 가이드:**
-- **🔥 극심한 구인난 (파스텔 코랄 핑크)**: 기업 수요는 높으나 구직자 공급이 부족하여 즉시 채용 우대가 적용되는 핵심 역량
-- **⚠️ 스펙 인플레이션 (파스텔 라벤더 보라)**: 기업의 실제 채용 수요 대비 구직자의 자격증 취득 및 수험 관심이 과도하게 쏠려 **'스펙만 과열되고 채용 연결 효율은 떨어지는 현상'**을 의미합니다.
-- **공급 과잉 (파스텔 하늘색)**: 기업 공고 수요 대비 취업 커뮤니티 및 게시글 유입이 상회하는 역량
-- **안정 수급 (파스텔 민트 그린)**: 기업 수요와 구직자 관심도가 비교적 적절한 균형을 이루는 영역"""
+            """**💡 4분면 포지셔닝 맵 가이드:**
+- **좌상단 (🔥 구인난 영역)**: 기업 채용 수요는 높으나 구직자 주간 관심/공급이 극히 부족한 즉시 채용 적합 스킬
+- **우하단 (⚠️ 인플레이션 영역)**: 자격증 취득 등 구직자 주간 관심만 과도하게 쏠린 수급 불균형 영역"""
         )
 
     with col_p3_2:
         st.write(f"#### ⚖️ [{selected_job}] 핵심 역량별 수급 Gap 지수")
         
-        PASTEL_COLOR_MAP = {
-            "🔥 극심한 구인난": "#fca5a5",  # 우유섞인 soft rose
-            "스펙 인플레이션": "#c084fc",    # 우유섞인 soft lavender
-            "공급 과잉": "#93c5fd",        # 우유섞인 soft sky blue
-            "안정 수급": "#86efac"         # 우유섞인 soft mint green
-        }
-        colors = [PASTEL_COLOR_MAP.get(t, "#cbd5e1") for t in df_gap['type']]
+        colors = [SLATE_COLOR_MAP.get(t, "#64748b") for t in df_gap['type']]
         fig_gap_bar = go.Figure()
+        
+        x_vals = df_gap['gap'].tolist()[::-1]
+        y_vals = df_gap['skill'].tolist()[::-1]
+        t_vals = df_gap['type'].tolist()[::-1]
+        c_vals = colors[::-1]
+
         fig_gap_bar.add_trace(go.Bar(
-            x=df_gap['gap'],
-            y=df_gap['skill'],
+            x=x_vals,
+            y=y_vals,
             orientation='h',
-            marker_color=colors,
+            marker_color=c_vals,
             hovertemplate="스킬: %{y}<br>수급 Gap: %{x}건<br>상태: %{text}<extra></extra>",
-            text=df_gap['type'],
+            text=t_vals,
             textposition="auto"
         ))
+        
         fig_gap_bar.update_layout(
-            title=f"<b>[{selected_job}] 스킬별 수급 Gap (기업수요 - 구직자공급)</b>",
-            xaxis_title="수급 Gap 수치 (음수: 공급쏠림 / 양수: 수요초과)",
+            title=f"<b>[{selected_job}] 스킬별 수급 Gap (기업수요 - 주간공급)</b>",
+            xaxis=dict(
+                title="수급 Gap 수치 (음수: 공급쏠림 / 양수: 기업수요 초과)",
+                zeroline=True,
+                zerolinecolor="#475569",
+                zerolinewidth=2
+            ),
             yaxis_title="스킬명",
             height=420,
             margin=dict(t=50, b=30, l=80, r=30)
         )
         st.plotly_chart(fig_gap_bar, use_container_width=True)
+        
+        # 우측 핵심 역량별 수급 Gap 지수 전용 해석 가이드
         st.markdown(
-            f"""**📌 비즈니스 제언 (Gap 분석):**
-
-붉은색 항목(**{', '.join(df_gap[df_gap['type']=='🔥 극심한 구인난']['skill'].tolist())}**)은 기업의 구인난이 심각한 스킬로, 
-해당 역량을 보유한 구직자는 높은 채용 성공률을 기대할 수 있으며 기업 인사팀은 해당 역량 우대 가산점을 파격적으로 높여야 합니다."""
+            """**⚖️ 수급 Gap 지수 & 상태 해석 가이드:**
+- **🔥 극심한 구인난 (슬레이트 크림슨)**: 기업 수요가 주간 공급을 크게 초과하여 구직자 채용 성공률이 매우 높은 스킬
+- **안정 수급 (슬레이트 민트 그린)**: 기업 공고 수요와 구직자 주간 관심도가 적절한 수급 균형을 이루는 영역
+- **공급 과잉 (슬레이트 오션 블루)**: 기업 공고 수요 대비 취업 커뮤니티 관심 및 유입이 상회하는 영역
+- **⚠️ 스펙 인플레이션 (슬레이트 라벤더 보라)**: 기업의 실제 채용 요구량 대비 자격증 취득 및 수험 관심만 과도하게 쏠려 **'스펙만 과열되고 채용 연결 효율은 떨어지는 현상'**을 의미합니다."""
         )
 
+    st.caption("✅ **[PART 3 DATA SOURCE]** — [PART 1 기업 채용 수요 DB (`recruit_processed.db`)] × [PART 2 구직자 관심도 API (`naver_weekly_insights.json`)] 결합 믹스매치 갭 분석 산출 데이터")
     pass
 
 

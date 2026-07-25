@@ -1291,9 +1291,13 @@ with tab1:
                 "synonyms": specs["synonyms"]
             }
             
-    licenses_pool = specs["licenses"]
-    tools_pool = specs["tools"]
-    experiences_pool = specs["experiences"]
+    raw_licenses = specs["licenses"]
+    raw_tools = specs["tools"]
+    raw_experiences = specs["experiences"]
+    
+    licenses_pool = ["해당 없음"] + raw_licenses
+    tools_pool = ["해당 없음"] + raw_tools
+    experiences_pool = ["해당 없음"] + raw_experiences
     synonyms = specs["synonyms"]
 
     # 입력 폼
@@ -1337,9 +1341,12 @@ with tab1:
 
     user_career_val = {"신입": 0, "주니어 (1~3년)": 2, "미들 (4~7년)": 5, "시니어 (8년 이상)": 10}[user_career]
     user_edu_val = {"고졸 이하": 0, "초대졸 (2/3년제)": 1, "대졸 (4년제 학사)": 2, "대학원 (석사/박사)": 3}[user_edu]
-    user_skills = user_licenses + user_tools + user_experiences
+    clean_licenses = [l for l in user_licenses if l != "해당 없음"]
+    clean_tools = [t for t in user_tools if t != "해당 없음"]
+    clean_experiences = [e for e in user_experiences if e != "해당 없음"]
+    user_skills = clean_licenses + clean_tools + clean_experiences
 
-    if diagnose_clicked or user_skills:
+    if diagnose_clicked or user_licenses or user_tools or user_experiences:
         # 스코어링 알고리즘 작동 (실제 사람인 DB가 있으면 공고 1,000건과 매칭, 없으면 모의 매칭)
         if selected_job == "기획/전략" and df_saramin is not None:
             total_scores = []
@@ -1377,11 +1384,11 @@ with tab1:
             ratio = (len(user_skills) / total_pool) if total_pool > 0 else 0.0
             suitability_score = float(np.clip(ratio * 70 + (user_career_val * 2) + (user_edu_val * 4), 0, 100))
 
-        # 미보유 추천 스펙 TOP 3 도출
+        # 미보유 추천 스펙 TOP 3 도출 (해당 없음 예외 처리)
         unselected = (
-            [(l, "자격증") for l in licenses_pool if l not in user_licenses] +
-            [(t, "실무 툴") for t in tools_pool if t not in user_tools] +
-            [(e, "직무 경험") for e in experiences_pool if e not in user_experiences]
+            [(l, "자격증") for l in raw_licenses if l not in clean_licenses] +
+            [(t, "실무 툴") for t in raw_tools if t not in clean_tools] +
+            [(e, "직무 경험") for e in raw_experiences if e not in clean_experiences]
         )
         missing_specs = unselected[:3]
 
@@ -1393,9 +1400,9 @@ with tab1:
         )
 
         # 세부 범주별 가중치 점수 산출 (Breakdown)
-        sub_lic_score = (len(user_licenses) / len(licenses_pool) * 100) if licenses_pool else 100.0
-        sub_tool_score = (len(user_tools) / len(tools_pool) * 100) if tools_pool else 100.0
-        sub_exp_score = (len(user_experiences) / len(experiences_pool) * 100) if experiences_pool else 100.0
+        sub_lic_score = (len(clean_licenses) / len(raw_licenses) * 100) if raw_licenses else 0.0
+        sub_tool_score = (len(clean_tools) / len(raw_tools) * 100) if raw_tools else 0.0
+        sub_exp_score = (len(clean_experiences) / len(raw_experiences) * 100) if raw_experiences else 0.0
         sub_career_score = float(user_career_val * 10)
         sub_edu_score = float(user_edu_val * 33.3)
 

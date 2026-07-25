@@ -664,10 +664,21 @@ with tab0:
                         line=dict(width=2)
                     ))
             fig_vol.update_layout(
-                title=dict(text=f"🟢 [{selected_job}] 주간 구직 검색량 변화 추이", font=dict(size=13, color="#028b3e")),
-                xaxis_title="주차 시작일", yaxis_title="상대적 검색 비율 (Trend Ratio)",
-                plot_bgcolor="rgba(240,253,244,0.3)", height=380,
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                title=dict(text=f"🟢 [{selected_job}] 주간 구직 검색량 변화 추이", font=dict(size=14, color="#028b3e"), y=0.98, x=0, xanchor="left"),
+                xaxis_title="주차 시작일 (월요일)",
+                yaxis_title="상대적 검색 비율 (Trend Ratio)",
+                plot_bgcolor="rgba(240,253,244,0.3)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                height=480,
+                margin=dict(t=50, b=110, l=45, r=25),
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",
+                    y=-0.22,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(size=11)
+                )
             )
             st.plotly_chart(fig_vol, use_container_width=True)
             st.markdown(

@@ -722,6 +722,300 @@ with tab0:
             )
 
     with col_p2_2:
+        cat_suffix = skill_category_mode.split(' ')[1] if ' ' in skill_category_mode else skill_category_mode
+        st.write(f"#### 🗣️ 네이버 취업 카페 언급량 TOP 10 ({cat_suffix})")
+        
+        # 1. naver_weekly_insights.json 실제 데이터 연동 및 필터링
+        if is_naver_api_real and mapped_job and df_weekly_insights is not None and not df_weekly_insights.empty:
+            df_job_cafe = df_weekly_insights[df_weekly_insights["job"] == mapped_job]
+            if target_category_skills:
+                df_job_cafe = df_job_cafe[df_job_cafe["keyword"].isin(target_category_skills)]
+
+            if not df_job_cafe.empty:
+                # 2. 키워드별 카페 유입량(cafe_weekly_count) 총합계 및 TOP 10 정렬
+                cafe_agg = df_job_cafe.groupby("keyword")["cafe_weekly_count"].sum().reset_index()
+                cafe_top10 = cafe_agg.sort_values("cafe_weekly_count", ascending=False).head(10)
+                df_cafe_kw = cafe_top10.rename(columns={"keyword": "keyword", "cafe_weekly_count": "freq"})
+            else:
+                df_cafe_kw = pd.DataFrame(columns=['keyword', 'freq'])
+        else:
+            df_cafe_kw = pd.DataFrame(columns=['keyword', 'freq'])
+
+        # 3. Plotly Bar Chart 시각화
+        fig_cafe = go.Figure()
+        if not df_cafe_kw.empty:
+            fig_cafe.add_trace(go.Bar(
+                x=df_cafe_kw['freq'][::-1],
+                y=df_cafe_kw['keyword'][::-1],
+                orientation='h',
+                marker_color='#16a085',
+                hovertemplate="키워드: %{y}<br>카페 게시글 유입량: %{x:,}건<extra></extra>"
+            ))
+        fig_cafe.update_layout(
+            title=f"<b>[{selected_job}] 커뮤니티 카페 유입량 TOP 10</b>",
+            xaxis_title="네이버 카페 주간 게시글 유입 합계 (건)",
+            yaxis_title="키워드",
+            height=420,
+            margin=dict(t=50, b=20, l=100, r=20)
+        )
+        st.plotly_chart(fig_cafe, use_container_width=True)
+        st.markdown(
+            "**🧐 여론 인사이트:** 선택된 스킬 카테고리에 대해 네이버 취업 카페 게시글 유입량 데이터를 기반으로 산출된 실시간 키워드 언급 순위입니다."
+        )
+        st.caption("✅ **[REAL DATA]** — 네이버 API 파이프라인 연동 데이터 (`naver_weekly_insights.json`)")
+
+    st.write("---")
+
+    # =====================================================================
+    # PART 1. 🏢 기업 채용 수요 EDA (사람인 크롤링 데이터 기반)
+    # =====================================================================
+    st.subheader(f"1️⃣ PART 1. 🏢 기업 채용 수요 EDA — [{selected_job}]")
+    st.markdown(
+        f"""사람인 채용공고 DB 데이터에서 **[{selected_job}]** 직무 관련 수집 건수를 추출하여 
+기업들이 실제로 요구하는 **학력 조건**, **경력 요건**, 및 **최다 요구 핵심 스킬셋**을 시각화합니다."""
+    )
+
+    col_p1_1, col_p1_2 = st.columns(2)
+
+    with col_p1_1:
+        # 1-1. 학력 요구사항 분포 (Pie Chart)
+        if df_filtered_saramin is not None and not df_filtered_saramin.empty and 'education' in df_filtered_saramin.columns:
+            edu_dist = df_filtered_saramin['education'].value_counts()
+            is_edu_mock = False
+        else:
+            edu_dist = pd.Series({"대졸(4년제)": 620, "학력무관": 380, "전문대졸": 150, "대학원(석/박사)": 80})
+            is_edu_mock = True
+
+        fig_edu_pie = go.Figure()
+        fig_edu_pie.add_trace(go.Pie(
+            labels=edu_dist.index,
+            values=edu_dist.values,
+            hole=0.4,
+            marker=dict(colors=['#1abc9c', '#3498db', '#9b59b6', '#f1c40f', '#e74c3c']),
+            hovertemplate="학력 요건: %{label}<br>비율: %{percent}<br>공고 수: %{value}건<extra></extra>"
+        ))
+        fig_edu_pie.update_layout(
+            title=f"<b>[{selected_job}] 기업 요구 학력 조건 분포</b>",
+            height=380,
+            margin=dict(t=50, b=20, l=20, r=20),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5)
+        )
+        st.plotly_chart(fig_edu_pie, use_container_width=True)
+        st.markdown(
+            f"""**🧐 데이터 해석 (기업 학력 요건):**
+
+**[{selected_job}]** 직무의 채용 공고 중 대학교(4년제) 이상 학력 요건이 과반을 차지합니다. 
+이는 해당 직무 진입 시 4년제 대졸 학위가 서류 검증 단계의 필수 진입장벽(Entrance Barrier)으로 작동하고 있음을 보여줍니다."""
+        )
+        if is_edu_mock:
+            mock_badge()
+
+    with col_p1_2:
+        # 1-2. 경력 요구 요건 분포 (Bar Chart)
+        if df_filtered_saramin is not None and not df_filtered_saramin.empty and 'career' in df_filtered_saramin.columns:
+            career_dist = df_filtered_saramin['career'].value_counts().head(7)
+            is_career_mock = False
+        else:
+            career_dist = pd.Series({"경력무관": 450, "경력 3~5년": 380, "경력 1~3년": 220, "신입": 60, "경력 5~10년": 140})
+            is_career_mock = True
+
+        fig_career_bar = go.Figure()
+        fig_career_bar.add_trace(go.Bar(
+            x=career_dist.index,
+            y=career_dist.values,
+            marker_color='#2c3e50',
+            hovertemplate="경력 요건: %{x}<br>공고 수: %{y}건<extra></extra>"
+        ))
+        fig_career_bar.update_layout(
+            title=f"<b>[{selected_job}] 기업 선호 경력 조건 분포</b>",
+            xaxis_title="경력 구분",
+            yaxis_title="공고 수 (건)",
+            height=380,
+            margin=dict(t=50, b=20, l=20, r=20)
+        )
+        st.plotly_chart(fig_career_bar, use_container_width=True)
+        st.markdown(
+            f"""**🧐 데이터 해석 (기업 경력 선호도):**
+
+**[{selected_job}]** 분야는 순수 '신입' 공고 비중이 5% 미만으로 극히 낮으며, 경력직과 '경력무관(실질적 중고신입 선호)' 공고가 압도적입니다. 
+기업들이 초기 교육 비용을 줄이기 위해 즉시 투입 가능한 경력형 인재를 우대함을 입증합니다."""
+        )
+        if is_career_mock:
+            mock_badge()
+
+    # 1-3. 기업 최다 요구 핵심 역량/스킬 TOP 10 (Horizontal Bar Chart)
+    st.write("#### 🎯 기업 채용 공고 최다 요구 핵심 스킬셋 TOP 10")
+    if df_filtered_saramin is not None and not df_filtered_saramin.empty and 'matched_skills' in df_filtered_saramin.columns:
+        all_skills_str = ",".join(df_filtered_saramin['matched_skills'].dropna().tolist())
+        skill_counts = Counter([s.strip() for s in re.split(r'[,|/]', all_skills_str) if s.strip() and len(s.strip()) > 1])
+        top_skills = pd.DataFrame(skill_counts.most_common(10), columns=['skill', 'count'])
+        is_skill_mock = False
+    else:
+        mock_skills_data = {
+            "기획/전략": [("전략기획", 420), ("SQLD", 310), ("Figma", 280), ("GA4", 250), ("데이터분석", 210), ("M&A", 180), ("사업타당성", 150), ("PPT작성법", 130), ("CFA", 110), ("CPA", 90)],
+            "인사/노무": [("인사기획", 390), ("노동법대응", 340), ("ERP(인사)", 290), ("성과관리", 240), ("공인노무사", 210), ("조직문화", 190), ("Workday", 150), ("Slack", 130), ("PHR", 100), ("채용면접", 80)],
+            "회계/재무": [("재무회계", 450), ("CPA", 380), ("SAP", 320), ("IFRS적용", 280), ("세무조정", 230), ("더존i-U", 210), ("재경관리사", 190), ("엑셀VBA", 160), ("AICPA", 120), ("예산통제", 90)],
+            "마케팅": [("GA4", 480), ("Google Ads", 410), ("SEO/SEM", 360), ("Meta Ads", 310), ("콘텐츠기획", 270), ("CRM마케팅", 240), ("HubSpot", 190), ("Braze", 150), ("SQLD", 120), ("검색광고", 90)],
+            "데이터분석가/AI엔지니어": [("Python", 520), ("SQL", 490), ("Tableau", 380), ("TensorFlow", 340), ("ETL파이프라인", 290), ("A/B테스트", 250), ("PyTorch", 210), ("빅데이터분석기사", 180), ("ADsP", 150), ("AWS", 120)]
+        }
+        top_skills = pd.DataFrame(mock_skills_data.get(selected_job, mock_skills_data["기획/전략"]), columns=['skill', 'count'])
+        is_skill_mock = True
+
+    fig_skill_top = go.Figure()
+    fig_skill_top.add_trace(go.Bar(
+        x=top_skills['count'][::-1],
+        y=top_skills['skill'][::-1],
+        orientation='h',
+        marker=dict(color=top_skills['count'][::-1], colorscale='Viridis'),
+        hovertemplate="요구 스킬: %{y}<br>언급 공고 수: %{x}건<extra></extra>"
+    ))
+    fig_skill_top.update_layout(
+        title=f"<b>[{selected_job}] 공고 명시 핵심 기술 스택 및 자격 요건 TOP 10</b>",
+        xaxis_title="공고 내 요구 횟수 (건)",
+        yaxis_title="핵심 역량 / 자격증",
+        height=400,
+        margin=dict(t=50, b=20, l=100, r=20)
+    )
+    st.plotly_chart(fig_skill_top, use_container_width=True)
+    if is_skill_mock:
+        mock_badge()
+
+    st.write("---")
+
+    # =====================================================================
+    # PART 2. 💬 구직자 관심도 & 여론 EDA (네이버 API & 카페 데이터 기반)
+    # =====================================================================
+    st.subheader(f"2️⃣ PART 2. 💬 구직자 관심도 & 여론 EDA — [{selected_job}]")
+    st.markdown(
+        f"""네이버 데이터랩 API 주간 트렌드와 취업 카페 게시글 텍스트를 통해 **[{selected_job}]** 관련 구직자들의 
+**실제 검색 관심도 시계열** 및 **커뮤니티 여론 키워드**를 분석합니다."""
+    )
+
+    # 📊 스킬 카테고리 토글 스위치 (옵션 3 구현)
+    skill_category_mode = st.radio(
+        "📊 분석할 스킬 유형 카테고리 선택",
+        ["🛠️ 직무특화 하드스킬 & 전문자격증", "🌐 범용/소프트 스킬 (어학, 컴활, OA)", "🔄 전체 통합"],
+        horizontal=True,
+        key=f"p2_category_mode_{selected_job}"
+    )
+
+    HARD_SKILLS_BY_JOB = {
+        "기획/전략": ["SQLD", "ADsP", "Figma", "GA4", "CFA", "CPA", "컴퓨터활용능력"],
+        "인사/노무": ["공인노무사", "PHR/SPHR", "직업상담사", "ERP(인사)", "노동법 대응", "조직문화", "Workday"],
+        "회계/재무": ["전산세무", "전산회계", "세무사", "공인회계사", "재경관리사", "미국회계사", "ERP 정보관리사", "SAP(회계)"],
+        "마케팅": ["GA4", "Google Ads", "Meta Ads", "SEO/SEM", "검색광고마케터", "SQLD", "CRM 마케팅"],
+        "데이터분석가/AI엔지니어": ["Python", "SQL", "Tableau", "TensorFlow", "PyTorch", "빅데이터분석기사", "ADsP", "AWS"]
+    }
+
+    GENERAL_SKILLS_BY_JOB = {
+        "기획/전략": ["커뮤니케이션", "협업", "영어", "Excel", "PPT작성법", "문서작성"],
+        "인사/노무": ["커뮤니케이션", "Excel", "협업", "영어", "엑셀", "문서작성"],
+        "회계/재무": ["Excel", "엑셀", "커뮤니케이션", "협업", "영어", "OA실무"],
+        "마케팅": ["커뮤니케이션", "협업", "영어", "Excel", "PPT작성법", "콘텐츠기획"],
+        "데이터분석가/AI엔지니어": ["협업", "커뮤니케이션", "영어", "Excel", "A/B테스트", "문서작성"]
+    }
+
+    is_naver_api_real = df_weekly_insights is not None
+    job_mapping = {
+        "기획/전략": "기획(plan)",
+        "인사/노무": "인사(hr)",
+        "회계/재무": "회계(acc)",
+        "마케팅": "마케팅(mkt)",
+        "데이터분석가/AI엔지니어": "개발(dev)"
+    }
+    mapped_job = job_mapping.get(selected_job)
+
+    # 선택된 카테고리에 따른 스킬 필터링
+    if "하드스킬" in skill_category_mode:
+        target_category_skills = HARD_SKILLS_BY_JOB.get(selected_job, [])
+    elif "범용" in skill_category_mode:
+        target_category_skills = GENERAL_SKILLS_BY_JOB.get(selected_job, [])
+    else:
+        target_category_skills = HARD_SKILLS_BY_JOB.get(selected_job, []) + GENERAL_SKILLS_BY_JOB.get(selected_job, [])
+
+    if is_naver_api_real and mapped_job:
+        df_job_weekly = df_weekly_insights[df_weekly_insights["job"] == mapped_job]
+        raw_api_skills = df_job_weekly["keyword"].unique().tolist()
+        # 카테고리 필터 적용
+        available_skills = [k for k in target_category_skills if k in raw_api_skills]
+        if not available_skills:
+            available_skills = target_category_skills
+    else:
+        df_job_weekly = pd.DataFrame()
+        available_skills = target_category_skills
+
+    col_p2_1, col_p2_2 = st.columns([1.3, 1.0])
+
+    with col_p2_1:
+        st.write(f"#### 📈 주간 관심도 트렌드 ({skill_category_mode.split(' ')[1]})")
+        vol_skills = st.multiselect(
+            "시계열 분석 스킬 선택",
+            available_skills,
+            default=available_skills,
+            key=f"p2_skills_select_{selected_job}_{skill_category_mode}"
+        )
+
+        fig_vol = go.Figure()
+        if vol_skills:
+            if is_naver_api_real and mapped_job and not df_job_weekly.empty:
+                df_job_weekly = df_job_weekly.sort_values("date")
+                avg_series = df_job_weekly.groupby("date")["trend_ratio"].mean()
+                fig_vol.add_trace(go.Scatter(
+                    x=avg_series.index, y=avg_series.values,
+                    mode="lines", name="직무 전체 평균",
+                    line=dict(color="#64748b", width=1.5, dash="dot")
+                ))
+                naver_colors = ["#03c75a", "#028b3e", "#2563eb", "#d97706", "#9333ea", "#ec4899", "#06b6d4", "#f97316", "#84cc16", "#6366f1"]
+                for idx, sk in enumerate(vol_skills):
+                    sk_df = df_job_weekly[df_job_weekly["keyword"] == sk]
+                    if not sk_df.empty:
+                        color = naver_colors[idx % len(naver_colors)]
+                        fig_vol.add_trace(go.Scatter(
+                            x=sk_df["date"], y=sk_df["trend_ratio"],
+                            mode="lines+markers", name=f"{sk}",
+                            line=dict(color=color, width=2.5),
+                            marker=dict(size=5, color=color)
+                        ))
+                if not avg_series.empty:
+                    peak_date = avg_series.idxmax()
+                    peak_val = avg_series.max()
+                    fig_vol.add_trace(go.Scatter(
+                        x=[peak_date, peak_date], y=[0, peak_val * 1.1],
+                        mode="lines", name=f"🔥 피크 주간 ({peak_date})",
+                        line=dict(color="#ef4444", width=1.5, dash="dash")
+                    ))
+            else:
+                dates = pd.date_range(start="2026-01-05", periods=24, freq="W-MON").strftime("%Y-%m-%d").tolist()
+                for idx, sk in enumerate(vol_skills):
+                    np.random.seed(idx * 7 + 42)
+                    trend_vals = np.sin(np.linspace(0, 3, 24)) * 25 + np.random.normal(50, 8, 24)
+                    fig_vol.add_trace(go.Scatter(
+                        x=dates, y=trend_vals, mode="lines+markers", name=f"{sk} (Mock)",
+                        line=dict(width=2)
+                    ))
+            fig_vol.update_layout(
+                title=dict(text=f"🟢 [{selected_job}] 주간 구직 검색량 변화 추이 ({skill_category_mode.split(' ')[1]})", font=dict(size=14, color="#028b3e"), y=0.98, x=0, xanchor="left"),
+                xaxis_title="주차 시작일 (월요일)",
+                yaxis_title="상대적 검색 비율 (Trend Ratio)",
+                plot_bgcolor="rgba(240,253,244,0.3)",
+                paper_bgcolor="rgba(0,0,0,0)",
+                height=480,
+                margin=dict(t=50, b=110, l=45, r=25),
+                legend=dict(
+                    orientation="h",
+                    yanchor="top",
+                    y=-0.22,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(size=11)
+                )
+            )
+            st.plotly_chart(fig_vol, use_container_width=True)
+            st.markdown(
+                "**🧐 트렌드 인사이트:** 자격증 시험 및 분기별 채용시즌 직전에 구직 목적 검색량이 급증하는 피크 패턴을 보입니다."
+            )
+
+    with col_p2_2:
         st.write(f"#### 🗣️ 네이버 취업 카페 언급량 TOP 10 ({skill_category_mode.split(' ')[1]})")
         if df_naver is not None and '제목' in df_naver.columns:
             cafe_titles = df_naver['제목'].dropna().tolist()

@@ -742,23 +742,35 @@ with tab0:
         else:
             df_cafe_kw = pd.DataFrame(columns=['keyword', 'freq'])
 
-        # 3. Plotly Bar Chart 시각화
+        # 3. Plotly Bar Chart 시각화 (리스트 변환으로 1:1 바 매칭 보장)
         fig_cafe = go.Figure()
         if not df_cafe_kw.empty:
+            x_vals = df_cafe_kw['freq'].tolist()[::-1]
+            y_vals = df_cafe_kw['keyword'].tolist()[::-1]
+            max_x = max(x_vals) if x_vals else 1000
+            
             fig_cafe.add_trace(go.Bar(
-                x=df_cafe_kw['freq'][::-1],
-                y=df_cafe_kw['keyword'][::-1],
+                x=x_vals,
+                y=y_vals,
                 orientation='h',
                 marker_color='#16a085',
                 hovertemplate="키워드: %{y}<br>카페 게시글 유입량: %{x:,}건<extra></extra>"
             ))
-        fig_cafe.update_layout(
-            title=f"<b>[{selected_job}] 커뮤니티 카페 유입량 TOP 10</b>",
-            xaxis_title="네이버 카페 주간 게시글 유입 합계 (건)",
-            yaxis_title="키워드",
-            height=420,
-            margin=dict(t=50, b=20, l=100, r=20)
-        )
+            fig_cafe.update_layout(
+                title=f"<b>[{selected_job}] 커뮤니티 카페 유입량 TOP 10</b>",
+                xaxis=dict(title="네이버 카페 주간 게시글 유입 합계 (건)", range=[0, max_x * 1.15]),
+                yaxis_title="키워드",
+                height=420,
+                margin=dict(t=50, b=20, l=100, r=20)
+            )
+        else:
+            fig_cafe.update_layout(
+                title=f"<b>[{selected_job}] 커뮤니티 카페 유입량 TOP 10</b>",
+                xaxis_title="네이버 카페 주간 게시글 유입 합계 (건)",
+                yaxis_title="키워드",
+                height=420,
+                margin=dict(t=50, b=20, l=100, r=20)
+            )
         st.plotly_chart(fig_cafe, use_container_width=True)
         st.markdown(
             "**🧐 여론 인사이트:** 선택된 스킬 카테고리에 대해 네이버 취업 카페 게시글 유입량 데이터를 기반으로 산출된 실시간 키워드 언급 순위입니다."

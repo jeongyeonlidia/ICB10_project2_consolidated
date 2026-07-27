@@ -45,6 +45,42 @@ except ImportError:
 # =====================================================================
 
 # ---------------------------------------------------------------------
+# 워드클라우드/PIL 폴백에 쓸 한글 지원 폰트 경로 탐색.
+#
+# 기존 코드는 "C:/Windows/Fonts/malgun.ttf"(Windows 전용 경로)를 하드코딩하고 있었다.
+# 로컬(macOS)이나 Streamlit Cloud(Linux) 어디에도 이 경로가 존재하지 않아 폰트 로드가
+# 항상 실패(OSError)했고, wordcloud/PIL이 한글 글리프가 없는 기본 폰트로 대체되면서
+# 한글 단어가 전부 네모(tofu) 박스로 렌더링되는 원인이었다. koreanize-matplotlib
+# 패키지가 SIL OFL 라이선스의 나눔고딕(NanumGothic.ttf)을 pip 설치 경로에 함께
+# 배포하므로, 플랫폼과 무관하게 항상 존재하는 이 경로를 최우선으로 사용한다.
+# ---------------------------------------------------------------------
+def _resolve_korean_font_path():
+    try:
+        import koreanize_matplotlib
+        candidate = os.path.join(os.path.dirname(koreanize_matplotlib.__file__), "fonts", "NanumGothic.ttf")
+        if os.path.exists(candidate):
+            return candidate
+    except ImportError:
+        pass
+
+    # 배포 환경에 koreanize-matplotlib이 없을 때를 대비한 OS별 시스템 폰트 폴백
+    fallback_candidates = [
+        "/System/Library/Fonts/Supplemental/AppleGothic.ttf",  # macOS
+        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",       # Linux (나눔폰트 설치 시)
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux (Noto CJK)
+        "C:/Windows/Fonts/malgun.ttf",                            # Windows
+        "C:/Windows/Fonts/gulim.ttc",
+    ]
+    for path in fallback_candidates:
+        if os.path.exists(path):
+            return path
+    return None
+
+
+_KOREAN_FONT_PATH = _resolve_korean_font_path()
+
+
+# ---------------------------------------------------------------------
 # 하이브리드 워드클라우드 실물 이미지 생성 헬퍼 (st.image 100% 출력 보장)
 # ---------------------------------------------------------------------
 def make_dynamic_color_func(dict_orig_scores, is_blue=True):
@@ -65,11 +101,9 @@ def make_dynamic_color_func(dict_orig_scores, is_blue=True):
     return dynamic_color_func
 
 def generate_real_wordcloud_img(dict_freq, is_blue=True):
-    font_path = "C:/Windows/Fonts/malgun.ttf"
-    if not os.path.exists(font_path):
-        font_path = "C:/Windows/Fonts/gulim.ttc"
-        
-    if dict_freq and WordCloud is not None:
+    font_path = _KOREAN_FONT_PATH
+
+    if dict_freq and WordCloud is not None and font_path is not None:
         try:
             # pow(1.5) 스케일링: 상위~하위 단어 모두 캔버스를 꽉 채우면서
             # 중요도 차이가 글자 크기로 명확히 드러나도록 설계
@@ -157,50 +191,6 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
                     g_val = int(220 - ratio_p * 140)
                     b_val = int(180 - ratio_p * 150)
                 draw.text((cx, cy), word, fill=(r_val, g_val, b_val), font=font)
-                drawn_boxes.append(box)
-                break
-        
-    return img
-        
-    max_score = max(w[1] for w in sorted_words) if max(w[1] for w in sorted_words) > 0 else 1.0
-    drawn_boxes = []
-    
-    grid_coords = []
-    for r in range(0, 140, 12):
-        for angle_deg in range(0, 360, 20):
-            rad = math.radians(angle_deg)
-            x = int(230 + r * 1.3 * math.cos(rad))
-            y = int(140 + r * 0.9 * math.sin(rad))
-            if 10 <= x <= 420 and 10 <= y <= 280:
-                grid_coords.append((x, y))
-
-    for word, score in sorted_words:
-        ratio = score / max_score
-        font_size = int(14 + ratio * 26)
-        try:
-            font = ImageFont.truetype(font_path, font_size)
-        except Exception:
-            font = ImageFont.load_default()
-            
-        bbox = draw.textbbox((0, 0), word, font=font)
-        w_width = bbox[2] - bbox[0]
-        w_height = bbox[3] - bbox[1]
-        
-        for (cx, cy) in grid_coords:
-            box = (cx - 3, cy - 3, cx + w_width + 3, cy + w_height + 3)
-            if box[0] < 5 or box[1] < 5 or box[2] > width - 5 or box[3] > height - 5:
-                continue
-            overlap = False
-            for db in drawn_boxes:
-                if not (box[2] < db[0] or box[0] > db[2] or box[3] < db[1] or box[1] > db[3]):
-                    overlap = True
-                    break
-            if not overlap:
-                if is_blue:
-                    color = (int(30 + ratio*20), int(90 + ratio*90), int(180 + ratio*70))
-                else:
-                    color = (int(210 + ratio*45), int(110 + ratio*80), int(20 + ratio*30))
-                draw.text((cx, cy), word, fill=color, font=font)
                 drawn_boxes.append(box)
                 break
         
@@ -1955,10 +1945,6 @@ def render_home_tab():
     st.write(f"#### ☁️ [{selected_job}] 요구역량 항목별 워드클라우드 서브플롯 (WordCloud)")
 
     col_wc_1, col_wc_2 = st.columns(2)
-
-    font_path = "C:/Windows/Fonts/malgun.ttf"
-    if not os.path.exists(font_path):
-        font_path = "C:/Windows/Fonts/gulim.ttc"
 
     with col_wc_1:
         st.write(f"##### 📌 [{selected_job}] 필수 요구사항 워드클라우드")

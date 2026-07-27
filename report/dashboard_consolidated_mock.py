@@ -781,32 +781,48 @@ def run_jd_similarity_search(jd_text, job_role):
 
 
 # ---------------------------------------------------------------------
-# "의미 기반 유사 역량 매칭" 산점도 - 사전 계산된 PCA 3D / UMAP 2D 좌표 로드
+# "의미 기반 유사 역량 매칭" 산점도 - PCA 3D / UMAP 2D 좌표
+#
+# 이전에는 build_job_projections.py가 미리 fit한 모델을 .joblib으로 저장해두고
+# 대시보드에서 그대로 불러 썼다. 그러나 UMAP은 내부적으로 numba로 JIT 컴파일된
+# 객체를 포함하고 있어, pickle된 상태가 "저장 당시의 numba/llvmlite/Python 버전"에
+# 강하게 결속된다. 로컬(Python 3.9, numba 0.60.0)에서 만든 .joblib을 배포 환경
+# (예: Streamlit Cloud Python 3.14, 자동 설치된 최신 numba)에서 불러오면
+# `numba.core.serialize._unpickle__CustomPickled` 단계에서 역직렬화가 깨진다.
+# 이를 근본적으로 피하기 위해, 사전 계산된 모델/좌표 파일을 배포하지 않고
+# 실행 중인 그 환경에서 직접 PCA/UMAP을 fit한다(직무당 587~1,192건 수준이라
+# 세션당 1회, st.cache_resource로 캐시하면 비용이 크지 않다).
 # ---------------------------------------------------------------------
-_PROJECTION_COORDS_PATH = os.path.join(_PROJECT_ROOT, "data", "embedding", "job_projection_coords.csv")
-_PROJECTION_MODELS_DIR = os.path.join(_PROJECT_ROOT, "data", "embedding", "projection_models")
-
-
-@st.cache_data
-def load_projection_coords():
-    if os.path.exists(_PROJECTION_COORDS_PATH):
-        try:
-            return pd.read_csv(_PROJECTION_COORDS_PATH)
-        except Exception:
-            return None
-    return None
-
-
-@st.cache_resource
-def load_projection_model(job_role, method):
-    """job_projections 사전 계산 스크립트가 저장한 fitted PCA/UMAP 모델을 로드한다.
-    입력 JD 벡터를 같은 좌표계로 transform()하기 위해 필요하다 (재학습하지 않음)."""
-    safe = job_role.replace("/", "_")
-    path = os.path.join(_PROJECTION_MODELS_DIR, f"{safe}_{method}.joblib")
-    if not os.path.exists(path):
+@st.cache_resource(show_spinner="임베딩 좌표 계산 중...")
+def fit_job_projection(job_role):
+    """선택 직무의 job_embeddings.npy 부분집합으로 PCA(3D)·UMAP(2D)을 그 자리에서 fit한다.
+    반환된 모델로 기존 공고 좌표와 신규 JD 벡터를 같은 좌표계에 놓을 수 있다."""
+    module = _get_jd_similarity_module()
+    if module is None:
         return None
-    import joblib
-    return joblib.load(path)
+    embeddings, metadata = module.load_artifacts()
+    mask = (metadata["job_role"] == job_role).values
+    if mask.sum() == 0:
+        return None
+
+    job_ids = metadata.loc[mask, "job_id"].values
+    job_emb = embeddings[mask]
+
+    from sklearn.decomposition import PCA
+    from umap import UMAP
+
+    pca_model = PCA(n_components=3, random_state=42)
+    pca_coords = pca_model.fit_transform(job_emb)
+
+    umap_model = UMAP(n_components=2, random_state=42, n_neighbors=15, min_dist=0.1)
+    umap_coords = umap_model.fit_transform(job_emb)
+
+    coords_df = pd.DataFrame({
+        "job_id": job_ids,
+        "pca_x": pca_coords[:, 0], "pca_y": pca_coords[:, 1], "pca_z": pca_coords[:, 2],
+        "umap_x": umap_coords[:, 0], "umap_y": umap_coords[:, 1],
+    })
+    return {"pca_model": pca_model, "umap_model": umap_model, "coords": coords_df}
 
 
 def _build_projection_scatter(coords_job, method, top5_ids, jd_point):
@@ -879,20 +895,20 @@ def render_semantic_matching_section():
         "다른 직무 공고는 포함되지 않습니다."
     )
 
-    coords_all = load_projection_coords()
     module = _get_jd_similarity_module()
-
-    if coords_all is None or module is None:
+    if module is None:
         st.info(
-            "임베딩 좌표 데이터(`data/embedding/job_projection_coords.csv`)를 찾을 수 없어 "
+            "임베딩 산출물(`src/embedding/jd_similarity_search.py`)을 찾을 수 없어 "
             "이 기능을 표시할 수 없습니다. (데이터 미확보)"
         )
         return
 
-    coords_job = coords_all[coords_all["job_role"] == selected_job].copy()
-    if coords_job.empty:
-        st.info(f"'{selected_job}' 직무의 임베딩 좌표가 없습니다. (데이터 미확보)")
+    projection = fit_job_projection(selected_job)
+    if projection is None:
+        st.info(f"'{selected_job}' 직무의 임베딩된 공고가 없습니다. (데이터 미확보)")
         return
+
+    coords_job = projection["coords"]
 
     _, metadata_all = module.load_artifacts()
     job_meta = metadata_all[metadata_all["job_role"] == selected_job]
@@ -922,8 +938,8 @@ def render_semantic_matching_section():
             with st.spinner("임베딩 및 좌표 계산 중..."):
                 sim_result = run_jd_similarity_search(jd_text, selected_job)
                 query_vec = module.embed_text(jd_text)
-                pca_model = load_projection_model(selected_job, "pca")
-                umap_model = load_projection_model(selected_job, "umap")
+                pca_model = projection["pca_model"]
+                umap_model = projection["umap_model"]
                 jd_pca = pca_model.transform([query_vec])[0].tolist() if pca_model is not None else None
                 jd_umap = umap_model.transform([query_vec])[0].tolist() if umap_model is not None else None
             st.session_state["embed_sim_result"] = sim_result

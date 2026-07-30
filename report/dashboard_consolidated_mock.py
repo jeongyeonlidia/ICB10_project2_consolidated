@@ -118,15 +118,15 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
             wc = WordCloud(
                 font_path=font_path,
                 width=700,
-                height=420,
+                height=380,
                 background_color='white',
                 color_func=color_fn,
                 margin=2,               # 자간 최소화
-                prefer_horizontal=0.65, # 수평/수직 혼합으로 공간 극대 활용
+                prefer_horizontal=0.92, # HR Analytics 스타일: 세로 단어 비율 최소화, 주요 키워드 가로 배치
                 relative_scaling=0.35,  # 낙은 값: 작은 단어도 충분한 크기로 레이아웃 보완
-                max_font_size=72,       # 최상위 단어 대형 표출
-                min_font_size=9,        # 최하위 단어 미세 크기
-                max_words=200,          # 더 많은 단어로 캔버스 벀 코 채우기
+                max_font_size=68,       # 최상위 단어 대형 표출
+                min_font_size=10,       # 최하위 단어 미세 크기
+                max_words=40,           # 핵심 키워드 30~40개 중심으로 축소
                 random_state=42,
                 collocations=False      # 중복 2-gram 방지
             ).generate_from_frequencies(scaled_dict)
@@ -1657,6 +1657,7 @@ st.write("---")
 # 탭 0. 홈 (Intro): 전 직무 미스매치 종합 현황
 # =====================================================================
 def render_home_tab():
+    _inject_page_card_css()
     st.header(f"🏠 [{selected_job}] 취업 마켓 다차원 EDA & 수급 갭(Gap) 센터")
     st.markdown(
         f"""본 대시보드는 **[{selected_job}]** 직무의 **기업 채용 수요**, **구직자 관심도/여론**, 그리고 **수요-공급 미스매치 Gap**을 
@@ -1941,22 +1942,37 @@ def render_home_tab():
         )
         st.plotly_chart(fig_tfidf_pref, use_container_width=True)
 
-    # 2. 워드클라우드 서브플롯 (📌 필수 자격 vs ⭐ 우대 사항)
-    st.write(f"#### ☁️ [{selected_job}] 요구역량 항목별 워드클라우드 서브플롯 (WordCloud)")
+    # 2. 워드클라우드 서브플롯 (📌 필수 자격 vs ⭐ 우대 사항) — HR Analytics 스타일 카드 UI
+    st.write(f"#### ☁️ [{selected_job}] 요구역량 항목별 워드클라우드 (WordCloud)")
+
+    def _wordcloud_top5_chips(df_sorted_asc, accent_bg, accent_fg):
+        top5 = df_sorted_asc.sort_values('score', ascending=False).head(5)
+        chips = "".join(
+            f"<span class='pg-badge' style='background:{accent_bg};color:{accent_fg};"
+            f"margin:0 6px 6px 0;'>{r['word']} · {r['score']:.1f}</span>"
+            for _, r in top5.iterrows()
+        )
+        st.markdown(chips, unsafe_allow_html=True)
 
     col_wc_1, col_wc_2 = st.columns(2)
 
     with col_wc_1:
-        st.write(f"##### 📌 [{selected_job}] 필수 요구사항 워드클라우드")
-        dict_req = dict(zip(df_tfidf_req['word'], df_tfidf_req['score']))
-        img_req = generate_real_wordcloud_img(dict_req, is_blue=True)
-        st.image(img_req, use_column_width=True)
+        with st.container(border=True):
+            st.markdown(f"**📌 [{selected_job}] 필수 요구사항**")
+            dict_req = dict(zip(df_tfidf_req['word'], df_tfidf_req['score']))
+            img_req = generate_real_wordcloud_img(dict_req, is_blue=True)
+            st.image(img_req, use_column_width=True)
+            st.caption("TOP 5 키워드 · 가중치")
+            _wordcloud_top5_chips(df_tfidf_req, accent_bg="#eff6ff", accent_fg="#1d4ed8")
 
     with col_wc_2:
-        st.write(f"##### ⭐ [{selected_job}] 우대사항 워드클라우드")
-        dict_pref = dict(zip(df_tfidf_pref['word'], df_tfidf_pref['score']))
-        img_pref = generate_real_wordcloud_img(dict_pref, is_blue=False)
-        st.image(img_pref, use_column_width=True)
+        with st.container(border=True):
+            st.markdown(f"**⭐ [{selected_job}] 우대사항**")
+            dict_pref = dict(zip(df_tfidf_pref['word'], df_tfidf_pref['score']))
+            img_pref = generate_real_wordcloud_img(dict_pref, is_blue=False)
+            st.image(img_pref, use_column_width=True)
+            st.caption("TOP 5 키워드 · 가중치")
+            _wordcloud_top5_chips(df_tfidf_pref, accent_bg="#fff7ed", accent_fg="#c2410c")
 
     st.markdown(
         f"""**🧐 데이터 해석 (TF-IDF & 워드클라우드 대조):**  

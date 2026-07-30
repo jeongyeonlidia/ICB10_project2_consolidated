@@ -171,12 +171,12 @@ def search_similar_jobs(jd_text, job_role, top_k=5):
 if __name__ == "__main__":
     # 테스트 JD 1건 (실제 데이터셋에 존재하는 어휘로 작성한 예시 입력문 — 가짜 공고 데이터 아님)
     test_jd = (
-        "데이터분석가/AI엔지니어 채용. "
+        "개발 채용. "
         "요구역량: Python, SQL, 데이터 분석, AI. "
         "우대역량: AWS, 클라우드, 백엔드 개발 경험. "
         "경력: 신입/경력 무관. 학력: 학력무관. 고용형태: 정규직."
     )
-    test_job_role = "데이터분석가/AI엔지니어"
+    test_job_role = "개발"
 
     print(f"[테스트 JD]\n{test_jd}\n")
     print(f"[대상 직무] {test_job_role}\n")

@@ -2,7 +2,7 @@
 취업 시장 다차원 EDA 및 직무 적합도 진단 솔루션 (SaaS) — 마스터 통합 대시보드
 
 주요 기능:
-- 5대 직무(기획/전략, 인사/노무, 회계/재무, 마케팅, 데이터분석가/AI엔지니어) 지원
+- 5대 직무(기획/전략, 인사/노무, 회계/재무, 마케팅, 개발) 지원
 - 사이드바 마스터 컨트롤러(직무 스위처)를 통한 실시간 동적 데이터 연동(Reactive)
 - 4대 마스터 탭 구조 구현:
   - 🏠 탭 0. 홈: 취업 마켓 다차원 EDA 센터 (전 직무 미스매치 현황, 주요 수집 데이터 규모 요약, 수요-공급 4분면 맵, Co-occurrence 네트워크, 시계열 관심도 트렌드, 네이버 카페 TF-IDF 여론 분석)
@@ -209,7 +209,7 @@ st.set_page_config(
 # =====================================================================
 JOB_LIST = [
     "기획/전략", "인사/노무", "회계/재무",
-    "마케팅", "데이터분석가/AI엔지니어"
+    "마케팅", "개발"
 ]
 
 JOB_SPECS_POOL = {
@@ -272,7 +272,7 @@ JOB_SPECS_POOL = {
             "CRM 마케팅": ["crm", "리텐션", "푸시"], "브랜드 전략 수립": ["브랜드", "브랜딩", "전략"]
         }
     },
-    "데이터분석가/AI엔지니어": {
+    "개발": {
         "licenses": ["빅데이터분석기사", "ADsP", "AWS Certified Data Analytics"],
         "tools": ["Python", "SQL", "Tableau/PowerBI", "Spark", "TensorFlow/PyTorch"],
         "experiences": ["지표 정의 및 대시보드 구축", "데이터 파이프라인(ETL) 구축", "ML/DL 모델링", "A/B 테스트 설계 및 분석"],
@@ -342,7 +342,7 @@ MOCK_SKILLS_BY_JOB = {
             "2026-06": [55.0, 40.0, 45.0, 50.0, 57.0, 35.0, 23.0, 51.0, 19.0, 50.0, 31.0],
         }
     },
-    "데이터분석가/AI엔지니어": {
+    "개발": {
         "skills": ["Python", "SQL", "TensorFlow/PyTorch", "Tableau/PowerBI", "지표 정의 및 대시보드 구축", "데이터 파이프라인(ETL) 구축", "ML/DL 모델링", "A/B 테스트 설계 및 분석", "빅데이터분석기사", "ADsP", "AWS Certified Data Analytics"],
         "demand": [120, 110, 65, 50, 45, 30, 55, 35, 28, 25, 20],
         "supply": [40000, 35000, 8000, 6000, 15000, 12000, 5000, 3000, 12000, 15000, 2500],
@@ -377,7 +377,7 @@ MOCK_COOCCURRENCE = {
         ("GA4", "Google Ads"), ("GA4", "SEO/SEM 최적화"), ("Meta Ads", "콘텐츠 기획 및 제작"),
         ("HubSpot", "Braze"), ("브랜드 전략 수립", "콘텐츠 기획 및 제작"),
     ],
-    "데이터분석가/AI엔지니어": [
+    "개발": [
         ("Python", "SQL"), ("Python", "TensorFlow/PyTorch"), ("SQL", "Spark"),
         ("Tableau/PowerBI", "지표 정의 및 대시보드 구축"), ("AWS Certified Data Analytics", "Spark"),
     ],
@@ -527,7 +527,7 @@ HR_SECTOR_MAP = {
     "인사/노무": "인사·HR·총무",
     "회계/재무": "회계·재무·경영관리",
     "마케팅": "마케팅·CRM",
-    "데이터분석가/AI엔지니어": "IT개발·데이터",
+    "개발": "IT개발·데이터",
 }
 
 
@@ -540,7 +540,7 @@ def build_gap_mart(job_name, _df_saramin, _df_weekly_insights):
     네이버 데이터에 없는 키워드는 임의 추정하지 않고 '데이터확보=False'로 표시한다."""
     naver_job_key_map = {
         "기획/전략": "기획(plan)", "인사/노무": "인사(hr)", "회계/재무": "회계(acc)",
-        "마케팅": "마케팅(mkt)", "데이터분석가/AI엔지니어": "개발(dev)",
+        "마케팅": "마케팅(mkt)", "개발": "개발(dev)",
     }
     mapped_job = HR_SECTOR_MAP.get(job_name)
     if _df_saramin is None or not mapped_job:
@@ -1674,7 +1674,7 @@ def render_home_tab():
         "인사/노무": ("hr", "인사·HR·총무"),
         "회계/재무": ("acc", "회계·재무·경영관리"),
         "마케팅": ("mkt", "마케팅·CRM"),
-        "데이터분석가/AI엔지니어": ("dev", "IT개발·데이터"),
+        "개발": ("dev", "IT개발·데이터"),
     }
     mapped_code, mapped_sector = SARAMIN_JOB_MAP.get(selected_job, ("", ""))
     df_filtered_saramin = None
@@ -1694,7 +1694,7 @@ def render_home_tab():
         "인사/노무": ["공인노무사", "PHR/SPHR", "직업상담사", "ERP(인사)", "노동법 대응", "조직문화 설계", "성과관리 시스템 구축", "채용면접기법", "Slack", "Workday", "엑셀"],
         "회계/재무": ["CPA", "세무사", "재경관리사", "AICPA", "ERP(회계)", "IFRS 적용", "SAP", "엑셀(VBA)", "더존 i-U"],
         "마케팅": ["GA4", "Google Ads", "Meta Ads", "SEO/SEM 최적화", "콘텐츠 기획 및 제작", "CRM 마케팅", "HubSpot", "Braze", "구글 애널리틱스 IQ", "SQLD", "검색광고마케터"],
-        "데이터분석가/AI엔지니어": ["Python", "SQL", "TensorFlow/PyTorch", "Tableau/PowerBI", "지표 정의 및 대시보드 구축", "데이터 파이프라인(ETL) 구축", "ML/DL 모델링", "A/B 테스트 설계 및 분석", "빅데이터분석기사", "ADsP", "AWS Certified Data Analytics"]
+        "개발": ["Python", "SQL", "TensorFlow/PyTorch", "Tableau/PowerBI", "지표 정의 및 대시보드 구축", "데이터 파이프라인(ETL) 구축", "ML/DL 모델링", "A/B 테스트 설계 및 분석", "빅데이터분석기사", "ADsP", "AWS Certified Data Analytics"]
     }
     cur_skills = skills_pool_by_job.get(selected_job, [])
 
@@ -1704,7 +1704,7 @@ def render_home_tab():
         "인사/노무": "인사(hr)",
         "회계/재무": "회계(acc)",
         "마케팅": "마케팅(mkt)",
-        "데이터분석가/AI엔지니어": "개발(dev)"
+        "개발": "개발(dev)"
     }
     cur_w_code = job_weekly_map.get(selected_job, "기획(plan)")
     if df_weekly_insights is not None and not df_weekly_insights.empty and 'job' in df_weekly_insights.columns:
@@ -1766,7 +1766,7 @@ def render_home_tab():
 기업들이 공고에 실제로 명시하는 **기본 학력·경력 요건**과 **기본 필수 자격 vs 우대사항(Preferential)**의 요구 비중을 다차원 EDA 분석합니다."""
     )
 
-    job_code_map = {"기획/전략": "plan", "인사/노무": "hr", "회계/재무": "acc", "마케팅": "mkt", "데이터분석가/AI엔지니어": "dev"}
+    job_code_map = {"기획/전략": "plan", "인사/노무": "hr", "회계/재무": "acc", "마케팅": "mkt", "개발": "dev"}
     cur_code = job_code_map.get(selected_job, "plan")
 
     if df_saramin is not None and not df_saramin.empty and 'job_category' in df_saramin.columns:
@@ -1987,7 +1987,7 @@ def render_home_tab():
         "인사/노무": ["공인노무사", "PHR/SPHR", "직업상담사", "ERP(인사)", "노동법 대응", "조직문화", "Workday"],
         "회계/재무": ["전산세무", "전산회계", "세무사", "공인회계사", "재경관리사", "미국회계사", "ERP 정보관리사", "SAP(회계)"],
         "마케팅": ["GA4", "Google Ads", "Meta Ads", "SEO/SEM", "검색광고마케터", "SQLD", "CRM 마케팅"],
-        "데이터분석가/AI엔지니어": ["Python", "SQL", "Tableau", "TensorFlow", "PyTorch", "빅데이터분석기사", "ADsP", "AWS"]
+        "개발": ["Python", "SQL", "Tableau", "TensorFlow", "PyTorch", "빅데이터분석기사", "ADsP", "AWS"]
     }
 
     GENERAL_SKILLS_BY_JOB = {
@@ -1995,7 +1995,7 @@ def render_home_tab():
         "인사/노무": ["커뮤니케이션", "Excel", "협업", "영어", "엑셀", "문서작성"],
         "회계/재무": ["Excel", "엑셀", "커뮤니케이션", "협업", "영어", "OA실무"],
         "마케팅": ["커뮤니케이션", "협업", "영어", "Excel", "PPT작성법", "콘텐츠기획"],
-        "데이터분석가/AI엔지니어": ["협업", "커뮤니케이션", "영어", "Excel", "A/B테스트", "문서작성"]
+        "개발": ["협업", "커뮤니케이션", "영어", "Excel", "A/B테스트", "문서작성"]
     }
 
     is_naver_api_real = df_weekly_insights is not None
@@ -2004,7 +2004,7 @@ def render_home_tab():
         "인사/노무": "인사(hr)",
         "회계/재무": "회계(acc)",
         "마케팅": "마케팅(mkt)",
-        "데이터분석가/AI엔지니어": "개발(dev)"
+        "개발": "개발(dev)"
     }
     mapped_job = job_mapping.get(selected_job)
 
@@ -2173,7 +2173,7 @@ def render_home_tab():
         "인사/노무": "hr",
         "회계/재무": "acc",
         "마케팅": "mkt",
-        "데이터분석가/AI엔지니어": "dev"
+        "개발": "dev"
     }
 
     job_weekly_map = {
@@ -2181,7 +2181,7 @@ def render_home_tab():
         "인사/노무": "인사(hr)",
         "회계/재무": "회계(acc)",
         "마케팅": "마케팅(mkt)",
-        "데이터분석가/AI엔지니어": "개발(dev)"
+        "개발": "개발(dev)"
     }
 
     skills_for_gap = {
@@ -2189,7 +2189,7 @@ def render_home_tab():
         "인사/노무": ["ERP", "조직문화", "노동법", "공인노무사", "성과관리", "Workday", "직업상담사", "PHR"],
         "회계/재무": ["ERP", "세무사", "전산회계", "SAP", "전산세무", "IFRS", "재경관리사", "공인회계사"],
         "마케팅": ["CRM", "Meta", "GA4", "SEO", "검색광고마케터", "Google Ads", "HubSpot", "SQLD"],
-        "데이터분석가/AI엔지니어": ["SQL", "Python", "AWS", "PyTorch", "TensorFlow", "ETL", "Tableau", "ADsP"]
+        "개발": ["SQL", "Python", "AWS", "PyTorch", "TensorFlow", "ETL", "Tableau", "ADsP"]
     }
 
     cur_code = job_code_map.get(selected_job, "plan")
@@ -2490,7 +2490,7 @@ def render_seeker_tab():
             "인사/노무": 59.8,
             "회계/재무": 61.2,
             "마케팅": 58.5,
-            "데이터분석가/AI엔지니어": 63.1
+            "개발": 63.1
         }
         avg_score = JOB_BENCHMARK.get(selected_job, 60.0)
 

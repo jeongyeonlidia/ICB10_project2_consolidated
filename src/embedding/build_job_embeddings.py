@@ -35,7 +35,7 @@ SARAMIN_JOB_MAP = {
     "인사/노무": "인사·HR·총무",
     "회계/재무": "회계·재무·경영관리",
     "마케팅": "마케팅·CRM",
-    "데이터분석가/AI엔지니어": "IT개발·데이터",
+    "개발": "IT개발·데이터",
 }
 JOB_GROUP_TO_ROLE = {v: k for k, v in SARAMIN_JOB_MAP.items()}
 

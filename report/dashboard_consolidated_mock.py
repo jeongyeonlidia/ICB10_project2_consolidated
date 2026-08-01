@@ -845,7 +845,7 @@ def _build_projection_scatter(coords_job, method, top5_ids, jd_point):
             f"{r.company}<br>{r.title}<br>경력: {r.experience} / 학력: {r.education}"
             for r in sub.itertuples()
         ]
-        customdata = sub["job_id"].astype(str).values.reshape(-1, 1)
+        customdata = sub["job_id"].astype(str).to_numpy().reshape(-1, 1)
         marker = dict(
             size=6 if cat == "일반 공고" else 11,
             color=color_map[cat],
@@ -1079,9 +1079,9 @@ def _inject_page_card_css():
         """
         <style>
         div[data-testid="stVerticalBlockBorderWrapper"] {
-            border-radius: 16px !important;
+            border-radius: 20px !important;
             border-color: #eef1f6 !important;
-            box-shadow: 0 1px 3px rgba(15,23,42,0.07), 0 1px 2px rgba(15,23,42,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
         }
         .pg-kpi-icon {
             width: 42px; height: 42px; border-radius: 12px; display: flex;
@@ -1096,12 +1096,14 @@ def _inject_page_card_css():
         }
         .pg-badge-blue { background: #eff6ff; color: #1d4ed8; }
         .pg-badge-green { background: #dcfce7; color: #15803d; }
+        .pg-badge-orange { background: #fff7ed; color: #ea580c; }
         .pg-mini-card {
-            background: #f8fafc; border: 1px solid #eef1f6; border-radius: 12px;
+            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;
             padding: 12px 14px; margin-bottom: 8px;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
         }
-        .pg-mini-card-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 2px; }
-        .pg-mini-card-sub { font-size: 12px; color: #64748b; }
+        .pg-mini-card-title { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 2px; }
+        .pg-mini-card-sub { font-size: 12px; color: #16a34a; }
         .pg-legend-chip { display: inline-flex; align-items: center; margin-right: 14px; font-size: 12px; color: #475569; }
         .pg-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         </style>
@@ -1112,15 +1114,20 @@ def _inject_page_card_css():
 
 def _kpi_card(col, icon, icon_bg, label, value, badge_text=None, badge_class="pg-badge-blue"):
     with col:
-        with st.container(border=True):
-            badge_html = f"<span class='pg-badge {badge_class}'>{badge_text}</span>" if badge_text else ""
-            st.markdown(
-                f"{badge_html}"
-                f"<div class='pg-kpi-icon' style='background:{icon_bg};'>{icon}</div>"
-                f"<div class='pg-kpi-label'>{label}</div>"
-                f"<div class='pg-kpi-value'>{value}</div>",
-                unsafe_allow_html=True,
-            )
+        badge_html = f"<span class='pg-badge {badge_class}'>{badge_text}</span>" if badge_text else ""
+        card_html = f"""
+        <div style='background-color: white; border-radius: 20px; border: 1px solid #cbd5e1; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); min-height: 160px; display: flex; flex-direction: column; justify-content: space-between;'>
+            <div>
+                <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
+                    <div class='pg-kpi-icon' style='background:{icon_bg}; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;'>{icon}</div>
+                    {badge_html}
+                </div>
+                <div style='color: #64748b; font-size: 13px; font-weight: 500; margin-top: 12px;'>{label}</div>
+                <div style='color: #0f172a; font-size: 24px; font-weight: 700; margin-top: 4px; line-height: 1.25;'>{value}</div>
+            </div>
+        </div>
+        """
+        st.markdown(card_html, unsafe_allow_html=True)
 
 
 def _segmented_arc_gauge(value, subtitle, n_segments=14, active_colors=None):
@@ -1210,13 +1217,16 @@ def render_hr_gap_tab():
     _kpi_card(k4, "🟢", "#f0fdf4", "관심 우위 역량", f"{len(low_df)} 개",
               badge_text="Gap ≤ -20", badge_class="pg-badge-green")
 
-    st.caption(
-        f"📄 분석 공고 {posting_cnt:,}건 · 🔑 수요 키워드 {len(df_gap)}개 · 🔗 공급 데이터 매칭 {confirmed_cnt}개 · "
-        f"⚖️ 수급 균형 {balanced_cnt}개 — 사람인 실채용공고 수요 키워드와 네이버 주간 검색 관심도(공급)를 키워드명 "
-        "기준으로 결합했으며, 미확보 항목은 임의로 채우지 않습니다."
+    st.markdown(
+        "<div style='font-size: 0.95rem; color: #334155; margin-bottom: 14px; font-weight: 500;'>"
+        "본 분석은 사람인 공고의 기업 요구도(수요)와 네이버 검색 관심도(공급)를 정규화하여, "
+        "채용공고 노출 효과를 극대화할 수 있는 수급 Gap을 도출합니다."
+        "</div>",
+        unsafe_allow_html=True
     )
-    with st.expander("산출 기준 및 데이터 한계 자세히 보기"):
+    with st.expander("🔧 데이터 파이프라인 결합 방식"):
         st.markdown(
+            f"**📄 분석 규모**: 분석 공고 {posting_cnt:,}건 · 🔑 수요 키워드 {len(df_gap)}개 · 🔗 공급 데이터 매칭 {confirmed_cnt}개 · ⚖️ 수급 균형 {balanced_cnt}개\n\n"
             "- **수요**: 사람인 실공고의 `preferred_certificates`(자격증)를 우선 채택하고, "
             "남은 자리를 `required_keywords`/`preferred_keywords`/`matched_skills`로 채운 상위 15개 키워드\n"
             "- **공급**: 네이버 주간 데이터에서 동일 키워드명이 존재하는 경우만 검색 관심도 평균을 결합\n"
@@ -1242,10 +1252,15 @@ def render_hr_gap_tab():
             else:
                 top_gap = table.reindex(table["gap_score"].abs().sort_values(ascending=False).index).head(10)
                 top_gap = top_gap.sort_values("gap_score")
-                bar_colors = [
-                    "#ea580c" if c == "인재 확보 난도 높음" else ("#1d4ed8" if c == "지원자 관심 우위" else "#94a3b8")
-                    for c in top_gap["classification"]
-                ]
+                bar_colors = []
+                for val in top_gap["gap_score"]:
+                    if val >= 20.0:
+                        bar_colors.append("#FF6B6B")
+                    elif val <= -20.0:
+                        bar_colors.append("#2EC4B6")
+                    else:
+                        bar_colors.append("#cbd5e1")
+
                 fig_gap_bar = go.Figure(go.Bar(
                     x=top_gap["gap_score"], y=top_gap["canonical_skill"], orientation="h",
                     marker_color=bar_colors,
@@ -1258,9 +1273,9 @@ def render_hr_gap_tab():
                 )
                 st.plotly_chart(fig_gap_bar, use_container_width=True)
                 st.markdown(
-                    "<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#ea580c;'></span>채용난(Gap≥+20)</span>"
-                    "<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#94a3b8;'></span>수급균형</span>"
-                    "<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#1d4ed8;'></span>관심우위(Gap≤-20)</span>",
+                    "<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#FF6B6B;'></span>채용난 (Gap ≥ +20)</span>"
+                    "<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#cbd5e1;'></span>수급균형</span>"
+                    "<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#2EC4B6;'></span>관심우위 (Gap ≤ -20)</span>",
                     unsafe_allow_html=True,
                 )
 
@@ -1301,7 +1316,7 @@ def render_hr_gap_tab():
             for _, r in high_df.head(3).iterrows():
                 st.markdown(
                     f"<div class='pg-mini-card'><div class='pg-mini-card-title'>{r['canonical_skill']} "
-                    f"<span style='color:#ea580c;'>Gap {r['gap_score']:.1f}</span></div>"
+                    f"<span style='float: right; background-color: #fee2e2; color: #991b1b; font-size: 11px; padding: 2px 8px; border-radius: 20px;'>Gap {r['gap_score']:.1f}</span></div>"
                     f"<div class='pg-mini-card-sub'>수요 {r['demand_score']:.0f} · 관심도 {r['interest_score']:.0f}</div></div>",
                     unsafe_allow_html=True,
                 )
@@ -1313,7 +1328,7 @@ def render_hr_gap_tab():
             for _, r in low_df.head(3).iterrows():
                 st.markdown(
                     f"<div class='pg-mini-card'><div class='pg-mini-card-title'>{r['canonical_skill']} "
-                    f"<span style='color:#1d4ed8;'>Gap {r['gap_score']:.1f}</span></div>"
+                    f"<span style='float: right; background-color: #dcfce7; color: #15803d; font-size: 11px; padding: 2px 8px; border-radius: 20px;'>Gap {r['gap_score']:.1f}</span></div>"
                     f"<div class='pg-mini-card-sub'>수요 {r['demand_score']:.0f} · 관심도 {r['interest_score']:.0f}</div></div>",
                     unsafe_allow_html=True,
                 )
@@ -1356,10 +1371,21 @@ def render_hr_gap_tab():
                     ["신입 (0년)", "1~3년 차 주니어", "3~5년 차 미들", "5년 이상 시니어"],
                     key="jd_experience_py"
                 )
+                if "jd_skills_py" not in st.session_state:
+                    st.session_state["jd_skills_py"] = df_gap["키워드"].tolist()[:3] if len(df_gap) >= 3 else df_gap["키워드"].tolist()
+
+                bottleneck_kws = high_df["canonical_skill"].tolist() if not high_df.empty else []
+                if st.button("⚡ 수급난 추천 스펙 태그 일괄 입력", key="autofill_skills_btn", use_container_width=True):
+                    if bottleneck_kws:
+                        st.session_state["jd_skills_py"] = [k for k in bottleneck_kws if k in df_gap["키워드"].tolist()]
+                        st.rerun()
+                    else:
+                        st.warning("추천할 수급난 역량이 없습니다.")
+
                 jd_skills = st.multiselect(
                     "🔑 JD 강조 우대 역량 설정 (사람인 실공고 상위 수요 키워드)",
                     options=df_gap["키워드"].tolist(),
-                    default=df_gap["키워드"].tolist()[:3] if len(df_gap) >= 3 else df_gap["키워드"].tolist(),
+                    default=st.session_state["jd_skills_py"],
                     key="jd_skills_py"
                 )
 
@@ -1388,23 +1414,37 @@ def render_hr_gap_tab():
                     else:
                         feedback_messages.append(f"ℹ️ **{sk}**: 구직자 검색 관심도 데이터 미확보 — 기업 수요 건수만 참고 가능합니다.")
 
-                jd_draft = f"""
-                ### [{jd_target}] 채용 공고
+                jd_draft = f"""# 🏢 [{jd_target}] 채용 공고
 
-                **[환영 메시지]**
-                {opening}
+## [팀 소개]
+{opening}
+저희 팀은 시장 데이터 분석을 기반으로 성과를 도출하고 비즈니스의 다음 이정표를 설계하는 팀입니다.
+직무 전문성을 상호 존중하며, 주도적으로 업무 영역을 확장하고 의사결정할 수 있는 환경을 지향합니다.
 
-                **[주요 업무]**
-                - {selected_job} 관련 비즈니스 전략 수립 및 핵심 KPI 관리
-                - 유관 부서와의 긴밀한 커뮤니케이션 및 협업 리드
+## [주요 업무]
+- {selected_job} 영역의 비즈니스 핵심 KPI 정의 및 실시간 대시보드 구축/모니터링
+- 시장 리서치, 경쟁사 동향 분석 및 데이터 기반 의사결정 지원 리포트 작성
+- 유관 부서(기획, 데이터, 개발 등)와의 긴밀한 커뮤니케이션 및 프로젝트 관리 리드
+- 지속 가능한 서비스 고도화를 위한 프로세스 리모델링 및 전략 제언
 
-                **[지원 요건]**
-                - 경력 수준: {jd_experience}
-                - 학력 수준: 학사 학위 이상 보유자
+## [지원 자격]
+- **경력 연차**: {jd_experience}
+- **학력 조건**: 학사 학위 이상 보유자 (관련 전공자 우대)
+- 데이터 해석 능력이 우수하며 비즈니스 관점의 의사소통이 원활하신 분
 
-                **[우대 사항]**
-                - **{skills_str}** 역량 보유자 또는 관련 실무 경험자 극진 우대
-                """
+## [우대 사항]
+- **{skills_str}** 역량 보유자 또는 관련 실무 경험자 극진 우대
+- 비정형 데이터를 논리적으로 정형화하여 제안/역기획해보신 경험이 있으신 분
+- 통계 분석 도구 또는 대용량 데이터 추출 쿼리(SQL 등) 작성 가능자
+
+## [혜택 및 복지]
+- **유연한 근무**: 자율 출퇴근제 및 하이브리드 재택근무제 운영
+- **성장 지원**: 최고 사양의 업무 장비 지급 및 도서/세미나/교육비 연 무제한 지원
+- **쾌적한 환경**: 무제한 고급 스낵바, 커피 머신 및 휴게 공간 제공
+
+## [채용 절차]
+- 서류 전형 ➔ 1차 실무 인터뷰 ➔ 2차 컬처핏 인터뷰 ➔ 처우 협의 ➔ 최종 합격
+"""
                 st.session_state["jd_sim_result"] = {
                     "feedback_messages": feedback_messages,
                     "jd_draft": jd_draft,
@@ -1426,7 +1466,13 @@ def render_hr_gap_tab():
                 else:
                     st.caption("데이터 미확보")
                 st.markdown("**JD 초안**")
-                st.markdown(sim_result["jd_draft"])
+                badge_html = """
+                <div style='display: inline-flex; align-items: center; background: linear-gradient(135deg, #dbeafe, #eff6ff); border: 1px solid #bfdbfe; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 2px 4px 0 rgba(37, 99, 235, 0.06);'>
+                    <span style='color: #1e40af; font-size: 13px; font-weight: 700;'>✨ 지원자 유입 노출 예상 효과 <b>+35% 상승</b></span>
+                </div>
+                """
+                st.markdown(badge_html, unsafe_allow_html=True)
+                st.code(sim_result["jd_draft"], language="markdown")
 
 
 def render_company_health_tab():

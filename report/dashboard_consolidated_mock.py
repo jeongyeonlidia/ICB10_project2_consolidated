@@ -1123,21 +1123,23 @@ def _inject_page_card_css():
     )
 
 
-def _kpi_card(col, icon, icon_bg, label, value, badge_text=None, badge_class="pg-badge-blue"):
+def _kpi_card(col, icon, icon_bg, label, value, badge_text=None, badge_class="pg-badge-blue", help_text=""):
     with col:
         badge_html = f"<span class='pg-badge {badge_class}'>{badge_text}</span>" if badge_text else ""
-        card_html = f"""
-        <div style='background-color: white; border-radius: 20px; border: 1px solid #cbd5e1; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); min-height: 160px; display: flex; flex-direction: column; justify-content: space-between;'>
-            <div>
-                <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-                    <div class='pg-kpi-icon' style='background:{icon_bg}; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;'>{icon}</div>
-                    {badge_html}
-                </div>
-                <div style='color: #64748b; font-size: 13px; font-weight: 500; margin-top: 12px;'>{label}</div>
-                <div style='color: #0f172a; font-size: 24px; font-weight: 700; margin-top: 4px; line-height: 1.25;'>{value}</div>
-            </div>
-        </div>
-        """
+        help_html = f"<div style='color: #94a3b8; font-size: 11px; margin-top: 8px; line-height: 1.3;'>{help_text}</div>" if help_text else ""
+        card_html = (
+            f"<div style='background-color: white; border-radius: 20px; border: 1px solid #cbd5e1; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); min-height: 190px; display: flex; flex-direction: column; justify-content: space-between;'>"
+            f"<div>"
+            f"<div style='display: flex; justify-content: space-between; align-items: flex-start;'>"
+            f"<div class='pg-kpi-icon' style='background:{icon_bg}; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;'>{icon}</div>"
+            f"{badge_html}"
+            f"</div>"
+            f"<div style='color: #64748b; font-size: 13px; font-weight: 500; margin-top: 12px;'>{label}</div>"
+            f"<div style='color: #0f172a; font-size: 24px; font-weight: 700; margin-top: 4px; line-height: 1.25;'>{value}</div>"
+            f"{help_html}"
+            f"</div>"
+            f"</div>"
+        )
         st.markdown(card_html, unsafe_allow_html=True)
 
 
@@ -1235,14 +1237,18 @@ def render_hr_gap_tab():
     k1, k2, k3, k4 = st.columns(4)
     _kpi_card(k1, "📊", "#eff6ff", "분석 가능 역량",
               f"{insight['usable']} 개" if insight else "N/A",
-              badge_text="사람인 DB · 네이버 API" if insight else "데이터 미확보", badge_class="pg-badge-blue")
+              badge_text="사람인 DB · 네이버 API" if insight else "데이터 미확보", badge_class="pg-badge-blue",
+              help_text="공고 수요(사람인)와 검색관심도(네이버)가 매칭되어 실제 수급 Gap 분석이 가능한 역량 수")
     _kpi_card(k2, "❓", "#f8fafc", "데이터 미확보",
               f"{insight['missing']} 개" if insight else f"{missing_cnt} 개",
-              badge_text=f"직무 전체 {insight['total']}개 중" if insight else None, badge_class="pg-badge-blue")
+              badge_text=f"직무 전체 {insight['total']}개 중" if insight else None, badge_class="pg-badge-blue",
+              help_text="사람인 수요에는 존재하나 네이버 API 검색 데이터가 매핑되지 않아 분석에서 제외된 역량 수")
     _kpi_card(k3, "🔥", "#fff7ed", "채용난 역량", f"{len(high_df)} 개",
-              badge_text="Gap ≥ +20", badge_class="pg-badge-blue")
+              badge_text="Gap ≥ +20", badge_class="pg-badge-blue",
+              help_text="기업 수요(요구도)가 지원자 관심(공급)보다 현저히 높은 역량 수 (인재 확보 난이도 높음)")
     _kpi_card(k4, "🟢", "#f0fdf4", "관심 우위 역량", f"{len(low_df)} 개",
-              badge_text="Gap ≤ -20", badge_class="pg-badge-green")
+              badge_text="Gap ≤ -20", badge_class="pg-badge-green",
+              help_text="지원자 관심(검색량)이 기업 수요를 크게 초과하여 지원자 유입에 매우 유리한 역량 수")
 
     st.markdown(
         "<div style='font-size: 0.95rem; color: #334155; margin-bottom: 14px; font-weight: 500;'>"
@@ -1313,19 +1319,32 @@ def render_hr_gap_tab():
                 st.info("데이터 미확보")
             else:
                 usable = insight["usable"] if insight["usable"] else 1
-                high_ratio = len(high_df) / usable * 100
+                high_cnt = len(high_df)
+                low_cnt = len(low_df)
+
+                if low_cnt > high_cnt:
+                    ratio_val = (low_cnt / usable) * 100
+                    gauge_title = "관심 우위 역량 비중"
+                    gauge_colors = ["#065f46", "#047857", "#059669", "#10b981", "#34d399", "#6ee7b7"]
+                elif high_cnt > 0:
+                    ratio_val = (high_cnt / usable) * 100
+                    gauge_title = "채용난 역량 비중"
+                    gauge_colors = ["#7c2d12", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"]
+                else:
+                    ratio_val = 100.0
+                    gauge_title = "수급 균형 비중"
+                    gauge_colors = ["#1e3a8a", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd"]
+
                 st.plotly_chart(
-                    _segmented_arc_gauge(high_ratio, "채용난 역량 비중",
-                                          active_colors=["#7c2d12", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"]),
+                    _segmented_arc_gauge(ratio_val, gauge_title, active_colors=gauge_colors),
                     use_container_width=True,
                 )
                 st.markdown(
-                    f"<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#ea580c;'></span>채용난 {len(high_df)}개</span>"
-                    f"<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#94a3b8;'></span>균형 {balanced_cnt}개</span>"
-                    f"<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#1d4ed8;'></span>관심우위 {len(low_df)}개</span>",
+                    f"<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#FF6B6B;'></span>채용난 {high_cnt}개</span>"
+                    f"<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#cbd5e1;'></span>균형 {balanced_cnt}개</span>"
+                    f"<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:#2EC4B6;'></span>관심우위 {low_cnt}개</span>",
                     unsafe_allow_html=True,
                 )
-                high_cnt, low_cnt = len(high_df), len(low_df)
                 if high_cnt > low_cnt:
                     suggestion = f"💡 {selected_job}은(는) 인재 확보 난도가 높은 역량이 더 많습니다 — 우대조건 완화나 채용 채널 확대를 검토해 보세요."
                 elif low_cnt > high_cnt:
@@ -1348,7 +1367,7 @@ def render_hr_gap_tab():
                     unsafe_allow_html=True,
                 )
         else:
-            st.caption("해당 역량이 없습니다.")
+            st.caption("💡 해당 직무에서는 기업의 채용 수요보다 구직자 관심(공급)이 월등히 부족한 '채용난 역량(Gap ≥ +20)'이 존재하지 않습니다. 이는 해당 직종 내 스펙들의 시장 공급망이 비교적 원활하며, 공고 등록 시 특정 역량 때문에 지원자 모집이 크게 지체될 우려가 적은 안정적인 인재 풀 환경임을 나타냅니다.")
     with top3_col2:
         st.caption(f"🟢 관심 우위 (Gap ≤ -20, 총 {len(low_df)}개)")
         if not low_df.empty:
@@ -1360,7 +1379,7 @@ def render_hr_gap_tab():
                     unsafe_allow_html=True,
                 )
         else:
-            st.caption("해당 역량이 없습니다.")
+            st.caption("💡 구직자 관심도가 기업 수요에 비해 압도적으로 높은 '관심 우위 역량(Gap ≤ -20)'이 현재 존재하지 않습니다. 이는 구직자들이 관심 있는 특정 스펙에 쏠리지 않고 고르게 분포되어 있거나, 시장 내 관심 열기가 다소 정체되어 공고 노출 시 즉각적인 트래픽 흡수가 상대적으로 둔화될 수 있음을 의미합니다.")
     if insight is not None and not table.empty:
         st.caption("※ trend_ratio_job_intent와 검색 API 수치는 이 Gap 스코어 계산에 사용하지 않았습니다.")
 

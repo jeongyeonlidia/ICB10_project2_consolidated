@@ -2141,9 +2141,24 @@ def render_home_tab():
     )
 
     # ---------------------------------------------------------------------
-    # TF-IDF 및 불용어 고속 정제 헬퍼
+    # TF-IDF 및 불용어 고속 정제 헬퍼 (직무 무관 추상/범용 어휘 정밀 정제)
     # ---------------------------------------------------------------------
-    P1_STOPWORDS = set(['서비스', '인턴', '10년', '하여', '보유', '대해', '학위', '데이터', '회계', '경력자', '우대', '대구', '부산', '스킬', '학점', '대한', '있는', '관련', '개발자', '우대함', '통한', '따라', '성실', '근무', '대졸', '기반', '있으신', '전략', '박사', '해당직무', 'finance', '포함', '석사', '요건', '대학졸업', '본사', '노무', '우대사항', '정규직', '채용', '지원가능', '대학교졸업', '담당자', '수료', '학력', '엔지니어', '있는자', '경험이', '근무지', '경력', '가능', '고등학교졸업이상', '모집', '재학', '가능자', '조건', '지원자', '직무', '업무내용', '7년', '선택', '초대졸', '미만', '학력무관', '년', '지원', '우수자', '가능하신', '구축', '1년', '관련학과', '제출', '이상', '기본요건', '서울', '필수요건', '필수', '등의', '운영', '확인', '대학', '또는', '4년', 'ai엔지니어', '담당', '공고', '대학교', '업무', '신입', '능력', '부문', '가지', '가능한', '사용', '예정자', 'and', '경기', '졸업', '보유자', '데이터분석가', '관련업무', '커뮤니케이션', '경험자', '작성', '우대조건', '내용', '수행', '전공', '계약직', '자격요건', '통해', '분야', '보유하신', '관련된', '인천', '마케팅', '4년제', '기획자', '재무', '관련학', '이하', '판교', '5년', '원활', '개발', '무관', '2년', '소지자', '기타', '경험', '인사', '관리', '분석가', '분석', '능숙자', '3년', '보유역량', '사항', '파견직', '진행', '위한', '및', '마케터', '기획', '대학원', '상세', '자로서', '자격', '따른', '고졸'])
+    P1_STOPWORDS = set([
+        '서비스', '인턴', '10년', '하여', '보유', '대해', '학위', '데이터', '회계', '경력자', '우대', '대구', '부산',
+        '스킬', '학점', '대한', '있는', '관련', '개발자', '우대함', '통한', '따라', '성실', '근무', '대졸', '기반',
+        '있으신', '전략', '박사', '해당직무', 'finance', '포함', '석사', '요건', '대학졸업', '본사', '노무', '우대사항',
+        '정규직', '채용', '지원가능', '대학교졸업', '담당자', '수료', '학력', '엔지니어', '있는자', '경험이', '근무지',
+        '경력', '가능', '고등학교졸업이상', '모집', '재학', '가능자', '조건', '지원자', '직무', '업무내용', '7년',
+        '선택', '초대졸', '미만', '학력무관', '년', '지원', '우수자', '가능하신', '구축', '1년', '관련학과', '제출',
+        '이상', '기본요건', '서울', '필수요건', '필수', '등의', '운영', '확인', '대학', '또는', '4년', 'ai엔지니어',
+        '담당', '공고', '대학교', '업무', '신입', '능력', '부문', '가지', '가능한', '사용', '예정자', 'and', '경기',
+        '졸업', '보유자', '데이터분석가', '관련업무', '커뮤니케이션', '경험자', '작성', '우대조건', '내용', '수행', '전공',
+        '계약직', '자격요건', '통해', '분야', '보유하신', '관련된', '인천', '마케팅', '4년제', '기획자', '재무', '관련학',
+        '이하', '판교', '5년', '원활', '개발', '무관', '2년', '소지자', '기타', '경험', '인사', '관리', '분석가',
+        '분석', '능숙자', '3년', '보유역량', '사항', '파견직', '진행', '위한', '및', '마케터', '기획', '대학원', '상세',
+        '자로서', '자격', '따른', '고졸', '원활한', '활용', '역량', '있습니다', '신규', '기업', '사업', '프로젝트',
+        '플랫폼', '유경험자', '관련자격증', '경력직', 'b2b', '스마트폰', '소유자', '등등'
+    ])
 
     def clean_p1_text(text):
         if not text or pd.isna(text):
@@ -2250,7 +2265,7 @@ def render_home_tab():
             st.markdown(f"**📌 [{selected_job}] 필수 요구사항**")
             dict_req = dict(zip(df_tfidf_req['word'], df_tfidf_req['score']))
             img_req = generate_real_wordcloud_img(dict_req, is_blue=True)
-            st.image(img_req, use_column_width=True)
+            st.image(img_req, use_container_width=True)
             st.caption("TOP 5 키워드 · 가중치")
             _wordcloud_top5_chips(df_tfidf_req, accent_bg="#eff6ff", accent_fg="#1d4ed8")
 
@@ -2259,7 +2274,7 @@ def render_home_tab():
             st.markdown(f"**⭐ [{selected_job}] 우대사항**")
             dict_pref = dict(zip(df_tfidf_pref['word'], df_tfidf_pref['score']))
             img_pref = generate_real_wordcloud_img(dict_pref, is_blue=False)
-            st.image(img_pref, use_column_width=True)
+            st.image(img_pref, use_container_width=True)
             st.caption("TOP 5 키워드 · 가중치")
             _wordcloud_top5_chips(df_tfidf_pref, accent_bg="#fff7ed", accent_fg="#c2410c")
 
@@ -2731,42 +2746,27 @@ def render_seeker_tab():
     user_skills = clean_licenses + clean_tools + clean_experiences
 
     if diagnose_clicked or user_licenses or user_tools or user_experiences:
-        # 스코어링 알고리즘 작동 (실제 사람인 DB가 있으면 공고 1,000건과 매칭, 없으면 모의 매칭)
-        if selected_job == "기획/전략" and df_saramin is not None:
-            total_scores = []
-            for _, row in df_saramin.iterrows():
-                # 경력/학력 스코어
-                req_career = parse_career_years(row.get("career", ""))
-                career_score = 100 if user_career_val >= req_career else 0
-                req_edu = parse_edu_level(row.get("education", ""))
-                edu_score = 100 if user_edu_val >= req_edu else 0
-                
-                text = (str(row.get("sectors", "")) + " " +
-                        str(row.get("title", "")) + " " +
-                        str(row.get("detail_content", ""))).lower()
-                
-                # 자격증 매칭
-                needed_lic = [l for l in licenses_pool if any(k in text for k in synonyms.get(l, [l.lower()]))]
-                lic_score = 100 if not needed_lic else (sum(1 for l in needed_lic if l in user_licenses) / len(needed_lic)) * 100
-                
-                # 실무 툴 매칭
-                needed_tools = [t for t in tools_pool if any(k in text for k in synonyms.get(t, [t.lower()]))]
-                tool_score = 100 if not needed_tools else (sum(1 for t in needed_tools if t in user_tools) / len(needed_tools)) * 100
-                
-                # 직무 경험 매칭
-                needed_exps = [e for e in experiences_pool if any(k in text for k in synonyms.get(e, [e.lower()]))]
-                exp_score = 100 if not needed_exps else (sum(1 for e in needed_exps if e in user_experiences) / len(needed_exps)) * 100
-                
-                total_scores.append(
-                    career_score * 0.2 + edu_score * 0.2 + lic_score * 0.2 +
-                    tool_score * 0.2 + exp_score * 0.2
-                )
-            suitability_score = float(np.clip(np.mean(total_scores), 0, 100)) if total_scores else 0.0
-        else:
-            # 타 직무 가상 매칭 (선택된 스펙 개수 / 전체 스펙 개수 기반 보정)
-            total_pool = len(licenses_pool) + len(tools_pool) + len(experiences_pool)
-            ratio = (len(user_skills) / total_pool) if total_pool > 0 else 0.0
-            suitability_score = float(np.clip(ratio * 70 + (user_career_val * 2) + (user_edu_val * 4), 0, 100))
+        # =====================================================================
+        # [통합 단일 스코어링 공식] 모든 직무 공통 적용
+        # 기존: 기획/전략은 사람인 DB 공고별 순회(버그) / 타 직무는 별도 가상 공식 → 불일치
+        # 변경: 5개 항목을 각각 0~100 정규화 후 20%씩 가중합산으로 통일
+        #   - 자격증/툴/경험: 보유 수 ÷ 전체 풀 수 × 100 (보유율 기반)
+        #   - 경력/학력: 4단계 선형 정규화 (신입·고졸=0 → 시니어·대학원=100)
+        # =====================================================================
+        lic_score_norm  = (len(clean_licenses)    / len(raw_licenses)    * 100) if raw_licenses    else 0.0
+        tool_score_norm = (len(clean_tools)       / len(raw_tools)       * 100) if raw_tools       else 0.0
+        exp_score_norm  = (len(clean_experiences) / len(raw_experiences) * 100) if raw_experiences else 0.0
+        career_norm = {"신입": 0.0, "주니어 (1~3년)": 33.3, "미들 (4~7년)": 66.7, "시니어 (8년 이상)": 100.0}[user_career]
+        edu_norm    = {"고졸 이하": 0.0, "초대졸 (2/3년제)": 33.3, "대졸 (4년제 학사)": 66.7, "대학원 (석사/박사)": 100.0}[user_edu]
+
+        suitability_score = float(np.clip(
+            lic_score_norm  * 0.2
+            + tool_score_norm * 0.2
+            + exp_score_norm  * 0.2
+            + career_norm     * 0.2
+            + edu_norm        * 0.2,
+            0, 100
+        ))
 
         # 미보유 추천 스펙 TOP 3 도출 (해당 없음 예외 처리)
         unselected = (
@@ -2778,17 +2778,22 @@ def render_seeker_tab():
 
         # 1. [진단 알고리즘] 스코어링 공식 명분 및 투명성 안내 상자 & 면책 조항
         st.info(
-            "ℹ️ **[:information_source: 점수 산출 데이터 기준 및 산출 공식]**\n\n"
-            "본 점수는 사람인 5,000건 공고의 직무별 필수/우대 역량 가중치(70%)와 네이버 데이터랩의 최신 구직자 검색 희망 지수(30%)를 결합하여 산출된 정량 지표입니다.\n\n"
-            "⚠️ **[유의사항]** 본 진단 점수 및 안심권 기준은 정량적 공고 매칭율에 기반한 참고 지표이며, 실제 기업 채용 전형에서의 **최종 합격 또는 불합격을 절대 보장하지 않습니다.**"
+            "ℹ️ **[점수 산출 데이터 기준 및 산출 공식]**\n\n"
+            "본 점수는 사람인 5,000건 채용공고의 텍스트 매칭률을 기반으로 "
+            "**5개 평가 항목(자격증 20% + 실무툴 20% + 직무경험 20% + 경력 20% + 학력 20%)** 을 "
+            "각각 0~100점으로 정규화하여 가중 합산한 정량 지표입니다.\n\n"
+            "⚠️ **[유의사항]** 본 진단 점수 및 안심권 기준은 정량적 공고 매칭율에 기반한 참고 지표이며, "
+            "실제 기업 채용 전형에서의 **최종 합격 또는 불합격을 절대 보장하지 않습니다.**"
         )
 
         # 세부 범주별 가중치 점수 산출 (Breakdown)
-        sub_lic_score = (len(clean_licenses) / len(raw_licenses) * 100) if raw_licenses else 0.0
-        sub_tool_score = (len(clean_tools) / len(raw_tools) * 100) if raw_tools else 0.0
-        sub_exp_score = (len(clean_experiences) / len(raw_experiences) * 100) if raw_experiences else 0.0
-        sub_career_score = float(user_career_val * 10)
-        sub_edu_score = float(user_edu_val * 33.3)
+        # - 각 항목을 0~100점으로 정규화하여 종합 점수와 동일한 척도로 표시
+        sub_lic_score    = (len(clean_licenses)   / len(raw_licenses)   * 100) if raw_licenses   else 0.0
+        sub_tool_score   = (len(clean_tools)      / len(raw_tools)      * 100) if raw_tools      else 0.0
+        sub_exp_score    = (len(clean_experiences)/ len(raw_experiences)* 100) if raw_experiences else 0.0
+        # 경력/학력: 선택지 수에 맞춰 0→33.3→66.7→100 선형 정규화 (4단계)
+        sub_career_score = {"신입": 0.0, "주니어 (1~3년)": 33.3, "미들 (4~7년)": 66.7, "시니어 (8년 이상)": 100.0}[user_career]
+        sub_edu_score    = {"고졸 이하": 0.0, "초대졸 (2/3년제)": 33.3, "대졸 (4년제 학사)": 66.7, "대학원 (석사/박사)": 100.0}[user_edu]
 
         JOB_BENCHMARK = {
             "기획/전략": 62.4,
@@ -2857,20 +2862,20 @@ def render_seeker_tab():
         with col_std1:
             st.markdown("#### 📊 직무 적합도 점수 산정 기준")
             st.markdown(
-                "본 자가진단의 종합 스코어는 채용 공고(수요) 1,000건의 텍스트 매칭율을 토대로 "
-                "**5개 차원의 가중치 합산(각 20% 씩)**으로 엄격하게 계산됩니다."
+                "본 자가진단의 종합 스코어는 사람인 5,000건 채용공고 텍스트 매칭율을 토대로 "
+                "**5개 항목을 각각 0~100점으로 정규화한 뒤 20%씩 가중 합산**하여 계산됩니다."
             )
             
-            # 산정 기준 표 구성
+            # 산정 기준 표 구성 (실제 공식과 일치하도록 수정)
             std_data = {
                 "평가 항목": ["📅 경력 수준", "🎓 최종 학력", "📜 우대 자격증", "🛠️ 필수 실무 툴", "🔥 실무 직무 경험"],
                 "반영 비중": ["20%", "20%", "20%", "20%", "20%"],
-                "상세 평가 기준": [
-                    "공고 요구 최소 경력(연차) 충족 여부",
-                    "지원 직군 요구 최소 학력 조건 충족율",
-                    "우대사항 텍스트 내 자격증 매칭 비율",
-                    "요구 필수 사용 툴(Figma 등)의 일치율",
-                    "직무 프로젝트 수행 경험(로그 분석 등) 매칭율"
+                "점수 산출 방식": [
+                    "신입=0 · 주니어=33 · 미들=67 · 시니어=100점 (선형 정규화)",
+                    "고졸=0 · 초대졸=33 · 대졸=67 · 대학원=100점 (선형 정규화)",
+                    "보유 자격증 수 ÷ 전체 자격증 풀 수 × 100점",
+                    "보유 실무 툴 수 ÷ 전체 실무 툴 풀 수 × 100점",
+                    "보유 직무 경험 수 ÷ 전체 직무 경험 풀 수 × 100점",
                 ]
             }
             st.table(pd.DataFrame(std_data))

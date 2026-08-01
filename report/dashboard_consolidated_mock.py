@@ -1586,12 +1586,58 @@ if selected_job == "기획/전략":
 
 st.sidebar.write("---")
 
-# 데이터 소스 상태 표시
+# 데이터 소스 상태 표시 (내부 경로는 expander 안에 숨기고, 배지만 표시)
 st.sidebar.subheader("📡 데이터 소스 현황")
-if saramin_path:
-    st.sidebar.success(f"✅ 사람인 DB (실제): {saramin_path}")
-if weekly_insights_path:
-    st.sidebar.success(f"✅ 네이버 주간 API (실제): {weekly_insights_path}")
+st.sidebar.markdown(
+    """
+    <style>
+    .data-badge {
+        display: block;
+        padding: 7px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+    .badge-green {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+    .badge-blue {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+    }
+    .badge-gray {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+_saramin_label = f"🟢 사람인 DB 연동 완료" if saramin_path else "⚪ 사람인 DB 미연동"
+_saramin_count_label = f" ({df_saramin.shape[0]:,}건)" if df_saramin is not None else ""
+_naver_label = f"🟢 네이버 API 연동 완료" if weekly_insights_path else "⚪ 네이버 API 미연동"
+_saramin_badge_cls = "badge-green" if saramin_path else "badge-gray"
+_naver_badge_cls = "badge-blue" if weekly_insights_path else "badge-gray"
+st.sidebar.markdown(
+    f"<span class='data-badge {_saramin_badge_cls}'>{_saramin_label}{_saramin_count_label}</span>"
+    f"<span class='data-badge {_naver_badge_cls}'>{_naver_label}</span>",
+    unsafe_allow_html=True
+)
+with st.sidebar.expander("🛠 데이터 파이프라인 정보"):
+    if saramin_path:
+        st.caption(f"사람인 DB: `{saramin_path}`")
+    else:
+        st.caption("사람인 DB: 미연동")
+    if weekly_insights_path:
+        st.caption(f"네이버 주간 API: `{weekly_insights_path}`")
+    else:
+        st.caption("네이버 주간 API: 미연동")
 
 
 # 현재 직무의 데이터프레임 결정
@@ -1621,34 +1667,115 @@ def mock_badge():
 # =====================================================================
 # 4. 메인 타이틀 및 2 탭 구성 (수집된 실제 데이터 기반으로 최적화)
 # =====================================================================
-st.title("🤖 취업 시장 다차원 EDA 및 직무 적합도 진단 솔루션 (SaaS)")
+st.title("취업 시장 다차원 EDA 및 직무 적합도 진단 솔루션")
 st.markdown(
-    f"**현재 관제 직무**: `{selected_job}` | 사람인 실제 채용공고 5,000건(수요) + 네이버 주간 API(공급) 데이터 실시간 동적 매칭"
+    f"**현재 관제 직무**: `{selected_job}` · 사람인 실채용공고 5,000건(수요) + 네이버 주간 API(공급) 실시간 동적 매칭"
 )
 
 # ---------------------------------------------------------------------
-# 🚀 Hero Banner Section: 대시보드 핵심 가치 & 3대 탭 연결 가이드
+# Hero Banner Section: 모던 카드 스타일로 개선
 # ---------------------------------------------------------------------
 hero_html = f"""
-<div style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #cbd5e1; border-left: 5px solid #2563eb; padding: 18px 24px; border-radius: 10px; margin-top: 10px; margin-bottom: 16px;">
-    <h3 style="margin-top:0; color:#1e293b; font-size: 1.15rem; font-weight: 700; line-height: 1.5;">
-        🎯 "나는 어떤 역량이 부족한지, 기업은 어떤 역량이 부족한지, 그리고 어디가 위험한 채용시장인지 한 번에 보여주는 대시보드입니다."
-    </h3>
-    <p style="margin-bottom: 0px; color: #475569; font-size: 0.93rem; line-height: 1.6;">
-        본 대시보드는 <b>사람인 5,000건 실시간 채용 DB</b>와 <b>네이버 API 구직자 관심도 데이터</b>를 결합하여 구직자와 인사팀 모두에게 명확한 데이터적 인사이트를 제시합니다. 아래 3가지 핵심 질문에 맞춰 원하는 기능을 탐색해 보세요.
+<style>
+.hero-outer {{
+    background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 100%);
+    border-radius: 20px;
+    padding: 28px 32px 20px 32px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(37,99,235,0.07);
+    border: 1px solid #e0e7ff;
+}}
+.hero-badge {{
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 14px;
+    border: 1px solid #bbf7d0;
+}}
+.hero-title {{
+    margin: 0 0 8px 0;
+    color: #1e293b;
+    font-size: 1.13rem;
+    font-weight: 700;
+    line-height: 1.5;
+}}
+.hero-desc {{
+    margin-bottom: 0;
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.65;
+}}
+.chip-row {{
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}}
+.chip-card {{
+    flex: 1;
+    min-width: 160px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px 18px;
+    transition: box-shadow 0.18s ease;
+    cursor: default;
+}}
+.chip-card:hover {{
+    box-shadow: 0 4px 16px rgba(37,99,235,0.10);
+    border-color: #93c5fd;
+}}
+.chip-icon {{
+    font-size: 18px;
+    margin-bottom: 6px;
+    display: block;
+}}
+.chip-title {{
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 3px;
+}}
+.chip-sub {{
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+}}
+</style>
+<div class="hero-outer">
+    <div class="hero-badge">🟢 REAL-TIME DATA CONNECTED</div>
+    <p class="hero-title">
+        나의 역량은 어느 수준인지, 기업이 원하는 스킬은 무엇인지, 어디가 위험한 채용시장인지 — 한 화면에서 확인하세요.
     </p>
+    <p class="hero-desc">
+        <b>사람인 5,000건 실채용 DB</b>와 <b>네이버 API 관심도 데이터</b>를 결합한 데이터 기반 취업 시장 인사이트 대시보드입니다.
+    </p>
+    <div class="chip-row">
+        <div class="chip-card">
+            <span class="chip-icon">📋</span>
+            <div class="chip-title">내 스펙 점검하기</div>
+            <div class="chip-sub">자격증·툴·경험 5대 스펙을 진단하세요 → 구직자 탭</div>
+        </div>
+        <div class="chip-card">
+            <span class="chip-icon">📊</span>
+            <div class="chip-title">기업 수급 Gap 보기</div>
+            <div class="chip-sub">채용 수요-공급 미스매치를 분석하세요 → 인사팀 탭</div>
+        </div>
+        <div class="chip-card">
+            <span class="chip-icon">🔍</span>
+            <div class="chip-title">블랙기업 신호 보기</div>
+            <div class="chip-sub">위험 채용공고·이직위험도를 탐지하세요 → 건전성 탭</div>
+        </div>
+    </div>
 </div>
 """
 st.markdown(hero_html, unsafe_allow_html=True)
-
-# 🚀 3대 탭 연동 핵심 질문 & 바로가기 안내 카드
-hero_col1, hero_col2, hero_col3 = st.columns(3)
-with hero_col1:
-    st.info("💡 **[내 스펙 점검하기]**\n\n나의 자격증·툴·경험 5대 스펙을 입력하고 100점 만점 대비 부족한 역량을 진단받으세요. *(상단 '💡 탭 1' 이용)*")
-with hero_col2:
-    st.success("🏢 **[기업 수급 Gap 보기]**\n\n기업 채용 수요와 구직자 관심도의 믹스매치 수급 갭을 확인하고 최적 JD를 도출하세요. *(상단 '🏢 탭 2' 이용)*")
-with hero_col3:
-    st.warning("⚠️ **[위험 공고/블랙기업 신호 보기]**\n\n업종별 평균 이직위험도와 잦은 채용공고 재등록 블랙기업 신호를 탐지하세요. *(상단 '⚠️ 탭 3' 이용)*")
 
 st.write("---")
 
@@ -1746,15 +1873,64 @@ def render_home_tab():
     else:
         mismatch_delta = "🟢 안정 수급"
 
-    col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-    with col_m1:
-        st.metric(label=f"🏢 [{selected_job}] 공고 수", value=f"{saramin_count:,} 건", delta="사람인 DB 연동")
-    with col_m2:
-        st.metric(label=f"💬 [{selected_job}] 네이버 API 데이터", value=f"{naver_cnt:,} 건", delta="주간 트렌드 연동")
-    with col_m3:
-        st.metric(label=f"⚙️ 핵심 요구 스킬 수", value=f"{len(cur_skills)} 개 항목", delta="실무 역량 중심")
-    with col_m4:
-        st.metric(label=f"⚠️ 수급 미스매치 지수", value=f"{mismatch_score:.1f} 점", delta=mismatch_delta, delta_color="inverse")
+    # --- Bento Card 스타일 KPI 4개 (st.metric 대체) ---
+    st.markdown(
+        """
+        <style>
+        .kpi-grid { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+        .kpi-card {
+            flex: 1; min-width: 180px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px 22px;
+            box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+        }
+        .kpi-label { color: #64748b; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+        .kpi-value { color: #0f172a; font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
+        .kpi-sub { color: #94a3b8; font-size: 12px; }
+        .kpi-card-accent {
+            flex: 1; min-width: 180px;
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 20px 22px;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.25);
+        }
+        .kpi-label-accent { color: #93c5fd; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+        .kpi-value-accent { color: #ffffff; font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
+        .kpi-sub-accent { color: #bfdbfe; font-size: 12px; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f"""
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">{selected_job} 채용 공고 수</div>
+                <div class="kpi-value">{saramin_count:,}<span style="font-size:16px;font-weight:400;"> 건</span></div>
+                <div class="kpi-sub">사람인 실채용 DB 연동</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">네이버 API 데이터</div>
+                <div class="kpi-value">{naver_cnt:,}<span style="font-size:16px;font-weight:400;"> 건</span></div>
+                <div class="kpi-sub">주간 트렌드 데이터 연동</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">핵심 요구 스킬</div>
+                <div class="kpi-value">{len(cur_skills)}<span style="font-size:16px;font-weight:400;"> 개</span></div>
+                <div class="kpi-sub">실무 역량 중심 항목</div>
+            </div>
+            <div class="kpi-card-accent">
+                <div class="kpi-label-accent">수급 미스매치 지수</div>
+                <div class="kpi-value-accent">{mismatch_score:.1f}<span style="font-size:16px;font-weight:400;"> 점</span></div>
+                <div class="kpi-sub-accent">{mismatch_delta} · 구직자 관점 시장 불균형 신호</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     st.write("---")
 
@@ -2358,10 +2534,10 @@ def render_home_tab():
 # 탭 1. 구직자: 스펙 자가진단 및 스코어링 엔진
 # =====================================================================
 def render_seeker_tab():
-    st.header(f"💡 [{selected_job}] 구직자 스펙 자가진단 및 적합도 스코어링")
+    st.header(f"[{selected_job}] 스펙 자가진단 및 적합도 스코어링")
     st.markdown(
-        "보유하신 경력/학력/자격증/툴/실무 경험을 토대로 "
-        "**실제 기업 공고 조건과 다차원적으로 비교**하여 점수를 진단합니다."
+        "보유하신 경력/학력/자격증/툴/실무 경험을 "
+        "**실제 기업 공고 조건과 다차원적으로 비교**하여 점수를 산출합니다."
     )
     if is_mock:
         pass

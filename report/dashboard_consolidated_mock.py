@@ -1488,7 +1488,13 @@ def render_hr_gap_tab():
                 </div>
                 """
                 st.markdown(badge_html, unsafe_allow_html=True)
-                st.code(sim_result["jd_draft"], language="markdown")
+                
+                # 대시보드 메인 글꼴과 완벽 통일하여 마크다운 렌더링
+                st.markdown(sim_result["jd_draft"])
+                
+                st.write("")
+                with st.expander("📋 원클릭 복사용 텍스트"):
+                    st.code(sim_result["jd_draft"], language="markdown")
 
 
 def render_company_health_tab():

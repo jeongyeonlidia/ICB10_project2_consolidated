@@ -1169,6 +1169,22 @@ def _segmented_arc_gauge(value, subtitle, n_segments=14, active_colors=None):
 
 
 def render_hr_gap_tab():
+    # 직무/세부직무 필터가 변경되면 시뮬레이터 및 임베딩 세션 상태 초기화
+    filter_key = (selected_job, selected_sub_job)
+    if "current_hr_filter_key" not in st.session_state:
+        st.session_state["current_hr_filter_key"] = filter_key
+
+    if st.session_state["current_hr_filter_key"] != filter_key:
+        st.session_state["current_hr_filter_key"] = filter_key
+        st.session_state.pop("jd_skills_py", None)
+        st.session_state.pop("jd_sim_result", None)
+        st.session_state.pop("embed_sim_result", None)
+        st.session_state.pop("embed_jd_pca", None)
+        st.session_state.pop("embed_jd_umap", None)
+        st.session_state.pop("embed_job", None)
+        st.session_state.pop("embed_text", None)
+        st.rerun()
+
     _inject_page_card_css()
     st.header(f"🏢 [{selected_job}] 인사팀 수급 Gap 분석 및 JD 최적화")
     st.caption("기업이 원하는 역량과 구직자 관심도의 차이를 분석하고, 채용공고 개선 방향을 제안합니다.")

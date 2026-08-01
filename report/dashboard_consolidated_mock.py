@@ -799,20 +799,34 @@ def fit_job_projection(job_role):
     job_emb = embeddings[mask]
 
     from sklearn.decomposition import PCA
-    from umap import UMAP
+    try:
+        from umap import UMAP
+        has_umap = True
+    except ImportError:
+        UMAP = None
+        has_umap = False
 
     pca_model = PCA(n_components=3, random_state=42)
     pca_coords = pca_model.fit_transform(job_emb)
 
-    umap_model = UMAP(n_components=2, random_state=42, n_neighbors=15, min_dist=0.1)
-    umap_coords = umap_model.fit_transform(job_emb)
+    if has_umap and UMAP is not None:
+        try:
+            umap_model = UMAP(n_components=2, random_state=42, n_neighbors=15, min_dist=0.1)
+            umap_coords = umap_model.fit_transform(job_emb)
+        except Exception:
+            umap_model = None
+            umap_coords = np.zeros((len(job_emb), 2))
+            has_umap = False
+    else:
+        umap_model = None
+        umap_coords = np.zeros((len(job_emb), 2))
 
     coords_df = pd.DataFrame({
         "job_id": job_ids,
         "pca_x": pca_coords[:, 0], "pca_y": pca_coords[:, 1], "pca_z": pca_coords[:, 2],
         "umap_x": umap_coords[:, 0], "umap_y": umap_coords[:, 1],
     })
-    return {"pca_model": pca_model, "umap_model": umap_model, "coords": coords_df}
+    return {"pca_model": pca_model, "umap_model": umap_model, "coords": coords_df, "has_umap": has_umap}
 
 
 def _build_projection_scatter(coords_job, method, top5_ids, jd_point):
@@ -915,10 +929,15 @@ def render_semantic_matching_section():
         key="embed_jd_input",
         label_visibility="collapsed",
     )
-    method_label = st.radio(
-        "좌표 방식", ["UMAP 2D (기본)", "PCA 3D"], index=0, horizontal=True, key="embed_proj_method"
-    )
-    method = "umap" if method_label.startswith("UMAP") else "pca"
+    has_umap = projection.get("has_umap", False)
+    if not has_umap:
+        st.warning("⚠️ UMAP 라이브러리(umap-learn)가 설치되지 않았거나 호환되지 않아 UMAP 2D 시각화는 비활성화되며, PCA 3D 시각화 모드만 사용 가능합니다.")
+        method = "pca"
+    else:
+        method_label = st.radio(
+            "좌표 방식", ["UMAP 2D (기본)", "PCA 3D"], index=0, horizontal=True, key="embed_proj_method"
+        )
+        method = "umap" if method_label.startswith("UMAP") else "pca"
 
     if st.button("🔍 유사 공고 분석 및 지도 표시", key="embed_analyze_btn"):
         if not jd_text.strip():

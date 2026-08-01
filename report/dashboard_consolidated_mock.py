@@ -1053,22 +1053,33 @@ def render_semantic_matching_section():
     compare_col1, compare_col2 = st.columns(2)
     with compare_col1:
         st.caption("현재 JD (원본)")
-        st.text_area("원본 JD", value=jd_text, height=200, disabled=True,
-                      key="embed_compare_original", label_visibility="collapsed")
+        original_html = f"""
+        <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; font-size: 14px; line-height: 1.6; height: 220px; overflow-y: auto; color: #334155; white-space: pre-wrap;">{jd_text}</div>
+        """
+        st.markdown(original_html, unsafe_allow_html=True)
     with compare_col2:
-        st.caption("보완 검토안 (참고용 — 자동 반영 아님, 직접 검토 후 수동 반영하세요)")
+        st.caption("보완 검토안 (참고용 — 직접 검토 후 공고에 수동 반영하세요)")
         addition_lines = []
         if sim_result["missing_from_jd"]:
-            addition_lines.append("[검토] 추가 고려 역량: " + ", ".join(sim_result["missing_from_jd"]))
+            skills = ", ".join(sim_result["missing_from_jd"])
+            addition_lines.append(f"<span style='color: #2563eb; font-weight: 700;'>🚨 [검토] 추가 고려 역량:</span> <span style='font-weight: 600; color: #1e3a8a;'>{skills}</span>")
         if sim_result["downgrade_candidates"]:
-            addition_lines.append(
-                "[검토] 필수→우대 전환 검토: " + ", ".join(c["skill"] for c in sim_result["downgrade_candidates"])
-            )
+            skills = ", ".join(c["skill"] for c in sim_result["downgrade_candidates"])
+            addition_lines.append(f"<span style='color: #ea580c; font-weight: 700;'>⚠️ [검토] 필수 ➔ 우대 전환 검토:</span> <span style='font-weight: 600; color: #7c2d12;'>{skills}</span>")
         if sim_result["jd_only_rare"]:
-            addition_lines.append("[검토] 유사 공고에 드문 조건(재검토 권장): " + ", ".join(sim_result["jd_only_rare"]))
-        supplement_text = jd_text + ("\n\n" + "\n".join(addition_lines) if addition_lines else "\n\n(추가 검토 후보 없음)")
-        st.text_area("보완 검토안", value=supplement_text, height=200, disabled=True,
-                      key="embed_compare_supplemented", label_visibility="collapsed")
+            skills = ", ".join(sim_result["jd_only_rare"])
+            addition_lines.append(f"<span style='color: #dc2626; font-weight: 700;'>🔍 [검토] 유사 공고에 드문 조건 (재검토 권장):</span> <span style='font-weight: 600; color: #7f1d1d;'>{skills}</span>")
+        
+        supplement_html = jd_text
+        if addition_lines:
+            supplement_html += "\n\n" + "\n".join(addition_lines)
+        else:
+            supplement_html += "\n\n<span style='color: #64748b; font-style: italic;'>(추가 검토 후보 없음)</span>"
+            
+        supplemented_html = f"""
+        <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; font-size: 14px; line-height: 1.6; height: 220px; overflow-y: auto; color: #334155; white-space: pre-wrap;">{supplement_html}</div>
+        """
+        st.markdown(supplemented_html, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------

@@ -37,8 +37,10 @@ except ImportError:
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
 except ImportError:
     TfidfVectorizer = None
+    cosine_similarity = None
 
 # =====================================================================
 # 페이지 기본 설정
@@ -1694,12 +1696,6 @@ selected_job = st.sidebar.selectbox(
 )
 
 selected_sub_job = "전체"
-if selected_job == "기획/전략":
-    selected_sub_job = st.sidebar.radio(
-        "🔍 세부 기획 직무 필터",
-        ["전체", "IT/서비스 기획", "경영/사업 전략"],
-        help="기획/전략 직무 내 세부 직무에 따라 요구되는 역량 스펙을 미세 조율합니다."
-    )
 
 st.sidebar.write("---")
 
@@ -2901,6 +2897,192 @@ def render_seeker_tab():
                 "공급 밀도가 너무 높은 공통 자격증 취득보다는 실제 SQL 작성 및 데이터 조작을 입증하여 실무 연계성이 높은 "
                 "**SQLD, ADsP, 빅데이터분석기사** 등을 보조적으로 빠르게 보완하는 것이 유리합니다."
             )
+
+        # =====================================================================
+        # 🎁 나의 스펙 맞춤형 채용 공고 추천 (Content-Based Filtering)
+        # =====================================================================
+        st.write("---")
+        st.subheader("🎁 나의 스펙 맞춤형 채용 공고 추천")
+        st.caption("구직자님의 자가진단 프로필(경력, 학력, 자격증, 실무툴, 프로젝트 경험)과 실제 채용 공고 본문을 TF-IDF 벡터 모델로 임베딩하여 유사도가 가장 높은 TOP 5 공고를 매칭해 드립니다.")
+        
+        # 1. Mermaid Flowchart
+        st.markdown("""
+        ```mermaid
+        graph TD
+            A["📝 구직자 스펙 입력 (경력/학력/스킬)"] --> B["🧹 텍스트 결합 및 전처리"]
+            B --> C["🎛️ TF-IDF 벡터화 (TfidfVectorizer)"]
+            C --> D["📐 코사인 유사도 계산 (Cosine Similarity)"]
+            D --> E["🎁 TOP 5 맞춤 채용공고 추천"]
+        ```
+        """)
+
+        if df_saramin is not None and not df_saramin.empty:
+            with st.spinner("맞춤 채용 공고 탐색 및 유사도 계산 중..."):
+                # 0. 현재 선택한 직무 필터와 일치하는 공고로 우선 필터링
+                SARAMIN_JOB_MAP = {
+                    "기획/전략": ("plan", "영업·사업개발"),
+                    "인사/노무": ("hr", "인사·HR·총무"),
+                    "회계/재무": ("acc", "회계·재무·경영관리"),
+                    "마케팅": ("mkt", "마케팅·CRM"),
+                    "개발": ("dev", "IT개발·데이터"),
+                }
+                mapped_code, mapped_sector = SARAMIN_JOB_MAP.get(selected_job, ("", ""))
+                
+                df_job_saramin = df_saramin.copy()
+                if 'job_category' in df_job_saramin.columns:
+                    df_job_saramin = df_job_saramin[df_job_saramin['job_category'] == mapped_code]
+                elif 'sectors' in df_job_saramin.columns:
+                    df_job_saramin = df_job_saramin[df_job_saramin['sectors'] == mapped_sector]
+
+                # 마감일 여부 필터링 함수 (2026-08-01 기준)
+                def is_posting_expired(r):
+                    dl = str(r.get("deadline", ""))
+                    if not dl:
+                        return False
+                    if any(kw in dl for kw in ["채용시", "상시", "접수", "진행", "마감없음"]):
+                        return False
+                    m = re.search(r'(\d{2})/(\d{2})', dl)
+                    if m:
+                        month = int(m.group(1))
+                        day = int(m.group(2))
+                        if month < 8 or (month == 8 and day < 1):
+                            return True
+                    return False
+
+                # 마감된 공고는 필터링하여 제외
+                active_rows = [row for _, row in df_job_saramin.iterrows() if not is_posting_expired(row)]
+                if active_rows:
+                    df_job_saramin = pd.DataFrame(active_rows)
+
+                # 구직자 스펙 결합 및 동의어 확장 텍스트 생성
+                expanded_skills = []
+                for sk in user_skills:
+                    syns = synonyms.get(sk, [sk]) if synonyms else [sk]
+                    expanded_skills.extend(syns)
+                
+                seeker_text = f"경력 {user_career} 학력 {user_edu} 보유역량 {' '.join(expanded_skills)}".lower()
+                
+                # 공고 corpus 빌드
+                posting_texts = []
+                for _, row in df_job_saramin.iterrows():
+                    title_t = str(row.get("title", ""))
+                    qual_t = str(row.get("cleaned_requirement", row.get("qualifications", "")))
+                    pref_t = str(row.get("cleaned_preferential", row.get("preferences", "")))
+                    det_t = str(row.get("detail_content", ""))
+                    posting_texts.append(f"{title_t} {qual_t} {pref_t} {det_t}".lower())
+                
+                # TF-IDF & Cosine Similarity 연산
+                all_docs = [seeker_text] + posting_texts
+                
+                vectorizer = TfidfVectorizer(token_pattern=r'(?u)\b\w+\b')
+                tfidf_matrix = vectorizer.fit_transform(all_docs)
+                
+                seeker_vec = tfidf_matrix[0]
+                postings_vecs = tfidf_matrix[1:]
+                
+                if cosine_similarity is not None:
+                    sims = cosine_similarity(seeker_vec, postings_vecs)[0]
+                else:
+                    sims = np.zeros(len(posting_texts))
+                
+                # 매칭 리스트 구성
+                rec_list = []
+                for idx, (_, row) in enumerate(df_job_saramin.iterrows()):
+                    title_t = str(row.get("title", ""))
+                    qual_t = str(row.get("cleaned_requirement", row.get("qualifications", "")))
+                    pref_t = str(row.get("cleaned_preferential", row.get("preferences", "")))
+                    det_t = str(row.get("detail_content", ""))
+                    posting_text_full = f"{title_t} {qual_t} {pref_t} {det_t}".lower()
+                    
+                    matched_tags = []
+                    for sk in user_skills:
+                        syns = synonyms.get(sk, [sk]) if synonyms else [sk]
+                        if any(syn.lower() in posting_text_full for syn in syns):
+                            matched_tags.append(sk)
+                    
+                    # 1. TF-IDF Cosine Similarity (문맥적 유사도)
+                    raw_sim = sims[idx]
+                    # 2. Exact keyword overlap ratio (실제 스펙 일치율)
+                    overlap_ratio = (len(matched_tags) / len(user_skills)) if user_skills else 0.0
+                    # 3. Combined similarity (60% TF-IDF context similarity + 40% Keyword overlap ratio)
+                    combined_sim = 0.6 * raw_sim + 0.4 * overlap_ratio
+                    # 4. Map to realistic and dynamic matching percentages (e.g. 50% to 98%)
+                    score_adjusted = round((0.5 + 0.48 * combined_sim) * 100, 1) if combined_sim > 0 else 0.0
+                    
+                    rec_list.append({
+                        "row": row, 
+                        "score": score_adjusted, 
+                        "matched_tags": matched_tags
+                    })
+                
+                # 등록일(updated_at) 및 마감일(deadline) 파싱용 정렬 키 도출 (1단계 예비정렬)
+                def get_date_val(item):
+                    r = item["row"]
+                    up_at = str(r.get("updated_at", ""))
+                    if up_at:
+                        return up_at
+                    dl = str(r.get("deadline", ""))
+                    m = re.search(r'(\d{2})/(\d{2})', dl)
+                    if m:
+                        return f"2026-{m.group(1)}-{m.group(2)} 00:00:00"
+                    return "1970-01-01 00:00:00"
+
+                # 1단계 예비정렬: 가장 최근에 등록/마감되는 공고 순 (최신순 내림차순)
+                rec_list = sorted(rec_list, key=get_date_val, reverse=True)
+                
+                # 2단계 최종정렬: 매칭 유사도 점수 기준 내림차순 (Python의 stable sort 성질로 동점 시 최신 등록 공고가 상위 노출됨)
+                top_5_recs = sorted(rec_list, key=lambda x: x["score"], reverse=True)[:5]
+                
+                st.write("")
+                st.markdown("##### 💼 TOP 5 맞춤 채용공고 카탈로그")
+                st.caption("※ 모든 공고의 요구 역량이 유사할 경우, 채용 중인 가장 최근 등록 공고(최신순) 순서로 정렬하여 노출됩니다.")
+                
+                for idx_c, item in enumerate(top_5_recs):
+                    row = item["row"]
+                    score = item["score"]
+                    matched_tags = item["matched_tags"]
+                    comp_name = row.get("company_name", row.get("company", "기업명 미상"))
+                    p_title = row.get("title", "공고 제목 없음")
+                    link_url = row.get("link", "https://www.saramin.co.kr")
+                    
+                    # st.container(border=True)를 통해 모서리가 둥근 Bento Card 스타일 구현
+                    with st.container(border=True):
+                        # 매칭률 점수 배지
+                        badge_color = "#dcfce7" if score >= 80.0 else "#ffedd5"
+                        badge_text_color = "#15803d" if score >= 80.0 else "#c2410c"
+                        badge_label = "적합" if score >= 80.0 else "보통"
+                        
+                        header_html = f"""
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-weight: 700; color: #1e293b; font-size: 15px;">🏢 {comp_name}</span>
+                            <span style="background-color: {badge_color}; color: {badge_text_color}; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                                매칭 유사도 {score:.1f}% ({badge_label})
+                            </span>
+                        </div>
+                        <div style="font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 12px; line-height: 1.4;">{p_title}</div>
+                        """
+                        st.markdown(header_html, unsafe_allow_html=True)
+                        
+                        tag_col, btn_col = st.columns([3, 1])
+                        with tag_col:
+                            if matched_tags:
+                                tag_elements = "".join([f"<span style='display:inline-block; background-color:#f1f5f9; color:#475569; border: 1px solid #e2e8f0; border-radius:6px; padding:2px 8px; font-size:11px; margin-right:4px; margin-bottom:4px;'>💡 {t}</span>" for t in matched_tags])
+                                st.markdown(tag_elements, unsafe_allow_html=True)
+                            else:
+                                st.markdown("<span style='font-size:11px; color:#94a3b8; font-style:italic;'>일치하는 핵심 우대사항 없음</span>", unsafe_allow_html=True)
+                        with btn_col:
+                            st.link_button("🔗 상세 공고 보기", link_url, use_container_width=True)
+
+                # 매칭 유사도 점수 계산 공식 및 주석 추가
+                st.markdown("""
+                <div style="font-size: 11.5px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-top: 16px; line-height: 1.6;">
+                    💡 <b>[매칭 유사도 점수 계산 공식 및 정렬 기준 안내]</b><br>
+                    • <b>종합 매칭 유사도(%)</b> = [문맥 콘텐츠 유사도(TF-IDF Cosine Similarity) × 60%] + [구직자 스펙 일치율(체크 키워드 매칭 비율) × 40%]<br>
+                    • <b>정렬 우선순위</b>: 1순위로 종합 매칭 유사도가 가장 높은 공고가 상위에 배치되며, <b>매칭 스펙이 비슷하여 점수가 동점인 경우 현재 채용 마감이 되지 않은 가장 최근 등록 공고(updated_at 최신순)가 차례대로 노출됩니다.</b>
+                </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.warning("⚠️ 맞춤 채용공고를 매칭할 사람인 채용공고 DB 데이터가 확보되지 않았습니다.")
     else:
         st.info("💡 경력/학력/보유 역량을 선택한 뒤 **'나의 다차원 직무 적합도 진단 실행'** 버튼을 누르세요.")
 

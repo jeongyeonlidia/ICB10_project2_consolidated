@@ -117,20 +117,29 @@ def generate_real_wordcloud_img(dict_freq, is_blue=True):
                 scaled_dict[w] = (norm ** 1.5) * 500 + 15.0
                 
             color_fn = make_dynamic_color_func(dict_freq, is_blue=is_blue)
+            
+            # 직사각형 캔버스를 꽉 채우는 네모 박스형 워드클라우드 구현:
+            # numpy 마스크 배열(0으로 채워진 직사각형)을 지정하면 타원형 대신
+            # 직사각형 전체 영역에 단어를 빈틈없이 배치함
+            import numpy as np
+            wc_width, wc_height = 700, 380
+            # 0 = 워드클라우드가 채울 수 있는 영역 (흰색 직사각형 마스크)
+            rect_mask = np.zeros((wc_height, wc_width), dtype=np.uint8)
+            
             wc = WordCloud(
                 font_path=font_path,
-                width=700,
-                height=380,
+                mask=rect_mask,             # 직사각형 마스크: 네모 박스 안에 단어를 꽉 채움
                 background_color='white',
                 color_func=color_fn,
-                margin=2,               # 자간 최소화
-                prefer_horizontal=0.92, # HR Analytics 스타일: 세로 단어 비율 최소화, 주요 키워드 가로 배치
-                relative_scaling=0.35,  # 낙은 값: 작은 단어도 충분한 크기로 레이아웃 보완
-                max_font_size=68,       # 최상위 단어 대형 표출
-                min_font_size=10,       # 최하위 단어 미세 크기
-                max_words=40,           # 핵심 키워드 30~40개 중심으로 축소
+                margin=1,                   # 자간 최소화 (더 촘촘)
+                prefer_horizontal=0.6,      # 가로/세로 혼용 40%: 구석 빈공간을 세로 단어로 채움
+                relative_scaling=0.45,      # 단어 크기 변동폭 조율
+                max_font_size=None,         # 마스크 크기에 따라 자동 조정
+                min_font_size=6,            # 최소 폰트 6px: 더 많은 작은 단어 삽입 가능
+                max_words=100,              # 직무별 최대 100개 단어: 네모 박스 완전히 채움
+                scale=2,                    # 2배 해상도 렌더링 (고화질 + 배치 정밀도 향상)
                 random_state=42,
-                collocations=False      # 중복 2-gram 방지
+                collocations=False          # 중복 2-gram 방지
             ).generate_from_frequencies(scaled_dict)
             return wc.to_array()
         except Exception:
@@ -2908,16 +2917,23 @@ def render_seeker_tab():
         # =====================================================================
         st.write("---")
         st.subheader("🎁 나의 스펙 맞춤형 채용 공고 추천")
-        st.caption("구직자님의 자가진단 프로필(경력, 학력, 자격증, 실무툴, 프로젝트 경험)과 실제 채용 공고 본문을 TF-IDF 벡터 모델로 임베딩하여 유사도가 가장 높은 TOP 5 공고를 매칭해 드립니다.")
+        st.caption("구직자님의 자가진단 프로필(경력, 학력, 자격증, 실무툴, 프로젝트 경험)과 실제 채용 공고 본문을 **2단계 Re-Ranking 알고리즘**으로 분석하여 최적의 TOP 5 공고를 정밀 선별합니다.")
         
-        # 1. Mermaid Flowchart
+        # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인)
         st.markdown("""
         ```mermaid
         graph TD
-            A["📝 구직자 스펙 입력 (경력/학력/스킬)"] --> B["🧹 텍스트 결합 및 전처리"]
-            B --> C["🎛️ TF-IDF 벡터화 (TfidfVectorizer)"]
-            C --> D["📐 코사인 유사도 계산 (Cosine Similarity)"]
-            D --> E["🎁 TOP 5 맞춤 채용공고 추천"]
+            A["📝 구직자 스펙 입력 (경력/학력/스킬)"] --> B["🧹 텍스트 결합 및 동의어 확장 전처리"]
+            B --> C["🎛️ 1단계: TF-IDF 벡터화 + 코사인 유사도"]
+            C --> D["📋 상위 50개 후보 공고 추출 (Candidate Generation)"]
+            D --> E["🔬 2단계 Re-Ranking: 다중 지표 스코어링"]
+            E --> E1["① TF-IDF Cosine Sim × 40%"]
+            E --> E2["② Jaccard 유사도 × 40%"]
+            E --> E3["③ Naver 시장 희소성 가중치 × 20%"]
+            E1 --> F["🏆 Final Score = Cosine×0.4 + Jaccard×0.4 + Scarcity×0.2"]
+            E2 --> F
+            E3 --> F
+            F --> G["🎁 TOP 5 맞춤 채용공고 추천"]
         ```
         """)
 
@@ -2967,6 +2983,30 @@ def render_seeker_tab():
                 
                 seeker_text = f"경력 {user_career} 학력 {user_edu} 보유역량 {' '.join(expanded_skills)}".lower()
                 
+                # ── 시장 희소성 가중치 데이터 로딩 (Naver 트렌드 기반) ──────────────────
+                # naver_skill_weekly_insights.csv의 trend_ratio_base: 해당 직무에서
+                # 각 스킬 키워드의 시장 관심도(0~1 정규화). 구직자 보유 스킬 중
+                # 시장 관심도가 높은 키워드를 요구하는 공고에 가점을 부여함.
+                df_weekly_skill_rec = load_naver_skill_weekly()
+                scarcity_map = {}  # keyword -> trend_ratio_base (0~1 정규화)
+                if df_weekly_skill_rec is not None and not df_weekly_skill_rec.empty:
+                    sub_skill = df_weekly_skill_rec[df_weekly_skill_rec["job_role"] == selected_job].copy()
+                    if not sub_skill.empty and "keyword" in sub_skill.columns and "trend_ratio_base" in sub_skill.columns:
+                        valid_s = sub_skill.dropna(subset=["trend_ratio_base"])
+                        if not valid_s.empty:
+                            max_t = valid_s["trend_ratio_base"].max()
+                            min_t = valid_s["trend_ratio_base"].min()
+                            rng_t = max_t - min_t + 1e-9
+                            scarcity_map = {
+                                row_s["keyword"]: float((row_s["trend_ratio_base"] - min_t) / rng_t)
+                                for _, row_s in valid_s.iterrows()
+                            }
+
+                # ══════════════════════════════════════════════════════
+                # 1단계 (Candidate Generation): TF-IDF Cosine Similarity
+                #   - 구직자 스펙 텍스트와 모든 공고 텍스트를 TF-IDF 벡터화 후
+                #     코사인 유사도 상위 50개를 1차 후보군으로 추출
+                # ══════════════════════════════════════════════════════
                 # 공고 corpus 빌드
                 posting_texts = []
                 for _, row in df_job_saramin.iterrows():
@@ -2975,52 +3015,94 @@ def render_seeker_tab():
                     pref_t = str(row.get("cleaned_preferential", row.get("preferences", "")))
                     det_t = str(row.get("detail_content", ""))
                     posting_texts.append(f"{title_t} {qual_t} {pref_t} {det_t}".lower())
-                
-                # TF-IDF & Cosine Similarity 연산
+
+                # TF-IDF 벡터화 & 코사인 유사도 계산
                 all_docs = [seeker_text] + posting_texts
-                
                 vectorizer = TfidfVectorizer(token_pattern=r'(?u)\b\w+\b')
                 tfidf_matrix = vectorizer.fit_transform(all_docs)
-                
+
                 seeker_vec = tfidf_matrix[0]
                 postings_vecs = tfidf_matrix[1:]
-                
+
                 if cosine_similarity is not None:
                     sims = cosine_similarity(seeker_vec, postings_vecs)[0]
                 else:
                     sims = np.zeros(len(posting_texts))
-                
-                # 매칭 리스트 구성
+
+                # 상위 50개 1차 후보군 인덱스 추출 (내림차순)
+                _top50_n = min(50, len(sims))
+                candidate_indices = np.argsort(sims)[::-1][:_top50_n]
+                df_job_rows_list = list(df_job_saramin.iterrows())  # [(idx, row), ...]
+
+                # ══════════════════════════════════════════════════════
+                # 2단계 (Re-Ranking): 다중 지표 종합 점수 산출
+                #   ① TF-IDF Cosine Similarity  [가중치 40%]
+                #   ② Jaccard Similarity (스펙 집합 교집합/합집합) [가중치 40%]
+                #   ③ 시장 희소성 가중치 (Naver trend_ratio_base)  [가중치 20%]
+                #
+                # Final_Score = (Cosine_Sim × 0.4) + (Jaccard_Sim × 0.4) + (Scarcity_Weight × 0.2)
+                # ══════════════════════════════════════════════════════
+                # 구직자 스펙 토큰 집합 (Jaccard 계산용)
+                seeker_token_set = set(seeker_text.split())
+
                 rec_list = []
-                for idx, (_, row) in enumerate(df_job_saramin.iterrows()):
+                for arr_idx in candidate_indices:
+                    _, row = df_job_rows_list[arr_idx]
+
                     title_t = str(row.get("title", ""))
                     qual_t = str(row.get("cleaned_requirement", row.get("qualifications", "")))
                     pref_t = str(row.get("cleaned_preferential", row.get("preferences", "")))
                     det_t = str(row.get("detail_content", ""))
                     posting_text_full = f"{title_t} {qual_t} {pref_t} {det_t}".lower()
-                    
+
+                    # — 매칭 태그 추출 (동의어 확장 기반 부분 일치) —
                     matched_tags = []
                     for sk in user_skills:
                         syns = synonyms.get(sk, [sk]) if synonyms else [sk]
                         if any(syn.lower() in posting_text_full for syn in syns):
                             matched_tags.append(sk)
-                    
-                    # 1. TF-IDF Cosine Similarity (문맥적 유사도)
-                    raw_sim = sims[idx]
-                    # 2. Exact keyword overlap ratio (실제 스펙 일치율)
-                    overlap_ratio = (len(matched_tags) / len(user_skills)) if user_skills else 0.0
-                    # 3. Combined similarity (60% TF-IDF context similarity + 40% Keyword overlap ratio)
-                    combined_sim = 0.6 * raw_sim + 0.4 * overlap_ratio
-                    # 4. Map to realistic and dynamic matching percentages (e.g. 50% to 98%)
-                    score_adjusted = round((0.5 + 0.48 * combined_sim) * 100, 1) if combined_sim > 0 else 0.0
-                    
+
+                    # ① TF-IDF Cosine Similarity (문맥 유사도)
+                    cosine_sim = float(sims[arr_idx])
+
+                    # ② Jaccard Similarity (스펙 토큰 집합 교집합 / 합집합)
+                    posting_token_set = set(posting_text_full.split())
+                    intersection = seeker_token_set & posting_token_set
+                    union = seeker_token_set | posting_token_set
+                    jaccard_sim = len(intersection) / len(union) if union else 0.0
+
+                    # ③ 시장 희소성 가중치
+                    # 구직자가 보유한 스킬 키워드 중 Naver trend_ratio_base가 높은
+                    # 키워드를 공고가 요구하고 있을 경우 가점 부여
+                    scarcity_scores = []
+                    for sk in user_skills:
+                        syns = synonyms.get(sk, [sk]) if synonyms else [sk]
+                        if any(syn.lower() in posting_text_full for syn in syns):
+                            # 동의어 키를 포함하여 scarcity_map에서 검색
+                            found_score = scarcity_map.get(sk, 0.0)
+                            for syn in syns:
+                                if syn in scarcity_map:
+                                    found_score = max(found_score, scarcity_map[syn])
+                            scarcity_scores.append(found_score)
+                    scarcity_weight = float(np.mean(scarcity_scores)) if scarcity_scores else 0.0
+
+                    # 최종 종합 점수 (Final Fit Score)
+                    final_score_raw = (cosine_sim * 0.4) + (jaccard_sim * 0.4) + (scarcity_weight * 0.2)
+
+                    # 표시용 백분율 변환: 현실적인 50~98% 범위로 매핑
+                    score_display = round((0.5 + 0.48 * final_score_raw) * 100, 1) if final_score_raw > 0 else 0.0
+
                     rec_list.append({
-                        "row": row, 
-                        "score": score_adjusted, 
+                        "row": row,
+                        "score": score_display,
+                        "final_score_raw": final_score_raw,
+                        "cosine_sim": cosine_sim,
+                        "jaccard_sim": jaccard_sim,
+                        "scarcity_weight": scarcity_weight,
                         "matched_tags": matched_tags
                     })
-                
-                # 등록일(updated_at) 및 마감일(deadline) 파싱용 정렬 키 도출 (1단계 예비정렬)
+
+                # 등록일(updated_at) 및 마감일(deadline) 파싱용 정렬 키 도출 (예비정렬)
                 def get_date_val(item):
                     r = item["row"]
                     up_at = str(r.get("updated_at", ""))
@@ -3032,16 +3114,16 @@ def render_seeker_tab():
                         return f"2026-{m.group(1)}-{m.group(2)} 00:00:00"
                     return "1970-01-01 00:00:00"
 
-                # 1단계 예비정렬: 가장 최근에 등록/마감되는 공고 순 (최신순 내림차순)
+                # 안정 정렬 (Timsort) 2-Pass:
+                # Pass 1 - 최신 등록순 (동점 시 최신 공고가 상위 노출)
                 rec_list = sorted(rec_list, key=get_date_val, reverse=True)
-                
-                # 2단계 최종정렬: 매칭 유사도 점수 기준 내림차순 (Python의 stable sort 성질로 동점 시 최신 등록 공고가 상위 노출됨)
-                top_5_recs = sorted(rec_list, key=lambda x: x["score"], reverse=True)[:5]
-                
+                # Pass 2 - Final Score 내림차순 (최종 TOP 5 추출)
+                top_5_recs = sorted(rec_list, key=lambda x: x["final_score_raw"], reverse=True)[:5]
+
                 st.write("")
                 st.markdown("##### 💼 TOP 5 맞춤 채용공고 카탈로그")
                 st.caption("※ 모든 공고의 요구 역량이 유사할 경우, 채용 중인 가장 최근 등록 공고(최신순) 순서로 정렬하여 노출됩니다.")
-                
+
                 for idx_c, item in enumerate(top_5_recs):
                     row = item["row"]
                     score = item["score"]
@@ -3049,14 +3131,14 @@ def render_seeker_tab():
                     comp_name = row.get("company_name", row.get("company", "기업명 미상"))
                     p_title = row.get("title", "공고 제목 없음")
                     link_url = row.get("link", "https://www.saramin.co.kr")
-                    
+
                     # st.container(border=True)를 통해 모서리가 둥근 Bento Card 스타일 구현
                     with st.container(border=True):
                         # 매칭률 점수 배지
                         badge_color = "#dcfce7" if score >= 80.0 else "#ffedd5"
                         badge_text_color = "#15803d" if score >= 80.0 else "#c2410c"
                         badge_label = "적합" if score >= 80.0 else "보통"
-                        
+
                         header_html = f"""
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <span style="font-weight: 700; color: #1e293b; font-size: 15px;">🏢 {comp_name}</span>
@@ -3067,7 +3149,7 @@ def render_seeker_tab():
                         <div style="font-size: 14px; font-weight: 600; color: #334155; margin-bottom: 12px; line-height: 1.4;">{p_title}</div>
                         """
                         st.markdown(header_html, unsafe_allow_html=True)
-                        
+
                         tag_col, btn_col = st.columns([3, 1])
                         with tag_col:
                             if matched_tags:
@@ -3078,12 +3160,16 @@ def render_seeker_tab():
                         with btn_col:
                             st.link_button("🔗 상세 공고 보기", link_url, use_container_width=True)
 
-                # 매칭 유사도 점수 계산 공식 및 주석 추가
+                # ── 2단계 Re-Ranking 공식 안내 ────────────────────────────────────────
                 st.markdown("""
-                <div style="font-size: 11.5px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-top: 16px; line-height: 1.6;">
-                    💡 <b>[매칭 유사도 점수 계산 공식 및 정렬 기준 안내]</b><br>
-                    • <b>종합 매칭 유사도(%)</b> = [문맥 콘텐츠 유사도(TF-IDF Cosine Similarity) × 60%] + [구직자 스펙 일치율(체크 키워드 매칭 비율) × 40%]<br>
-                    • <b>정렬 우선순위</b>: 1순위로 종합 매칭 유사도가 가장 높은 공고가 상위에 배치되며, <b>매칭 스펙이 비슷하여 점수가 동점인 경우 현재 채용 마감이 되지 않은 가장 최근 등록 공고(updated_at 최신순)가 차례대로 노출됩니다.</b>
+                <div style="font-size: 11.5px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-top: 16px; line-height: 1.7;">
+                    💡 <b>[고도화된 추천 산식 — 2단계 Re-Ranking]</b><br>
+                    • <b>1단계 후보 추출</b>: TF-IDF + 코사인 유사도로 상위 50개 공고를 1차 후보군으로 선별합니다.<br>
+                    • <b>2단계 Re-Ranking 종합 점수</b>: <code>Final Score = (TF-IDF Cosine × 40%) + (Jaccard 유사도 × 40%) + (시장 희소 스펙 가중치 × 20%)</code><br>
+                    &nbsp;&nbsp;— <b>TF-IDF Cosine (40%)</b>: 구직자 프로필 문맥과 공고 본문 전체의 의미적 유사도<br>
+                    &nbsp;&nbsp;— <b>Jaccard 유사도 (40%)</b>: 구직자 스펙 토큰 집합 ∩ 공고 요구 스펙 집합 / 합집합 비율<br>
+                    &nbsp;&nbsp;— <b>시장 희소성 (20%)</b>: 네이버 트렌드 API(trend_ratio_base) 기반, 구직자 보유 스펙 중 시장 관심도가 높은 키워드를 우대하는 공고에 가중치<br>
+                    • <b>정렬 우선순위</b>: Final Score 내림차순으로 TOP 5 선별. 동점 시 가장 최근 등록 공고(updated_at 최신순)가 우선 노출됩니다.
                 </div>
                 """, unsafe_allow_html=True)
         else:

@@ -3167,19 +3167,12 @@ def render_seeker_tab():
                 # Pass 1 - 최신 등록순 (동점 시 최신 공고가 상위 노출)
                 rec_list = sorted(rec_list, key=get_date_val, reverse=True)
                 # Pass 2 - Final Score 내림차순 (전체 정렬)
-                sorted_recs = sorted(rec_list, key=lambda x: x["final_score_raw"], reverse=True)
-
-                # ── 임계값 필터링 + 노출 개수 제한 ─────────────────────────────────
-                # rec_threshold: 사용자가 설정한 최소 매칭 유사도(%) — 위 슬라이더 값
-                # rec_display_n: 사용자가 설정한 최대 노출 개수 — 위 슬라이더 값
-                threshold_filtered = [item for item in sorted_recs if item["score"] >= rec_threshold]
-                top_n_recs = threshold_filtered[:rec_display_n]
-
                 st.write("")
                 # ── 제목 + 인라인 슬라이더 콘트롤 ─────────────────────────
+                _displayn_default = st.session_state.get("rec_display_n_slider", 5)
                 st.markdown(f"##### 💼 TOP {_displayn_default} 맞춤 채용공고 카탈로그")
 
-                # ── 슬라이더 콘트롤: 카탈로그 제목 아래, 고드 본문 위 ──────────
+                # ── 슬라이더 콘트롤: 카탈로그 제목 아래, 카드 본문 위 ──────────
                 _sctrl1, _sctrl2 = st.columns(2)
                 with _sctrl1:
                     rec_threshold = st.slider(
@@ -3196,7 +3189,7 @@ def render_seeker_tab():
                         help="추천 결과로 노출할 공고의 최대 개수입니다. (3~20개)"
                     )
 
-                # 필터링 적용 (슬라이더 확정 후)
+                # ── 임계값 필터링 + 노출 개수 제한 ─────────────────────────────────
                 threshold_filtered = [item for item in sorted_recs if item["score"] >= rec_threshold]
                 top_n_recs        = threshold_filtered[:rec_display_n]
 

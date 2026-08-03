@@ -3163,16 +3163,14 @@ def render_seeker_tab():
                         return f"2026-{m.group(1)}-{m.group(2)} 00:00:00"
                     return "1970-01-01 00:00:00"
 
-                # 안정 정렬 (Timsort) 2-Pass:
+                # 백업 정렬 (Timsort) 2-Pass:
                 # Pass 1 - 최신 등록순 (동점 시 최신 공고가 상위 노출)
                 rec_list = sorted(rec_list, key=get_date_val, reverse=True)
                 # Pass 2 - Final Score 내림차순 (전체 정렬)
-                st.write("")
-                # ── 제목 + 인라인 슬라이더 콘트롤 ─────────────────────────
-                _displayn_default = st.session_state.get("rec_display_n_slider", 5)
-                st.markdown(f"##### 💼 TOP {_displayn_default} 맞춤 채용공고 카탈로그")
+                sorted_recs = sorted(rec_list, key=lambda x: x["final_score_raw"], reverse=True)
 
-                # ── 슬라이더 콘트롤: 카탈로그 제목 아래, 카드 본문 위 ──────────
+                st.write("")
+                # ── 슬라이더 콘트롤: 카탈로그 제목 및 카드 본문 영역 ──────────
                 _sctrl1, _sctrl2 = st.columns(2)
                 with _sctrl1:
                     rec_threshold = st.slider(
@@ -3188,6 +3186,9 @@ def render_seeker_tab():
                         key="rec_display_n_slider",
                         help="추천 결과로 노출할 공고의 최대 개수입니다. (3~20개)"
                     )
+
+                # 제목에 슬라이더에서 선택된 실시간 개수를 동적 반영
+                st.markdown(f"##### 💼 TOP {rec_display_n} 맞춤 채용공고 카탈로그")
 
                 # ── 임계값 필터링 + 노출 개수 제한 ─────────────────────────────────
                 threshold_filtered = [item for item in sorted_recs if item["score"] >= rec_threshold]

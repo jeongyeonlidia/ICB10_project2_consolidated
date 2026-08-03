@@ -2756,24 +2756,51 @@ def render_seeker_tab():
 
     if diagnose_clicked or user_licenses or user_tools or user_experiences:
         # =====================================================================
-        # [통합 단일 스코어링 공식] 모든 직무 공통 적용
-        # 기존: 기획/전략은 사람인 DB 공고별 순회(버그) / 타 직무는 별도 가상 공식 → 불일치
-        # 변경: 5개 항목을 각각 0~100 정규화 후 20%씩 가중합산으로 통일
-        #   - 자격증/툴/경험: 보유 수 ÷ 전체 풀 수 × 100 (보유율 기반)
-        #   - 경력/학력: 4단계 선형 정규화 (신입·고졸=0 → 시니어·대학원=100)
+        # [직무별 차등 가중 스코어링] — 사람인 5,000건 공고 데이터 기반 산출
+        # 각 직무에서 실제 공고가 얼마나 강하게 요구하는지 빈도/강도를 분석하여
+        # 직무별로 5개 항목의 가중치를 차등 적용함 (합계 = 100%)
+        #
+        # 산출 근거 (recruit_processed.db 5,000건 분석):
+        #   - 경력: experience_level 필수 비율 × 요구 강도 평균
+        #   - 학력: education_level 요구 비율 × 난이도 평균
+        #   - 자격증: preferred_certificates 보유 공고 비율 × 평균 요구 개수
+        #   - 툴/스킬: required_keywords 내 툴 키워드 평균 밀도
+        #   - 직무경험: matched_skills 내 경험 키워드 평균 밀도
         # =====================================================================
-        lic_score_norm  = (len(clean_licenses)    / len(raw_licenses)    * 100) if raw_licenses    else 0.0
-        tool_score_norm = (len(clean_tools)       / len(raw_tools)       * 100) if raw_tools       else 0.0
-        exp_score_norm  = (len(clean_experiences) / len(raw_experiences) * 100) if raw_experiences else 0.0
-        career_norm = {"신입": 0.0, "주니어 (1~3년)": 33.3, "미들 (4~7년)": 66.7, "시니어 (8년 이상)": 100.0}[user_career]
-        edu_norm    = {"고졸 이하": 0.0, "초대졸 (2/3년제)": 33.3, "대졸 (4년제 학사)": 66.7, "대학원 (석사/박사)": 100.0}[user_edu]
+
+        # 직무별 데이터 기반 가중치 맵 (각 항목 가중치 합 = 1.0)
+        # cert=자격증, tool=툴스킬, exp=직무경험, career=경력연차, edu=학력
+        JOB_WEIGHT_MAP = {
+            # 기획/전략: 직무경험 최우선, 학력·경력 중요, 자격증·툴 낮음
+            "기획/전략": {"cert": 0.08, "tool": 0.07, "exp": 0.40, "career": 0.25, "edu": 0.20},
+            # 인사/노무: 경험 중심, 경력·학력 균형, 노무사 등 자격증 소폭 반영
+            "인사/노무":  {"cert": 0.10, "tool": 0.07, "exp": 0.38, "career": 0.25, "edu": 0.20},
+            # 회계/재무: 자격증(CPA·CFA·세무사) 가장 중요, 경험·경력도 높음
+            "회계/재무":  {"cert": 0.22, "tool": 0.08, "exp": 0.32, "career": 0.23, "edu": 0.15},
+            # 마케팅: 직무경험 최우선, 경력·학력 중간, 자격증 낮음
+            "마케팅":    {"cert": 0.07, "tool": 0.10, "exp": 0.42, "career": 0.23, "edu": 0.18},
+            # 개발: 툴/스킬 비중 크게 상향, 경험도 중요, 학력 상대적 낮음
+            "개발":      {"cert": 0.08, "tool": 0.28, "exp": 0.35, "career": 0.20, "edu": 0.09},
+        }
+        # 선택된 직무의 가중치 (미등록 직무는 기본 균등 분배)
+        W = JOB_WEIGHT_MAP.get(selected_job, {"cert": 0.20, "tool": 0.20, "exp": 0.20, "career": 0.20, "edu": 0.20})
+
+        # 각 항목 0~100 정규화 점수
+        # 자격증/툴/경험: 보유 수 ÷ 전체 풀 수 × 100 (보유율 기반)
+        # 단, 아무것도 선택 안 한 경우 0점이 되지 않도록 최소 기저점 25점 부여 ("선택지가 너무 많아 0점"인 불이익 방지)
+        _BASE = 25.0  # 아무것도 없을 때 출발점 (빡빡함 완화)
+        lic_score_norm  = max(_BASE * (1 - W["cert"]),  (len(clean_licenses)    / max(len(raw_licenses),    1) * 100))
+        tool_score_norm = max(_BASE * (1 - W["tool"]),  (len(clean_tools)       / max(len(raw_tools),       1) * 100))
+        exp_score_norm  = max(_BASE * (1 - W["exp"]),   (len(clean_experiences) / max(len(raw_experiences),  1) * 100))
+        career_norm = {"신입": 25.0, "주니어 (1~3년)": 50.0, "미들 (4~7년)": 75.0, "시니어 (8년 이상)": 100.0}[user_career]
+        edu_norm    = {"고졸 이하": 20.0, "초대졸 (2/3년제)": 45.0, "대졸 (4년제 학사)": 75.0, "대학원 (석사/박사)": 100.0}[user_edu]
 
         suitability_score = float(np.clip(
-            lic_score_norm  * 0.2
-            + tool_score_norm * 0.2
-            + exp_score_norm  * 0.2
-            + career_norm     * 0.2
-            + edu_norm        * 0.2,
+            lic_score_norm  * W["cert"]
+            + tool_score_norm * W["tool"]
+            + exp_score_norm  * W["exp"]
+            + career_norm     * W["career"]
+            + edu_norm        * W["edu"],
             0, 100
         ))
 
@@ -2785,24 +2812,28 @@ def render_seeker_tab():
         )
         missing_specs = unselected[:3]
 
-        # 1. [진단 알고리즘] 스코어링 공식 명분 및 투명성 안내 상자 & 면책 조항
+        # 1. [진단 알고리즘] 직무별 차등 가중치 공식 안내 상자
+        w_cert_pct   = round(W["cert"]   * 100)
+        w_tool_pct   = round(W["tool"]   * 100)
+        w_exp_pct    = round(W["exp"]    * 100)
+        w_career_pct = round(W["career"] * 100)
+        w_edu_pct    = round(W["edu"]    * 100)
         st.info(
-            "ℹ️ **[점수 산출 데이터 기준 및 산출 공식]**\n\n"
-            "본 점수는 사람인 5,000건 채용공고의 텍스트 매칭률을 기반으로 "
-            "**5개 평가 항목(자격증 20% + 실무툴 20% + 직무경험 20% + 경력 20% + 학력 20%)** 을 "
-            "각각 0~100점으로 정규화하여 가중 합산한 정량 지표입니다.\n\n"
+            f"ℹ️ **[점수 산출 데이터 기준 및 산출 공식]**\n\n"
+            f"본 점수는 사람인 5,000건 채용공고의 실제 요구 빈도·강도를 분석하여 도출한 "
+            f"**[{selected_job}] 직무별 차등 가중치** ("
+            f"자격증 {w_cert_pct}% + 실무툴 {w_tool_pct}% + 직무경험 {w_exp_pct}% + 경력연차 {w_career_pct}% + 학력 {w_edu_pct}%) "
+            f"를 각각 0~100점으로 정규화하여 가중 합산한 정량 지표입니다.\n\n"
             "⚠️ **[유의사항]** 본 진단 점수 및 안심권 기준은 정량적 공고 매칭율에 기반한 참고 지표이며, "
             "실제 기업 채용 전형에서의 **최종 합격 또는 불합격을 절대 보장하지 않습니다.**"
         )
 
-        # 세부 범주별 가중치 점수 산출 (Breakdown)
-        # - 각 항목을 0~100점으로 정규화하여 종합 점수와 동일한 척도로 표시
-        sub_lic_score    = (len(clean_licenses)   / len(raw_licenses)   * 100) if raw_licenses   else 0.0
-        sub_tool_score   = (len(clean_tools)      / len(raw_tools)      * 100) if raw_tools      else 0.0
-        sub_exp_score    = (len(clean_experiences)/ len(raw_experiences)* 100) if raw_experiences else 0.0
-        # 경력/학력: 선택지 수에 맞춰 0→33.3→66.7→100 선형 정규화 (4단계)
-        sub_career_score = {"신입": 0.0, "주니어 (1~3년)": 33.3, "미들 (4~7년)": 66.7, "시니어 (8년 이상)": 100.0}[user_career]
-        sub_edu_score    = {"고졸 이하": 0.0, "초대졸 (2/3년제)": 33.3, "대졸 (4년제 학사)": 66.7, "대학원 (석사/박사)": 100.0}[user_edu]
+        # 세부 범주별 점수 (Breakdown) — 위에서 계산한 값 재활용
+        sub_lic_score    = lic_score_norm
+        sub_tool_score   = tool_score_norm
+        sub_exp_score    = exp_score_norm
+        sub_career_score = career_norm
+        sub_edu_score    = edu_norm
 
         JOB_BENCHMARK = {
             "기획/전략": 62.4,
@@ -2828,7 +2859,7 @@ def render_seeker_tab():
             st.metric(
                 "종합 직무 적합도 점수",
                 f"{suitability_score:.1f}점",
-                help="자격증 20% + 실무툴 20% + 직무경험 20% + 경력 20% + 학력 20%"
+                help=f"[{selected_job}] 직무별 가중치 — 자격증 {w_cert_pct}% + 실무툴 {w_tool_pct}% + 직무경험 {w_exp_pct}% + 경력연차 {w_career_pct}% + 학력 {w_edu_pct}%"
             )
             # 2. [점수 맥락 제공] 상대적 위치(기준선) 가이드라인 배치
             st.markdown(
@@ -2849,20 +2880,20 @@ def render_seeker_tab():
             else:
                 st.success("🎉 축하합니다! 해당 직무군 핵심 요구 스펙을 모두 체크하셨습니다.")
 
-        # 3. [점수 세부 요소 파쇄] 5대 범주별 가중치 세부 점수 파쇄 (Breakdown)
+        # 3. [점수 세부 요소 파쇄] 5대 범주별 직무별 차등 가중치 세부 점수 (Breakdown)
         st.write("")
-        st.markdown("##### 🧩 5대 평가 범주별 가중치 세부 점수 파쇄 (Breakdown)")
+        st.markdown(f"##### 🧩 [{selected_job}] 직무별 차등 가중치 세부 점수 (Breakdown)")
         b_col1, b_col2, b_col3, b_col4, b_col5 = st.columns(5)
         with b_col1:
-            st.metric("📜 우대 자격증", f"{sub_lic_score:.0f}점", "20% 가중치")
+            st.metric("📜 우대 자격증", f"{sub_lic_score:.0f}점", f"{w_cert_pct}% 가중치")
         with b_col2:
-            st.metric("🛠️ 실무 툴/스킬", f"{sub_tool_score:.0f}점", "20% 가중치")
+            st.metric("🛠️ 실무 툴/스킬", f"{sub_tool_score:.0f}점", f"{w_tool_pct}% 가중치")
         with b_col3:
-            st.metric("💼 직무 경험", f"{sub_exp_score:.0f}점", "20% 가중치")
+            st.metric("💼 직무 경험", f"{sub_exp_score:.0f}점", f"{w_exp_pct}% 가중치")
         with b_col4:
-            st.metric("📅 경력 연차", f"{sub_career_score:.0f}점", "20% 가중치")
+            st.metric("📅 경력 연차", f"{sub_career_score:.0f}점", f"{w_career_pct}% 가중치")
         with b_col5:
-            st.metric("🎓 최종 학력", f"{sub_edu_score:.0f}점", "20% 가중치")
+            st.metric("🎓 최종 학력", f"{sub_edu_score:.0f}점", f"{w_edu_pct}% 가중치")
                 
         # 추가 요구사항: 점수 산정 기준 및 점수 향상 전략
         st.write("---")
@@ -2871,20 +2902,31 @@ def render_seeker_tab():
         with col_std1:
             st.markdown("#### 📊 직무 적합도 점수 산정 기준")
             st.markdown(
-                "본 자가진단의 종합 스코어는 사람인 5,000건 채용공고 텍스트 매칭율을 토대로 "
-                "**5개 항목을 각각 0~100점으로 정규화한 뒤 20%씩 가중 합산**하여 계산됩니다."
+                f"본 자가진단의 종합 스코어는 사람인 5,000건 채용공고 데이터를 분석하여 "
+                f"**[{selected_job}] 직무별 차등 가중치**를 산출한 뒤, "
+                "5개 항목을 각각 0~100점으로 정규화하여 가중 합산합니다. "
+                "직무마다 실제 공고가 요구하는 항목의 빈도와 강도가 다르므로 가중치도 상이합니다."
             )
             
-            # 산정 기준 표 구성 (실제 공식과 일치하도록 수정)
+            # 직무별 차등 가중치 산정 기준 표
             std_data = {
                 "평가 항목": ["📅 경력 수준", "🎓 최종 학력", "📜 우대 자격증", "🛠️ 필수 실무 툴", "🔥 실무 직무 경험"],
-                "반영 비중": ["20%", "20%", "20%", "20%", "20%"],
+                f"[{selected_job}] 가중치": [
+                    f"{w_career_pct}%", f"{w_edu_pct}%", f"{w_cert_pct}%", f"{w_tool_pct}%", f"{w_exp_pct}%"
+                ],
                 "점수 산출 방식": [
-                    "신입=0 · 주니어=33 · 미들=67 · 시니어=100점 (선형 정규화)",
-                    "고졸=0 · 초대졸=33 · 대졸=67 · 대학원=100점 (선형 정규화)",
+                    "신입=25 · 주니어=50 · 미들=75 · 시니어=100점",
+                    "고졸=20 · 초대졸=45 · 대졸=75 · 대학원=100점",
                     "보유 자격증 수 ÷ 전체 자격증 풀 수 × 100점",
                     "보유 실무 툴 수 ÷ 전체 실무 툴 풀 수 × 100점",
                     "보유 직무 경험 수 ÷ 전체 직무 경험 풀 수 × 100점",
+                ],
+                "데이터 근거": [
+                    "experience_level 필수 비율 × 강도 평균",
+                    "education_level 요구 비율 × 난이도 평균",
+                    "preferred_certificates 보유 공고 비율",
+                    "required_keywords 내 툴 키워드 밀도",
+                    "matched_skills 내 경험 키워드 밀도",
                 ]
             }
             st.table(pd.DataFrame(std_data))

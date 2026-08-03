@@ -2959,10 +2959,16 @@ def render_seeker_tab():
         # =====================================================================
         st.write("---")
         st.subheader("🎁 나의 스펙 맞춤형 채용 공고 추천")
-        st.caption("구직자님의 자가진단 프로필(경력, 학력, 자격증, 실무툴, 프로젝트 경험)과 실제 채용 공고 본문을 **2단계 Re-Ranking 알고리즘**으로 분석하여 최적의 TOP 5 공고를 정밀 선별합니다.")
-        
+        st.caption("구직자님의 자가진단 프로필(경력, 학력, 자격증, 실무툴, 프로젝트 경험)과 실제 채용 공고 본문을 **2단계 Re-Ranking 알고리즘**으로 분석하여 최적 공고를 정밀 선별합니다.")
+
         # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인)
-        st.markdown("""
+        # (제목 아래 슬라이더에서 rec_threshold / rec_display_n를 읽으므로
+        #  머메이드 차트 렌더링 전 시쇼스테이트 기본값으로 초기화)
+        _threshold_default = st.session_state.get("rec_threshold_slider", 50)
+        _displayn_default  = st.session_state.get("rec_display_n_slider", 5)
+
+        # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인)
+        st.markdown(f"""
         ```mermaid
         graph TD
             A["📝 구직자 스펙 입력 (경력/학력/스킬)"] --> B["🧹 텍스트 결합 및 동의어 확장 전처리"]
@@ -2975,7 +2981,8 @@ def render_seeker_tab():
             E1 --> F["🏆 Final Score = Cosine×0.4 + Jaccard×0.4 + Scarcity×0.2"]
             E2 --> F
             E3 --> F
-            F --> G["🎁 TOP 5 맞춤 채용공고 추천"]
+            F --> G["🔎 임계값 필터 ({_threshold_default}% 이상)"]
+            G --> H["🎁 TOP {_displayn_default} 맞춤 채용공고 추천"]
         ```
         """)
 
@@ -3159,14 +3166,52 @@ def render_seeker_tab():
                 # 안정 정렬 (Timsort) 2-Pass:
                 # Pass 1 - 최신 등록순 (동점 시 최신 공고가 상위 노출)
                 rec_list = sorted(rec_list, key=get_date_val, reverse=True)
-                # Pass 2 - Final Score 내림차순 (최종 TOP 5 추출)
-                top_5_recs = sorted(rec_list, key=lambda x: x["final_score_raw"], reverse=True)[:5]
+                # Pass 2 - Final Score 내림차순 (전체 정렬)
+                sorted_recs = sorted(rec_list, key=lambda x: x["final_score_raw"], reverse=True)
+
+                # ── 임계값 필터링 + 노출 개수 제한 ─────────────────────────────────
+                # rec_threshold: 사용자가 설정한 최소 매칭 유사도(%) — 위 슬라이더 값
+                # rec_display_n: 사용자가 설정한 최대 노출 개수 — 위 슬라이더 값
+                threshold_filtered = [item for item in sorted_recs if item["score"] >= rec_threshold]
+                top_n_recs = threshold_filtered[:rec_display_n]
 
                 st.write("")
-                st.markdown("##### 💼 TOP 5 맞춤 채용공고 카탈로그")
-                st.caption("※ 모든 공고의 요구 역량이 유사할 경우, 채용 중인 가장 최근 등록 공고(최신순) 순서로 정렬하여 노출됩니다.")
+                # ── 제목 + 인라인 슬라이더 콘트롤 ─────────────────────────
+                st.markdown(f"##### 💼 TOP {_displayn_default} 맞춤 채용공고 카탈로그")
 
-                for idx_c, item in enumerate(top_5_recs):
+                # ── 슬라이더 콘트롤: 카탈로그 제목 아래, 고드 본문 위 ──────────
+                _sctrl1, _sctrl2 = st.columns(2)
+                with _sctrl1:
+                    rec_threshold = st.slider(
+                        "🎯 최소 매칭 유사도 임계값 (%)",
+                        min_value=50, max_value=90, value=50, step=5,
+                        key="rec_threshold_slider",
+                        help="이 값 이상의 매칭 유사도를 가진 공고만 노출됩니다. 높이면 더 엄격하게 필터링됩니다."
+                    )
+                with _sctrl2:
+                    rec_display_n = st.slider(
+                        "📋 노출 공고 개수",
+                        min_value=3, max_value=20, value=5, step=1,
+                        key="rec_display_n_slider",
+                        help="추천 결과로 노출할 공고의 최대 개수입니다. (3~20개)"
+                    )
+
+                # 필터링 적용 (슬라이더 확정 후)
+                threshold_filtered = [item for item in sorted_recs if item["score"] >= rec_threshold]
+                top_n_recs        = threshold_filtered[:rec_display_n]
+
+                st.caption(
+                    f"※ 매칭 유사도 **{rec_threshold}% 이상** 공고 중 Final Score 내림차순 상위 **{rec_display_n}개** 노출 "
+                    f"| 동점 시 최신 등록 공고 우선 | 전체 후보 {len(sorted_recs)}개 → 임계값 통과 {len(threshold_filtered)}개"
+                )
+
+                if not top_n_recs:
+                    st.warning(
+                        f"⚠️ 현재 임계값({rec_threshold}%)을 충족하는 공고가 없습니다. "
+                        "⚙️ **추천 필터 설정**에서 임계값을 낮추거나 보유 스펙을 추가해 보세요."
+                    )
+
+                for idx_c, item in enumerate(top_n_recs):
                     row = item["row"]
                     score = item["score"]
                     matched_tags = item["matched_tags"]
@@ -3211,7 +3256,7 @@ def render_seeker_tab():
                     &nbsp;&nbsp;— <b>TF-IDF Cosine (40%)</b>: 구직자 프로필 문맥과 공고 본문 전체의 의미적 유사도<br>
                     &nbsp;&nbsp;— <b>Jaccard 유사도 (40%)</b>: 구직자 스펙 토큰 집합 ∩ 공고 요구 스펙 집합 / 합집합 비율<br>
                     &nbsp;&nbsp;— <b>시장 희소성 (20%)</b>: 네이버 트렌드 API(trend_ratio_base) 기반, 구직자 보유 스펙 중 시장 관심도가 높은 키워드를 우대하는 공고에 가중치<br>
-                    • <b>정렬 우선순위</b>: Final Score 내림차순으로 TOP 5 선별. 동점 시 가장 최근 등록 공고(updated_at 최신순)가 우선 노출됩니다.
+                    • <b>정렬 우선순위</b>: Final Score 내림차순으로 TOP {rec_display_n} 선별. 동점 시 가장 최근 등록 공고(updated_at 최신순)가 우선 노출됩니다.
                 </div>
                 """, unsafe_allow_html=True)
         else:

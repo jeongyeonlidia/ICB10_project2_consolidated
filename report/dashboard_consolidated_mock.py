@@ -2966,64 +2966,62 @@ def render_seeker_tab():
         with b_col5:
             st.metric("🎓 최종 학력", f"{sub_edu_score:.0f}점", f"{w_edu_pct}% 가중치")
                 
-        # 추가 요구사항: 점수 산정 기준 및 점수 향상 전략
-        st.write("---")
-        col_std1, col_std2 = st.columns(2)
-        
-        with col_std1:
-            st.markdown("#### 📊 직무 적합도 점수 산정 기준")
-            st.markdown(
-                f"본 자가진단의 종합 스코어는 사람인 5,000건 채용공고 데이터를 분석하여 "
-                f"**[{selected_job}] 직무별 차등 가중치**를 산출한 뒤, "
-                "5개 항목을 각각 0~100점으로 정규화하여 가중 합산합니다. "
-                "직무마다 실제 공고가 요구하는 항목의 빈도와 강도가 다르므로 가중치도 상이합니다."
-            )
-            
-            # 직무별 차등 가중치 산정 기준 표
-            std_data = {
-                "평가 항목": ["📅 경력 수준", "🎓 최종 학력", "📜 우대 자격증", "🛠️ 필수 실무 툴", "🔥 실무 직무 경험"],
-                f"[{selected_job}] 가중치": [
-                    f"{w_career_pct}%", f"{w_edu_pct}%", f"{w_cert_pct}%", f"{w_tool_pct}%", f"{w_exp_pct}%"
-                ],
-                "점수 산출 방식": [
-                    "신입=25 · 주니어=50 · 미들=75 · 시니어=100점",
-                    "고졸=20 · 초대졸=45 · 대졸=75 · 대학원=100점",
-                    "보유 자격증 수 ÷ 전체 자격증 풀 수 × 100점",
-                    "보유 실무 툴 수 ÷ 전체 실무 툴 풀 수 × 100점",
-                    "보유 직무 경험 수 ÷ 전체 직무 경험 풀 수 × 100점",
-                ],
-                "데이터 근거": [
-                    "experience_level 필수 비율 × 강도 평균",
-                    "education_level 요구 비율 × 난이도 평균",
-                    "preferred_certificates 보유 공고 비율",
-                    "required_keywords 내 툴 키워드 밀도",
-                    "matched_skills 내 경험 키워드 밀도",
-                ]
-            }
-            st.table(pd.DataFrame(std_data))
-            
-        with col_std2:
-            st.markdown("#### 🚀 직무 적합도 점수 향상 및 합격 전략")
-            st.markdown(
-                f"**선택하신 `{selected_job}` 직무군에서 단기간에 점수를 보완하고 "
-                "서류 통과율을 극대화할 수 있는 수석 실무진의 합격 로드맵입니다.**"
-            )
-            
-            st.info(
-                "1️⃣ **포트폴리오 중심 실무 툴 & 경험(40% 비중) 우선 확보**\n\n"
-                "경력과 학력은 단기 보완이 어렵지만, **실무 툴(Figma/GA4 등)**과 **직무 경험(역기획/A-B테스트 등)**은 "
-                "개인 포트폴리오 기획 및 미니 프로젝트를 통해 단기간에 채울 수 있어 점수를 빠르게 올릴 수 있는 치트키 영역입니다."
-            )
-            st.warning(
-                "2️⃣ **과공급 스펙 지양 & 채용난 블루오션 역량 적극 어필**\n\n"
-                "컴퓨터활용능력이나 일반 PPT 작성 등의 흔한 자격증보다, 인사팀 분석 탭의 '채용난 위험 군집'에 속하는 "
-                "핵심 키워드(예: M&A, GA4 로그 기획 등)를 보유 역량에 기재하여 희소성을 선점하십시오."
-            )
-            st.success(
-                "3️⃣ **정량 자격증은 직무 지향형으로 조율**\n\n"
-                "공급 밀도가 너무 높은 공통 자격증 취득보다는 실제 SQL 작성 및 데이터 조작을 입증하여 실무 연계성이 높은 "
-                "**SQLD, ADsP, 빅데이터분석기사** 등을 보조적으로 빠르게 보완하는 것이 유리합니다."
-            )
+        # ── [UX 개선] 참고용 상세 가이드 및 기준표 접기 (expander) ──────────────────
+        with st.expander("📖 [{selected_job}] 직무 적합도 점수 산정 상세 기준 및 합격 전략 가이드", expanded=False):
+            col_std1, col_std2 = st.columns(2)
+            with col_std1:
+                st.markdown("#### 📊 직무 적합도 점수 산정 기준")
+                st.markdown(
+                    f"본 자가진단의 종합 스코어는 사람인 5,000건 채용공고 데이터를 분석하여 "
+                    f"**[{selected_job}] 직무별 차등 가중치**를 산출한 뒤, "
+                    "5개 항목을 정규화하여 선택 연차 기대 스펙 충족률에 맞게 가중 합산합니다."
+                )
+                
+                # 직무별 차등 가중치 산정 기준 표
+                std_data = {
+                    "평가 항목": ["📅 경력 수준", "🎓 최종 학력", "📜 우대 자격증", "🛠️ 필수 실무 툴", "🔥 실무 직무 경험"],
+                    f"[{selected_job}] 가중치": [
+                        f"{w_career_pct}%", f"{w_edu_pct}%", f"{w_cert_pct}%", f"{w_tool_pct}%", f"{w_exp_pct}%"
+                    ],
+                    "점수 산출 방식": [
+                        "신입=40 · 주니어=65 · 미들=85 · 시니어=100점",
+                        "고졸=30 · 초대졸=55 · 대졸=80 · 대학원=100점",
+                        "실무 충족률 비선형 체감 (1개=65 · 2개=85 · 3개=95점)",
+                        "실무 충족률 비선형 체감 (1개=65 · 2개=85 · 3개=95점)",
+                        "실무 충족률 비선형 체감 (1개=65 · 2개=85 · 3개=95점)",
+                    ],
+                    "데이터 근거": [
+                        "experience_level 필수 비율 × 강도 평균",
+                        "education_level 요구 비율 × 난이도 평균",
+                        "preferred_certificates 보유 공고 비율",
+                        "required_keywords 내 툴 키워드 밀도",
+                        "matched_skills 내 경험 키워드 밀도",
+                    ]
+                }
+                st.table(pd.DataFrame(std_data))
+                
+            with col_std2:
+                st.markdown("#### 🚀 직무 적합도 점수 향상 및 합격 전략")
+                st.markdown(
+                    f"**선택하신 `{selected_job}` 직무군에서 단기간에 점수를 보완하고 "
+                    "서류 통과율을 극대화할 수 있는 수석 실무진의 합격 로드맵입니다.**"
+                )
+                
+                st.info(
+                    "1️⃣ **포트폴리오 중심 실무 툴 & 경험(40% 비중) 우선 확보**\n\n"
+                    "경력과 학력은 단기 보완이 어렵지만, **실무 툴(Figma/GA4 등)**과 **직무 경험(역기획/A-B테스트 등)**은 "
+                    "개인 포트폴리오 기획 및 미니 프로젝트를 통해 단기간에 채울 수 있어 점수를 빠르게 올릴 수 있는 치트키 영역입니다."
+                )
+                st.warning(
+                    "2️⃣ **과공급 스펙 지양 & 채용난 블루오션 역량 적극 어필**\n\n"
+                    "컴퓨터활용능력이나 일반 PPT 작성 등의 흔한 자격증보다, 인사팀 분석 탭의 '채용난 위험 군집'에 속하는 "
+                    "핵심 키워드(예: M&A, GA4 로그 기획 등)를 보유 역량에 기재하여 희소성을 선점하십시오."
+                )
+                st.success(
+                    "3️⃣ **정량 자격증은 직무 지향형으로 조율**\n\n"
+                    "공급 밀도가 너무 높은 공통 자격증 취득보다는 실제 SQL 작성 및 데이터 조작을 입증하여 실무 연계성이 높은 "
+                    "**SQLD, ADsP, 빅데이터분석기사** 등을 보조적으로 빠르게 보완하는 것이 유리합니다."
+                )
 
         # =====================================================================
         # 🎁 나의 스펙 맞춤형 채용 공고 추천 (Content-Based Filtering)
@@ -3043,26 +3041,24 @@ def render_seeker_tab():
             help="Agent 2 검증 모델 A(다중가중 앙상블)와 모델 B(단일 코사인) 중 실시간 추천 결과 차이를 직접 테스트 및 검증할 수 있습니다."
         )
 
-        # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인)
-        # (제목 아래 슬라이더에서 rec_threshold / rec_display_n를 읽으므로
-        #  머메이드 차트 렌더링 전 시쇼스테이트 기본값으로 초기화)
+        # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인) - 참고용 expander 접기
         _threshold_default = st.session_state.get("rec_threshold_slider", 50)
         _displayn_default  = st.session_state.get("rec_display_n_slider", 5)
-
         _model_tag = "2-Stage Re-Ranking 앙상블" if "Model A" in rec_model_choice else "Pure TF-IDF Cosine Sim"
-        # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인)
-        st.markdown(f"""
-        ```mermaid
-        graph TD
-            A["📝 구직자 스펙 입력 (경력/학력/스킬)"] --> B["🧹 텍스트 결합 및 동의어 확장 전처리"]
-            B --> C["🎛️ 1단계: TF-IDF 벡터화 + 코사인 유사도"]
-            C --> D["📋 상위 50개 후보 공고 추출 (Candidate Generation)"]
-            D --> E["🔬 2단계: {rec_model_choice.split(':')[1].strip()}"]
-            E --> F["🏆 Final Score 계산 완료"]
-            F --> G["🔎 임계값 필터 ({_threshold_default}% 이상)"]
-            G --> H["🎁 TOP {_displayn_default} 맞춤 채용공고 추천"]
-        ```
-        """)
+
+        with st.expander("ℹ️ 2단계 Re-Ranking 추천 알고리즘 분석 파이프라인 프로세스 보기 (Mermaid)", expanded=False):
+            st.markdown(f"""
+            ```mermaid
+            graph TD
+                A["📝 구직자 스펙 입력 (경력/학력/스킬)"] --> B["🧹 텍스트 결합 및 동의어 확장 전처리"]
+                B --> C["🎛️ 1단계: TF-IDF 벡터화 + 코사인 유사도"]
+                C --> D["📋 상위 50개 후보 공고 추출 (Candidate Generation)"]
+                D --> E["🔬 2단계: {rec_model_choice.split(':')[1].strip()}"]
+                E --> F["🏆 Final Score 계산 완료"]
+                F --> G["🔎 임계값 필터 ({_threshold_default}% 이상)"]
+                G --> H["🎁 TOP {_displayn_default} 맞춤 채용공고 추천"]
+            ```
+            """)
 
         if df_saramin is not None and not df_saramin.empty:
             with st.spinner("맞춤 채용 공고 탐색 및 유사도 계산 중..."):
@@ -3371,18 +3367,19 @@ def render_seeker_tab():
                         with btn_col:
                             st.link_button("🔗 상세 공고 보기", link_url, use_container_width=True)
 
-                # ── 2단계 Re-Ranking 공식 안내 ────────────────────────────────────────
-                st.markdown(f"""
-                <div style="font-size: 11.5px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-top: 16px; line-height: 1.7;">
-                    💡 <b>[고도화된 추천 산식 — 2단계 Re-Ranking]</b><br>
-                    • <b>1단계 후보 추출</b>: TF-IDF + 코사인 유사도로 상위 50개 공고를 1차 후보군으로 선별합니다.<br>
-                    • <b>2단계 Re-Ranking 종합 점수</b>: <code>Final Score = (TF-IDF Cosine × 40%) + (Jaccard 유사도 × 40%) + (시장 희소 스펙 가중치 × 20%)</code><br>
-                    &nbsp;&nbsp;— <b>TF-IDF Cosine (40%)</b>: 구직자 프로필 문맥과 공고 본문 전체의 의미적 유사도<br>
-                    &nbsp;&nbsp;— <b>Jaccard 유사도 (40%)</b>: 구직자 스펙 토큰 집합 ∩ 공고 요구 스펙 집합 / 합집합 비율<br>
-                    &nbsp;&nbsp;— <b>시장 희소성 (20%)</b>: 네이버 트렌드 API(trend_ratio_base) 기반, 구직자 보유 스펙 중 시장 관심도가 높은 키워드를 우대하는 공고에 가중치<br>
-                    • <b>정렬 우선순위</b>: Final Score 내림차순으로 TOP {rec_display_n} 선별. 동점 시 가장 최근 등록 공고(updated_at 최신순)가 우선 노출됩니다.
-                </div>
-                """, unsafe_allow_html=True)
+                # ── 2단계 Re-Ranking 공식 안내 (참고용 expander 접기) ──────────────────
+                with st.expander("💡 2단계 Re-Ranking 고도화 추천 산식 세부 설명 보기", expanded=False):
+                    st.markdown(f"""
+                    <div style="font-size: 11.5px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-top: 4px; line-height: 1.7;">
+                        💡 <b>[고도화된 추천 산식 — 2단계 Re-Ranking]</b><br>
+                        • <b>1단계 후보 추출</b>: TF-IDF + 코사인 유사도로 상위 50개 공고를 1차 후보군으로 선별합니다.<br>
+                        • <b>2단계 Re-Ranking 종합 점수</b>: <code>Final Score = (TF-IDF Cosine × 40%) + (Jaccard 유사도 × 40%) + (시장 희소 스펙 가중치 × 20%)</code><br>
+                        &nbsp;&nbsp;— <b>TF-IDF Cosine (40%)</b>: 구직자 프로필 문맥과 공고 본문 전체의 의미적 유사도<br>
+                        &nbsp;&nbsp;— <b>Jaccard 유사도 (40%)</b>: 구직자 스펙 토큰 집합 ∩ 공고 요구 스펙 집합 / 합집합 비율<br>
+                        &nbsp;&nbsp;— <b>시장 희소성 (20%)</b>: 네이버 트렌드 API(trend_ratio_base) 기반, 구직자 보유 스펙 중 시장 관심도가 높은 키워드를 우대하는 공고에 가중치<br>
+                        • <b>정렬 우선순위</b>: Final Score 내림차순으로 TOP {rec_display_n} 선별. 동점 시 가장 최근 등록 공고(updated_at 최신순)가 우선 노출됩니다.
+                    </div>
+                    """, unsafe_allow_html=True)
         else:
             st.warning("⚠️ 맞춤 채용공고를 매칭할 사람인 채용공고 DB 데이터가 확보되지 않았습니다.")
     else:

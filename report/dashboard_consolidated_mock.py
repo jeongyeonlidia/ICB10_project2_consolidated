@@ -410,6 +410,26 @@ def build_mock_mart(job_name):
     return pd.DataFrame(rows)
 
 
+# ---------------------------------------------------------------------
+# [Agent 1 개선안 5] 데이터 정합성 검증 (Data Quality Check) 헬퍼
+# ---------------------------------------------------------------------
+def check_data_quality(df, dataset_name="Dataset"):
+    """데이터프레임의 null 비율, 데이터 건수를 검증하여 정합성 정보 리턴"""
+    if df is None or df.empty:
+        return {"status": "FAIL", "msg": f"{dataset_name}: 데이터 미로드 (0건)"}
+    null_count = int(df.isnull().sum().sum())
+    total_cells = int(df.shape[0] * df.shape[1])
+    null_ratio = (null_count / total_cells * 100) if total_cells > 0 else 0.0
+    return {
+        "status": "PASS" if null_ratio < 5.0 else "WARN",
+        "rows": df.shape[0],
+        "cols": df.shape[1],
+        "null_count": null_count,
+        "null_ratio": round(null_ratio, 2),
+        "msg": f"{dataset_name}: {df.shape[0]:,}건 (Null {null_ratio:.1f}%)"
+    }
+
+
 # =====================================================================
 # 2. 실제 데이터 로더 (기존 파이프라인 결과물 우선 로드)
 # =====================================================================
@@ -1788,7 +1808,7 @@ st.sidebar.markdown(
     f"<span class='data-badge {_naver_badge_cls}'>{_naver_label}</span>",
     unsafe_allow_html=True
 )
-with st.sidebar.expander("🛠 데이터 파이프라인 정보"):
+with st.sidebar.expander("🛠 데이터 파이프라인 정보 및 DQ Check"):
     if saramin_path:
         st.caption(f"사람인 DB: `{saramin_path}`")
     else:
@@ -1797,6 +1817,11 @@ with st.sidebar.expander("🛠 데이터 파이프라인 정보"):
         st.caption(f"네이버 주간 API: `{weekly_insights_path}`")
     else:
         st.caption("네이버 주간 API: 미연동")
+    
+    _dq1 = check_data_quality(df_saramin, "사람인 DB")
+    _dq2 = check_data_quality(df_weekly_insights, "네이버 주간 API")
+    st.caption(f"✅ DQ Check (사람인): {_dq1['msg']}")
+    st.caption(f"✅ DQ Check (네이버): {_dq2['msg']}")
 
 
 # 현재 직무의 데이터프레임 결정
@@ -2998,12 +3023,24 @@ def render_seeker_tab():
         st.subheader("🎁 나의 스펙 맞춤형 채용 공고 추천")
         st.caption("구직자님의 자가진단 프로필(경력, 학력, 자격증, 실무툴, 프로젝트 경험)과 실제 채용 공고 본문을 **2단계 Re-Ranking 알고리즘**으로 분석하여 최적 공고를 정밀 선별합니다.")
 
+        # ── [Agent 2 개선안 8] A/B 테스트 추천 모델 선택기 ────────────────────────
+        rec_model_choice = st.radio(
+            "🧪 추천 모델 알고리즘 선택 (Agent 2 A/B 테스트 스위처)",
+            ["Model A: 2-Stage Re-Ranking (TF-IDF 40% + Jaccard 40% + Naver희소성 20%) [권장]",
+             "Model B: Pure TF-IDF Cosine Similarity (단일 코사인 유사도 100%)"],
+            index=0,
+            horizontal=True,
+            key="rec_model_choice_radio",
+            help="Agent 2 검증 모델 A(다중가중 앙상블)와 모델 B(단일 코사인) 중 실시간 추천 결과 차이를 직접 테스트 및 검증할 수 있습니다."
+        )
+
         # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인)
         # (제목 아래 슬라이더에서 rec_threshold / rec_display_n를 읽으므로
         #  머메이드 차트 렌더링 전 시쇼스테이트 기본값으로 초기화)
         _threshold_default = st.session_state.get("rec_threshold_slider", 50)
         _displayn_default  = st.session_state.get("rec_display_n_slider", 5)
 
+        _model_tag = "2-Stage Re-Ranking 앙상블" if "Model A" in rec_model_choice else "Pure TF-IDF Cosine Sim"
         # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인)
         st.markdown(f"""
         ```mermaid
@@ -3011,13 +3048,8 @@ def render_seeker_tab():
             A["📝 구직자 스펙 입력 (경력/학력/스킬)"] --> B["🧹 텍스트 결합 및 동의어 확장 전처리"]
             B --> C["🎛️ 1단계: TF-IDF 벡터화 + 코사인 유사도"]
             C --> D["📋 상위 50개 후보 공고 추출 (Candidate Generation)"]
-            D --> E["🔬 2단계 Re-Ranking: 다중 지표 스코어링"]
-            E --> E1["① TF-IDF Cosine Sim × 40%"]
-            E --> E2["② Jaccard 유사도 × 40%"]
-            E --> E3["③ Naver 시장 희소성 가중치 × 20%"]
-            E1 --> F["🏆 Final Score = Cosine×0.4 + Jaccard×0.4 + Scarcity×0.2"]
-            E2 --> F
-            E3 --> F
+            D --> E["🔬 2단계: {rec_model_choice.split(':')[1].strip()}"]
+            E --> F["🏆 Final Score 계산 완료"]
             F --> G["🔎 임계값 필터 ({_threshold_default}% 이상)"]
             G --> H["🎁 TOP {_displayn_default} 맞춤 채용공고 추천"]
         ```
@@ -3172,8 +3204,11 @@ def render_seeker_tab():
                             scarcity_scores.append(found_score)
                     scarcity_weight = float(np.mean(scarcity_scores)) if scarcity_scores else 0.0
 
-                    # 최종 종합 점수 (Final Fit Score)
-                    final_score_raw = (cosine_sim * 0.4) + (jaccard_sim * 0.4) + (scarcity_weight * 0.2)
+                    # ── [Agent 2 개선안 8] A/B 테스트 모델별 점수 계산 분기 ──
+                    if "Pure TF-IDF" in rec_model_choice:
+                        final_score_raw = cosine_sim
+                    else:
+                        final_score_raw = (cosine_sim * 0.4) + (jaccard_sim * 0.4) + (scarcity_weight * 0.2)
 
                     # 표시용 백분율 변환: 현실적인 50~98% 범위로 매핑
                     score_display = round((0.5 + 0.48 * final_score_raw) * 100, 1) if final_score_raw > 0 else 0.0
@@ -3224,8 +3259,8 @@ def render_seeker_tab():
                         help="추천 결과로 노출할 공고의 최대 개수입니다. (3~20개)"
                     )
 
-                # 제목에 슬라이더에서 선택된 실시간 개수를 동적 반영
-                st.markdown(f"##### 💼 TOP {rec_display_n} 맞춤 채용공고 카탈로그")
+                # 제목에 선택된 추천 모델 및 실시간 개수를 동적 반영
+                st.markdown(f"##### 💼 TOP {rec_display_n} 맞춤 채용공고 카탈로그 (`{rec_model_choice.split(':')[0]}` 적용 중)")
 
                 # ── 임계값 필터링 + 노출 개수 제한 ─────────────────────────────────
                 threshold_filtered = [item for item in sorted_recs if item["score"] >= rec_threshold]
@@ -3242,7 +3277,24 @@ def render_seeker_tab():
                         "⚙️ **추천 필터 설정**에서 임계값을 낮추거나 보유 스펙을 추가해 보세요."
                     )
 
-                for idx_c, item in enumerate(top_n_recs):
+                # ── [Agent 3 개선안 9] 카탈로그 페이지네이션 (Pagination) ───────────
+                items_per_page = 5
+                total_items = len(top_n_recs)
+                total_pages = max(1, math.ceil(total_items / items_per_page))
+
+                if total_pages > 1:
+                    p_col1, p_col2 = st.columns([1, 3])
+                    with p_col1:
+                        cur_page = st.number_input("📄 페이지 선택", min_value=1, max_value=total_pages, value=1, step=1, key="catalog_page_num")
+                    with p_col2:
+                        st.caption(f"📌 총 {total_items}개 공고 중 **{cur_page} / {total_pages} 페이지** (페이지당 {items_per_page}개씩 노출)")
+                    
+                    start_idx = (cur_page - 1) * items_per_page
+                    render_items = top_n_recs[start_idx:start_idx + items_per_page]
+                else:
+                    render_items = top_n_recs
+
+                for idx_c, item in enumerate(render_items):
                     row = item["row"]
                     score = item["score"]
                     matched_tags = item["matched_tags"]

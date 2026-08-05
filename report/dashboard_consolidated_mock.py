@@ -1713,6 +1713,13 @@ st.sidebar.subheader("📡 데이터 소스 현황")
 st.sidebar.markdown(
     """
     <style>
+    /* ── [UX/UI Agent 4 개선안] 모던 파스텔 디자인 시스템 & Bento Grid ── */
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    
+    html, body, [class*="css"] {
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    
     .data-badge {
         display: block;
         padding: 7px 12px;
@@ -1721,6 +1728,7 @@ st.sidebar.markdown(
         font-weight: 500;
         margin-bottom: 6px;
         line-height: 1.4;
+        transition: all 0.2s ease-in-out;
     }
     .badge-green {
         background: #f0fdf4;
@@ -1732,10 +1740,39 @@ st.sidebar.markdown(
         color: #1d4ed8;
         border: 1px solid #bfdbfe;
     }
+    .badge-purple {
+        background: #faf5ff;
+        color: #6b21a8;
+        border: 1px solid #e9d5ff;
+    }
+    .badge-amber {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+    .badge-rose {
+        background: #fff1f2;
+        color: #be123c;
+        border: 1px solid #fecdd3;
+    }
     .badge-gray {
         background: #f8fafc;
         color: #64748b;
         border: 1px solid #e2e8f0;
+    }
+    
+    /* Bento Grid Card & Metric Component Styling */
+    div[data-testid="stMetric"] {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px 18px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
     }
     </style>
     """,

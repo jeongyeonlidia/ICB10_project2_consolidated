@@ -3242,7 +3242,7 @@ def render_seeker_tab():
                             st.link_button("🔗 상세 공고 보기", link_url, use_container_width=True)
 
                 # ── 2단계 Re-Ranking 공식 안내 ────────────────────────────────────────
-                st.markdown("""
+                st.markdown(f"""
                 <div style="font-size: 11.5px; color: #475569; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; border-radius: 8px; margin-top: 16px; line-height: 1.7;">
                     💡 <b>[고도화된 추천 산식 — 2단계 Re-Ranking]</b><br>
                     • <b>1단계 후보 추출</b>: TF-IDF + 코사인 유사도로 상위 50개 공고를 1차 후보군으로 선별합니다.<br>

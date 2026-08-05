@@ -2848,14 +2848,20 @@ def render_seeker_tab():
         W = JOB_WEIGHT_MAP.get(selected_job, {"cert": 0.20, "tool": 0.20, "exp": 0.20, "career": 0.20, "edu": 0.20})
 
         # 각 항목 0~100 정규화 점수
-        # 자격증/툴/경험: 보유 수 ÷ 전체 풀 수 × 100 (보유율 기반)
-        # 단, 아무것도 선택 안 한 경우 0점이 되지 않도록 최소 기저점 25점 부여 ("선택지가 너무 많아 0점"인 불이익 방지)
-        _BASE = 25.0  # 아무것도 없을 때 출발점 (빡빡함 완화)
-        lic_score_norm  = max(_BASE * (1 - W["cert"]),  (len(clean_licenses)    / max(len(raw_licenses),    1) * 100))
-        tool_score_norm = max(_BASE * (1 - W["tool"]),  (len(clean_tools)       / max(len(raw_tools),       1) * 100))
-        exp_score_norm  = max(_BASE * (1 - W["exp"]),   (len(clean_experiences) / max(len(raw_experiences),  1) * 100))
-        career_norm = {"신입": 25.0, "주니어 (1~3년)": 50.0, "미들 (4~7년)": 75.0, "시니어 (8년 이상)": 100.0}[user_career]
-        edu_norm    = {"고졸 이하": 20.0, "초대졸 (2/3년제)": 45.0, "대졸 (4년제 학사)": 75.0, "대학원 (석사/박사)": 100.0}[user_edu]
+        # 스펙 충족률 현실화: 실무상 핵심 2~3개만 보유해도 충족률이 높으므로
+        # 비선형 체감 스케일링 (0개:30점, 1개:65점, 2개:85점, 3개:95점, 4개이상:100점) 적용
+        def calc_spec_score(selected_count):
+            if selected_count <= 0: return 30.0
+            elif selected_count == 1: return 65.0
+            elif selected_count == 2: return 85.0
+            elif selected_count == 3: return 95.0
+            else: return 100.0
+
+        lic_score_norm  = calc_spec_score(len(clean_licenses))
+        tool_score_norm = calc_spec_score(len(clean_tools))
+        exp_score_norm  = calc_spec_score(len(clean_experiences))
+        career_norm = {"신입": 40.0, "주니어 (1~3년)": 65.0, "미들 (4~7년)": 85.0, "시니어 (8년 이상)": 100.0}[user_career]
+        edu_norm    = {"고졸 이하": 30.0, "초대졸 (2/3년제)": 55.0, "대졸 (4년제 학사)": 80.0, "대학원 (석사/박사)": 100.0}[user_edu]
 
         suitability_score = float(np.clip(
             lic_score_norm  * W["cert"]
@@ -2881,11 +2887,11 @@ def render_seeker_tab():
         w_career_pct = round(W["career"] * 100)
         w_edu_pct    = round(W["edu"]    * 100)
         st.info(
-            f"ℹ️ **[점수 산출 데이터 기준 및 산출 공식]**\n\n"
+            f"ℹ️ **[점수 산출 데이터 기준 및 연차별 산출 공식]**\n\n"
             f"본 점수는 사람인 5,000건 채용공고의 실제 요구 빈도·강도를 분석하여 도출한 "
             f"**[{selected_job}] 직무별 차등 가중치** ("
             f"자격증 {w_cert_pct}% + 실무툴 {w_tool_pct}% + 직무경험 {w_exp_pct}% + 경력연차 {w_career_pct}% + 학력 {w_edu_pct}%) "
-            f"를 각각 0~100점으로 정규화하여 가중 합산한 정량 지표입니다.\n\n"
+            f"를 기반으로 구직자님의 **선택 연차인 `{user_career}` 기대 스펙 보유율**을 실무형 비선형 함수로 정규화하여 산출합니다.\n\n"
             "⚠️ **[유의사항]** 본 진단 점수 및 안심권 기준은 정량적 공고 매칭율에 기반한 참고 지표이며, "
             "실제 기업 채용 전형에서의 **최종 합격 또는 불합격을 절대 보장하지 않습니다.**"
         )
@@ -2897,21 +2903,24 @@ def render_seeker_tab():
         sub_career_score = career_norm
         sub_edu_score    = edu_norm
 
-        JOB_BENCHMARK = {
-            "기획/전략": 62.4,
-            "인사/노무": 59.8,
-            "회계/재무": 61.2,
-            "마케팅": 58.5,
-            "개발": 63.1
+        # ── [사용자 요청] 연차별(경력 수준별) 벤치마크 산출 기준 ────────────────
+        CAREER_BENCHMARK = {
+            "신입":           {"avg": 52.5, "safe": 65.0, "level_name": "신입 지원자"},
+            "주니어 (1~3년)": {"avg": 61.0, "safe": 72.0, "level_name": "주니어 (1~3년) 지원자"},
+            "미들 (4~7년)":   {"avg": 68.5, "safe": 78.0, "level_name": "미들 (4~7년) 지원자"},
+            "시니어 (8년 이상)": {"avg": 75.0, "safe": 85.0, "level_name": "시니어 (8년 이상) 지원자"},
         }
-        avg_score = JOB_BENCHMARK.get(selected_job, 60.0)
+        cb_info = CAREER_BENCHMARK.get(user_career, {"avg": 62.0, "safe": 75.0, "level_name": "지원자"})
+        avg_score  = cb_info["avg"]
+        safe_score = cb_info["safe"]
+        career_label = cb_info["level_name"]
 
-        if suitability_score >= 85.0:
+        if suitability_score >= safe_score + 7.0:
             pct_str = "현재 상위 12% 수준입니다 (서류 최우수 합격권 🏆)"
-        elif suitability_score >= 75.0:
-            pct_str = "현재 상위 24% 수준입니다 (서류 통과 안심권 🟢)"
-        elif suitability_score >= 60.0:
-            pct_str = "현재 상위 48% 수준입니다 (보완 요구 경쟁권 🟡)"
+        elif suitability_score >= safe_score:
+            pct_str = "현재 상위 25% 수준입니다 (서류 통과 안심권 🟢)"
+        elif suitability_score >= avg_score:
+            pct_str = "현재 상위 45% 수준입니다 (보완 요구 경쟁권 🟡)"
         else:
             pct_str = "현재 상위 68% 수준입니다 (스펙 보완 필요권 🔴)"
 
@@ -2923,13 +2932,13 @@ def render_seeker_tab():
                 f"{suitability_score:.1f}점",
                 help=f"[{selected_job}] 직무별 가중치 — 자격증 {w_cert_pct}% + 실무툴 {w_tool_pct}% + 직무경험 {w_exp_pct}% + 경력연차 {w_career_pct}% + 학력 {w_edu_pct}%"
             )
-            # 2. [점수 맥락 제공] 상대적 위치(기준선) 가이드라인 배치
+            # [점수 맥락 제공] 선택 연차별 상대적 위치 가이드라인
             st.markdown(
                 f"""<div style="background-color:#eff6ff; border:1px solid #bfdbfe; padding:10px 14px; border-radius:8px; margin-top:8px;">
                     <p style="margin:0; font-size:0.88rem; color:#1e3a8a; font-weight:600;">
-                        📊 <b>[{selected_job}] 지원자 평균 {avg_score:.1f}점</b> | 합격 안심권 <b>75.0점 이상</b><br>
+                        📊 <b>[{selected_job}] {career_label} 평균 {avg_score:.1f}점</b> | 합격 안심권 <b>{safe_score:.1f}점 이상</b><br>
                         ➔ <span style="color:#2563eb; font-weight:700;">{pct_str}</span><br>
-                        <span style="font-size:0.78rem; color:#64748b; font-weight:normal;">(※ 기준: 합격자 개인 이력서 DB가 아닌, 사람인 5,000건 기업 공고 요건의 75% 이상을 동시 충족하는 시장 상위 25% 정량 충족률 기준입니다. <b>본 결과는 실제 합격/불합격을 보장하지 않습니다.</b>)</span>
+                        <span style="font-size:0.78rem; color:#64748b; font-weight:normal;">(※ 기준: 사람인 5,000건 공고 요건 및 연차별 기대 스펙 충족률 기준입니다. <b>본 결과는 실제 합격/불합격을 보장하지 않습니다.</b>)</span>
                     </p>
                 </div>""",
                 unsafe_allow_html=True
@@ -3173,12 +3182,27 @@ def render_seeker_tab():
                     det_t = str(row.get("detail_content", ""))
                     posting_text_full = f"{title_t} {qual_t} {pref_t} {det_t}".lower()
 
-                    # — 매칭 태그 추출 (동의어 확장 기반 부분 일치) —
-                    matched_tags = []
-                    for sk in user_skills:
-                        syns = synonyms.get(sk, [sk]) if synonyms else [sk]
+                    # — 매칭 태그 범주별 추출 (자격증, 실무 툴, 직무 경험) —
+                    matched_licenses = []
+                    matched_tools = []
+                    matched_experiences = []
+
+                    for l in clean_licenses:
+                        syns = synonyms.get(l, [l]) if synonyms else [l]
                         if any(syn.lower() in posting_text_full for syn in syns):
-                            matched_tags.append(sk)
+                            matched_licenses.append(l)
+
+                    for t in clean_tools:
+                        syns = synonyms.get(t, [t]) if synonyms else [t]
+                        if any(syn.lower() in posting_text_full for syn in syns):
+                            matched_tools.append(t)
+
+                    for e in clean_experiences:
+                        syns = synonyms.get(e, [e]) if synonyms else [e]
+                        if any(syn.lower() in posting_text_full for syn in syns):
+                            matched_experiences.append(e)
+
+                    matched_tags = matched_licenses + matched_tools + matched_experiences
 
                     # ① TF-IDF Cosine Similarity (문맥 유사도)
                     cosine_sim = float(sims[arr_idx])
@@ -3220,7 +3244,10 @@ def render_seeker_tab():
                         "cosine_sim": cosine_sim,
                         "jaccard_sim": jaccard_sim,
                         "scarcity_weight": scarcity_weight,
-                        "matched_tags": matched_tags
+                        "matched_tags": matched_tags,
+                        "matched_licenses": matched_licenses,
+                        "matched_tools": matched_tools,
+                        "matched_experiences": matched_experiences
                     })
 
                 # 등록일(updated_at) 및 마감일(deadline) 파싱용 정렬 키 도출 (예비정렬)
@@ -3322,7 +3349,21 @@ def render_seeker_tab():
 
                         tag_col, btn_col = st.columns([3, 1])
                         with tag_col:
-                            if matched_tags:
+                            m_lics = item.get("matched_licenses", [])
+                            m_tools = item.get("matched_tools", [])
+                            m_exps = item.get("matched_experiences", [])
+                            
+                            tag_htmls = []
+                            for l in m_lics:
+                                tag_htmls.append(f"<span style='display:inline-block; background-color:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; margin-right:4px; margin-bottom:4px;'>📜 {l}</span>")
+                            for t in m_tools:
+                                tag_htmls.append(f"<span style='display:inline-block; background-color:#fffbeb; color:#b45309; border:1px solid #fde68a; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; margin-right:4px; margin-bottom:4px;'>🛠️ {t}</span>")
+                            for e in m_exps:
+                                tag_htmls.append(f"<span style='display:inline-block; background-color:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; margin-right:4px; margin-bottom:4px;'>💼 {e}</span>")
+                            
+                            if tag_htmls:
+                                st.markdown("".join(tag_htmls), unsafe_allow_html=True)
+                            elif matched_tags:
                                 tag_elements = "".join([f"<span style='display:inline-block; background-color:#f1f5f9; color:#475569; border: 1px solid #e2e8f0; border-radius:6px; padding:2px 8px; font-size:11px; margin-right:4px; margin-bottom:4px;'>💡 {t}</span>" for t in matched_tags])
                                 st.markdown(tag_elements, unsafe_allow_html=True)
                             else:

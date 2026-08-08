@@ -118,6 +118,7 @@ style: |
 
   /* ── 이미지 프레임 ── */
   .img-frame {
+    background: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 10px;
     overflow: hidden;
@@ -125,10 +126,13 @@ style: |
   }
   .img-frame img {
     width: 100%;
-    max-height: 310px;
+    max-height: 290px;
     object-fit: cover;
     object-position: top;
     display: block;
+  }
+  .img-frame-sm img {
+    max-height: 240px;
   }
 
   /* ── 그리드 레이아웃 ── */
@@ -571,7 +575,7 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 
 # 5. 대시보드 시각화 공유 — (3) 인사팀 모드 및 유저 예시
 
-## 수급 Gap 분석 & AI JD 시뮬레이터 (유저 시나리오 예시: 인사팀장 '이채용' 님)
+## 3D 임베딩 매칭 & AI JD 시뮬레이터 (유저 시나리오 예시: 인사팀장 '이채용' 님)
 
 <div class="cols-2">
 <div>
@@ -581,25 +585,31 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 <h3>👤 인사팀장 '이채용' 님의 고민</h3>
 <ul>
 <li>"공고를 올려도 모호한 우대조건으로 <strong>허수 지원자만 많고 실무형 인재가 안 옵니다.</strong>"</li>
-<li>"어느 조건을 교체해야 지원자 유입이 늘어나는지 <strong>지표가 없습니다.</strong>"</li>
+<li>"어느 조건을 교체해야 유입이 늘어나는지 <strong>지표가 없습니다.</strong>"</li>
 </ul>
 </div>
 
 <div class="card card-sky">
-<span class="badge badge-blue">인사팀 모드 탭 핵심</span>
-<h3>⚖️ Gap 분석 & AI JD 시뮬레이터</h3>
+<span class="badge badge-blue">인사팀 모드 2대 핵심 기능</span>
+<h3>⚖️ 3D 임베딩 매칭 & AI JD 시뮬레이터</h3>
 <ul>
-<li><strong>마디형 파란 반원 아치 게이지 (`_segmented_arc_gauge`)</strong></li>
-<li><strong>의미 기반 유사 역량 매칭 (2D 임베딩 시각화)</strong></li>
-<li>유입 노출 <strong>+35% 상승 예측 JD 문구 생성</strong></li>
+<li><strong>PCA 3D 의미론적 국소 매칭</strong>: 유사 공고 3D 근접도 포커스 뷰</li>
+<li><strong>수급난 추천 스펙 일괄 연동</strong>: 지원자 유입 노출 <strong>+35% 상승 예측 JD 문구 생성</strong></li>
 </ul>
 </div>
 
 </div>
 <div>
 
-<div class="img-frame">
-  <img src="../images/presentation/03_hr_gap.png" alt="인사팀 모드 수급 Gap 분석 및 JD 시뮬레이터 대시보드 스크린샷">
+<div class="cols-2" style="gap:10px;">
+  <div class="img-frame img-frame-sm">
+    <p style="font-size:0.75rem; font-weight:700; color:#3730a3; margin:4px 8px 2px 8px;">① PCA 3D 임베딩 국소 뷰</p>
+    <img src="../images/presentation/03_hr_embedding_3d.png" alt="PCA 3D 임베딩 국소 뷰 스크린샷">
+  </div>
+  <div class="img-frame img-frame-sm">
+    <p style="font-size:0.75rem; font-weight:700; color:#0369a1; margin:4px 8px 2px 8px;">② AI JD 시뮬레이터 & 생성</p>
+    <img src="../images/presentation/04_hr_jd_simulator.png" alt="AI JD 시뮬레이터 뷰 스크린샷">
+  </div>
 </div>
 
 </div>

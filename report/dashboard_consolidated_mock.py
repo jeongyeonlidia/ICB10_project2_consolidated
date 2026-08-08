@@ -1981,14 +1981,19 @@ def render_company_health_tab():
 st.sidebar.title("🎛️ 마스터 컨트롤러")
 
 USER_MODE_OPTIONS = [
+    "🏠 메인 홈 (관제 솔루션 홈)",
     "📈 취업시장 EDA 및 채용 건전성 분석",
     "👤 구직자 모드 (자가진단 & 추천)",
     "🏢 기업·인사팀 모드 (수급 Gap 분석)"
 ]
+
+if "user_mode" not in st.session_state:
+    st.session_state["user_mode"] = USER_MODE_OPTIONS[0]
+
 user_mode = st.sidebar.radio(
     "🧭 사용자 모드",
     USER_MODE_OPTIONS,
-    index=0,
+    key="user_mode",
     help="선택한 모드에 따라 대시보드 메인 화면의 분석 및 진단 뷰가 변경됩니다."
 )
 
@@ -2085,148 +2090,246 @@ def mock_badge():
 # =====================================================================
 # 4. 메인 타이틀 및 2 탭 구성 (수집된 실제 데이터 기반으로 최적화)
 # =====================================================================
-st.title("취업 시장 다차원 EDA 및 직무 적합도 진단 솔루션")
-st.markdown(
-    f"**현재 관제 직무**: `{selected_job}` · 사람인 실채용공고 5,000건(수요) + 네이버 주간 API(공급) 실시간 동적 매칭"
-)
+# =====================================================================
+# 4. 메인 랜딩 홈 탭 (히어로 배너 및 3대 원클릭 관제 모드 이동 카드)
+# =====================================================================
+def render_home_landing_tab():
+    _inject_page_card_css()
+    st.title("취업 시장 다차원 EDA 및 직무 적합도 진단 솔루션")
+    st.markdown(
+        f"**현재 관제 직무**: `{selected_job}` · 사람인 실채용공고 5,000건(수요) + 네이버 주간 API(공급) 실시간 동적 매칭"
+    )
 
-# ---------------------------------------------------------------------
-# Hero Banner Section: 모던 카드 스타일로 개선
-# ---------------------------------------------------------------------
-hero_html = f"""
-<style>
-/* ── 딥 블루 히어로 배너 (Modern SaaS) ─────────────────────────── */
-.hero-outer {{
-    background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 45%, #2563EB 100%);
-    border-radius: 22px;
-    padding: 34px 38px 26px 38px;
-    margin-top: 10px;
-    margin-bottom: 24px;
-    box-shadow: 0 10px 40px rgba(37,99,235,0.28), 0 3px 10px rgba(30,58,138,0.18);
-    border: 1px solid rgba(255,255,255,0.10);
-    position: relative;
-    overflow: hidden;
-}}
-.hero-outer::before {{
-    content: "";
-    position: absolute; top: -70px; right: -70px;
-    width: 240px; height: 240px;
-    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}}
-.hero-outer::after {{
-    content: "";
-    position: absolute; bottom: -50px; left: 32%;
-    width: 180px; height: 180px;
-    background: radial-gradient(circle, rgba(96,165,250,0.10) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}}
-.hero-badge {{
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 16px;
-    border-radius: 20px;
-    background: rgba(255,255,255,0.12);
-    color: #93C5FD;
-    font-size: 11.5px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    margin-bottom: 16px;
-    border: 1px solid rgba(147,197,253,0.25);
-    backdrop-filter: blur(4px);
-    position: relative; z-index: 1;
-}}
-.hero-title {{
-    margin: 0 0 10px 0;
-    color: #FFFFFF;
-    font-size: 1.22rem;
-    font-weight: 800;
-    line-height: 1.55;
-    letter-spacing: -0.01em;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.14);
-    position: relative; z-index: 1;
-}}
-.hero-desc {{
-    margin-bottom: 0;
-    color: rgba(255,255,255,0.80);
-    font-size: 0.875rem;
-    line-height: 1.75;
-    position: relative; z-index: 1;
-}}
-.chip-row {{
-    display: flex;
-    gap: 12px;
-    margin-top: 22px;
-    flex-wrap: wrap;
-    position: relative; z-index: 1;
-}}
-.chip-card {{
-    flex: 1;
-    min-width: 165px;
-    background: rgba(255,255,255,0.09);
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 14px;
-    padding: 15px 19px;
-    transition: all 0.22s ease;
-    cursor: default;
-    backdrop-filter: blur(6px);
-}}
-.chip-card:hover {{
-    background: rgba(255,255,255,0.16);
-    border-color: rgba(255,255,255,0.32);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-}}
-.chip-icon {{
-    font-size: 20px;
-    margin-bottom: 8px;
-    display: block;
-}}
-.chip-title {{
-    font-size: 14px;
-    font-weight: 700;
-    color: #FFFFFF;
-    margin-bottom: 4px;
-}}
-.chip-sub {{
-    font-size: 12px;
-    color: rgba(255,255,255,0.68);
-    line-height: 1.4;
-}}
-</style>
-<div class="hero-outer">
-    <div class="hero-badge">🟢 REAL-TIME DATA CONNECTED</div>
-    <p class="hero-title">
-        나의 역량은 어느 수준인지, 기업이 원하는 스킬은 무엇인지, 어디가 위험한 채용시장인지 — 한 화면에서 확인하세요.
-    </p>
-    <p class="hero-desc">
-        <b style="color:#93C5FD;">사람인 5,000건 실채용 DB</b>와 <b style="color:#93C5FD;">네이버 API 관심도 데이터</b>를 결합한 데이터 기반 취업 시장 인사이트 대시보드입니다.
-    </p>
-    <div class="chip-row">
-        <div class="chip-card">
-            <span class="chip-icon">📈</span>
-            <div class="chip-title">시장 분석 통합 보기</div>
-            <div class="chip-sub">다차원 EDA 및 기업 이직위험 탐지 → 1번 탭</div>
-        </div>
-        <div class="chip-card">
-            <span class="chip-icon">💡</span>
-            <div class="chip-title">내 스펙 점검 &amp; 추천</div>
-            <div class="chip-sub">자가진단·비선형 스코어링·2-Stage 추천 → 2번 탭</div>
-        </div>
-        <div class="chip-card">
-            <span class="chip-icon">🏢</span>
-            <div class="chip-title">기업 수급 Gap &amp; JD 최적화</div>
-            <div class="chip-sub">채용 수요-공급 미스매치 &amp; JD 분석 → 3번 탭</div>
-        </div>
+    hero_html = f"""
+    <style>
+    /* ── 딥 블루 히어로 배너 (Modern SaaS) ─────────────────────────── */
+    .hero-outer {{
+        background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #2563EB 100%);
+        border-radius: 22px;
+        padding: 36px 40px 28px 40px;
+        margin-top: 10px;
+        margin-bottom: 24px;
+        box-shadow: 0 12px 40px rgba(37,99,235,0.25), 0 4px 12px rgba(15,23,42,0.20);
+        border: 1px solid rgba(255,255,255,0.12);
+        position: relative;
+        overflow: hidden;
+    }}
+    .hero-badge {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 18px;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.12);
+        color: #93C5FD;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        margin-bottom: 16px;
+        border: 1px solid rgba(147,197,253,0.30);
+        backdrop-filter: blur(4px);
+    }}
+    .hero-title {{
+        margin: 0 0 10px 0;
+        color: #FFFFFF;
+        font-size: 1.35rem;
+        font-weight: 800;
+        line-height: 1.55;
+        letter-spacing: -0.01em;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.18);
+    }}
+    .hero-desc {{
+        margin-bottom: 0;
+        color: rgba(255,255,255,0.85);
+        font-size: 0.95rem;
+        line-height: 1.75;
+    }}
+
+    /* ── 3대 프리미엄 럭셔리 관제 카드 스타일 ───────────────────────── */
+    .saas-big-card {{
+        background: #FFFFFF;
+        border-radius: 20px;
+        padding: 26px 26px 22px 26px;
+        box-shadow: 0 10px 30px rgba(15,23,42,0.06), 0 2px 8px rgba(0,0,0,0.03);
+        border: 1px solid #E2E8F0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }}
+    .saas-big-card:hover {{
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px rgba(37,99,235,0.14), 0 4px 14px rgba(0,0,0,0.06);
+    }}
+
+    .card-header-bar {{
+        height: 6px;
+        width: 100%;
+        border-radius: 4px;
+        margin-bottom: 18px;
+    }}
+    .bar-blue {{ background: linear-gradient(90deg, #1E3A8A, #2563EB); }}
+    .bar-purple {{ background: linear-gradient(90deg, #4C1D95, #7C3AED); }}
+    .bar-teal {{ background: linear-gradient(90deg, #064E3B, #0D9488); }}
+
+    .card-icon-title {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }}
+    .card-icon-box {{
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }}
+    .icon-box-blue {{ background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }}
+    .icon-box-purple {{ background: #F3E8FF; color: #7C3AED; border: 1px solid #DDD6FE; }}
+    .icon-box-teal {{ background: #CCFBF1; color: #0D9488; border: 1px solid #99F6E4; }}
+
+    .card-main-title {{
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #0F172A;
+        line-height: 1.35;
+        letter-spacing: -0.01em;
+    }}
+    .card-body-desc {{
+        font-size: 0.90rem;
+        color: #475569;
+        line-height: 1.7;
+        margin-bottom: 18px;
+        flex-grow: 1;
+    }}
+    .tag-container {{
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }}
+    .tag-pill {{
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 8px;
+    }}
+    .tag-blue {{ background: #F1F5F9; color: #1E40AF; border: 1px solid #E2E8F0; }}
+    .tag-purple {{ background: #FAF5FF; color: #6B21A8; border: 1px solid #F3E8FF; }}
+    .tag-teal {{ background: #F0FDF4; color: #047857; border: 1px solid #DCFCE7; }}
+    </style>
+
+    <div class="hero-outer">
+        <div class="hero-badge">🟢 REAL-TIME DATA CONNECTED</div>
+        <p class="hero-title">
+            나의 역량은 어느 수준인지, 기업이 원하는 스킬은 무엇인지, 어디가 위험한 채용시장인지 — 한 화면에서 확인하세요.
+        </p>
+        <p class="hero-desc">
+            <b style="color:#93C5FD;">사람인 5,000건 실채용 DB</b>와 <b style="color:#93C5FD;">네이버 API 관심도 데이터</b>를 결합한 데이터 기반 취업 시장 인사이트 대시보드입니다. 아래 원하시는 전문 관제 카드의 버튼을 클릭하여 이동하세요.
+        </p>
     </div>
-</div>
-"""
-st.markdown(hero_html, unsafe_allow_html=True)
+    """
+    st.markdown(hero_html, unsafe_allow_html=True)
 
-st.write("---")
+    def _switch_user_mode(target_mode):
+        st.session_state["user_mode"] = target_mode
+
+    # 상단 3대 대형 카드 구성 (확대된 폰트, 시각적 시그니처 색상, 태그 포함)
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+        <div class="saas-big-card">
+            <div>
+                <div class="card-header-bar bar-blue"></div>
+                <div class="card-icon-title">
+                    <div class="card-icon-box icon-box-blue">📈</div>
+                    <div class="card-main-title">취업시장 EDA &amp;<br>채용 건전성 관제</div>
+                </div>
+                <div class="card-body-desc">
+                    사람인 5,000건 공고 수요와 네이버 API 구직자 관심도를 실시간 결합하여 <b>수요-공급 4분면 맵</b> 및 <b>기업 이직위험 건전성 지표</b>를 360도로 종합 관제합니다.
+                </div>
+                <div class="tag-container">
+                    <span class="tag-pill tag-blue">#5대직무EDA</span>
+                    <span class="tag-pill tag-blue">#수급4분면맵</span>
+                    <span class="tag-pill tag-blue">#이직위험지표</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.write("")
+        st.button(
+            "🚀 시장 분석 통합 관제 센터 이동 ➔",
+            key="btn_home_card1",
+            use_container_width=True,
+            on_click=_switch_user_mode,
+            args=(USER_MODE_OPTIONS[1],)
+        )
+
+    with col2:
+        st.markdown("""
+        <div class="saas-big-card">
+            <div>
+                <div class="card-header-bar bar-purple"></div>
+                <div class="card-icon-title">
+                    <div class="card-icon-box icon-box-purple">💡</div>
+                    <div class="card-main-title">구직자 스펙 진단 &amp;<br>AI 맞춤 추천</div>
+                </div>
+                <div class="card-body-desc">
+                    경력·학력·자격증·툴·경험 5대 항목의 <b>비선형 차등 가중 스코어링 진단</b>과 문맥·보유스펙·희소성을 종합 계산하는 <b>2-Stage Re-Ranking AI 추천</b>을 제공합니다.
+                </div>
+                <div class="tag-container">
+                    <span class="tag-pill tag-purple">#자가진단점수</span>
+                    <span class="tag-pill tag-purple">#레이더차트</span>
+                    <span class="tag-pill tag-purple">#2StageReRanking</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.write("")
+        st.button(
+            "🎯 구직자 진단 & AI 추천 이동 ➔",
+            key="btn_home_card2",
+            use_container_width=True,
+            on_click=_switch_user_mode,
+            args=(USER_MODE_OPTIONS[2],)
+        )
+
+    with col3:
+        st.markdown("""
+        <div class="saas-big-card">
+            <div>
+                <div class="card-header-bar bar-teal"></div>
+                <div class="card-icon-title">
+                    <div class="card-icon-box icon-box-teal">🏢</div>
+                    <div class="card-main-title">인사팀 수급 Gap &amp;<br>JD 최적화 시뮬레이션</div>
+                </div>
+                <div class="card-body-desc">
+                    직무별 핵심 스킬의 <b>기업수요 vs 관심도 Gap 4대 KPI</b>를 정밀 측정하고, 2D 공간 임베딩 매칭 및 <b>수급난 키워드 기반 AI JD 리모델링</b>을 지원합니다.
+                </div>
+                <div class="tag-container">
+                    <span class="tag-pill tag-teal">#수급Gap지수</span>
+                    <span class="tag-pill tag-teal">#PCA_UMAP매칭</span>
+                    <span class="tag-pill tag-teal">#AI_JD최적화</span>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.write("")
+        st.button(
+            "🛠️ 인사팀 Gap 분석 & JD 시뮬레이터 이동 ➔",
+            key="btn_home_card3",
+            use_container_width=True,
+            on_click=_switch_user_mode,
+            args=(USER_MODE_OPTIONS[3],)
+        )
 
 
 # =====================================================================
@@ -3527,8 +3630,10 @@ def render_seeker_tab():
 
 
 if user_mode == USER_MODE_OPTIONS[0]:
-    render_market_analysis_tab()
+    render_home_landing_tab()
 elif user_mode == USER_MODE_OPTIONS[1]:
+    render_market_analysis_tab()
+elif user_mode == USER_MODE_OPTIONS[2]:
     render_seeker_tab()
 else:
     render_hr_gap_tab()

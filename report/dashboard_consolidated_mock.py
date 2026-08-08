@@ -1632,6 +1632,11 @@ def render_company_health_tab():
                 st.plotly_chart(fig_t2, use_container_width=True)
             st.caption("💡 상시채용·비정규직·경력자전용·반복공고 강도를 결합한 프록시 지표 상위 기업입니다. 점수가 높을수록 참고 관찰이 필요합니다.")
 
+    st.markdown(
+        f"""**📊 데이터 해석 (반복 공고 강도 및 채용 건전성 위험지표 Top 15):**  
+사람인 실채용 공고 {len(df_t):,}건 기반 위험지표 분석 결과, 동일 기업의 단기 잦은 채용공고 반복 게시 및 상시 채용 비중은 해당 기업의 조기 이직률이나 잦은 결원 발생 신호로 작용할 수 있습니다. 상위 위험지표 기업일수록 경력자 전용 공고 및 비정규직 비중이 높게 형성되는 상관관계를 보이며, 구직자는 지원 전 해당 기업의 잦은 공고 발행 사유와 근속 환경을 사전 점검할 필요가 있습니다."""
+    )
+
     st.write("")
 
     col_t_g3, col_t_g4 = st.columns(2)
@@ -1676,6 +1681,11 @@ def render_company_health_tab():
             )
             st.caption("💡 마감일을 명시하지 않는 '상시채용/채용시' 비중이 높을수록, 자리가 상시적으로 비거나 채용을 계속 진행 중인 포지션이 많다는 신호입니다.")
 
+    st.markdown(
+        f"""**🏢 데이터 해석 (고용형태 및 마감 유형 건전성 분포):**  
+전체 공고 중 마감일을 명시하지 않는 '상시채용/채용시' 마감 방식과 정규직 외 비정규직(계약/파견/인턴) 비율 분석은 채용의 질적 건전성을 가늠하는 핵심 지표입니다. 상시 채용 비율이 과도하게 높을 경우 정기 채용 프로세스 미비나 상시 결원 가능성을 암시하므로 인사팀은 JD 최적화를, 구직자는 고용 안정성 검증을 병행하는 지혜가 요구됩니다."""
+    )
+
     st.write("")
 
     with st.container(border=True):
@@ -1705,14 +1715,17 @@ def render_company_health_tab():
 # =====================================================================
 st.sidebar.title("🎛️ 마스터 컨트롤러")
 
-USER_MODE_OPTIONS = ["👤 구직자 모드", "🏢 기업·인사팀 모드"]
+USER_MODE_OPTIONS = [
+    "📈 취업시장 EDA 및 채용 건전성 분석",
+    "👤 구직자 모드 (자가진단 & 추천)",
+    "🏢 기업·인사팀 모드 (수급 Gap 분석)"
+]
 user_mode = st.sidebar.radio(
     "🧭 사용자 모드",
     USER_MODE_OPTIONS,
     index=0,
-    help="모드에 따라 노출되는 탭이 달라집니다. 선택한 직무 필터는 모드를 전환해도 그대로 유지됩니다."
+    help="선택한 모드에 따라 대시보드 메인 화면의 분석 및 진단 뷰가 변경됩니다."
 )
-is_seeker_mode = user_mode == USER_MODE_OPTIONS[0]
 
 st.sidebar.write("---")
 st.sidebar.markdown("대시보드 전체 데이터를 제어하는 직무 스위처입니다.")
@@ -1942,19 +1955,19 @@ hero_html = f"""
     </p>
     <div class="chip-row">
         <div class="chip-card">
-            <span class="chip-icon">📋</span>
-            <div class="chip-title">내 스펙 점검하기</div>
-            <div class="chip-sub">자격증·툴·경험 5대 스펙을 진단하세요 → 구직자 탭</div>
+            <span class="chip-icon">📈</span>
+            <div class="chip-title">시장 분석 통합 보기</div>
+            <div class="chip-sub">다차원 EDA 및 기업 이직위험 탐지 → 1번 탭</div>
         </div>
         <div class="chip-card">
-            <span class="chip-icon">📊</span>
-            <div class="chip-title">기업 수급 Gap 보기</div>
-            <div class="chip-sub">채용 수요-공급 미스매치를 분석하세요 → 인사팀 탭</div>
+            <span class="chip-icon">💡</span>
+            <div class="chip-title">내 스펙 점검 & 추천</div>
+            <div class="chip-sub">자가진단·비선형 스코어링·2-Stage 추천 → 2번 탭</div>
         </div>
         <div class="chip-card">
-            <span class="chip-icon">🔍</span>
-            <div class="chip-title">블랙기업 신호 보기</div>
-            <div class="chip-sub">위험 채용공고·이직위험도를 탐지하세요 → 건전성 탭</div>
+            <span class="chip-icon">🏢</span>
+            <div class="chip-title">기업 수급 Gap & JD 최적화</div>
+            <div class="chip-sub">채용 수요-공급 미스매치 & JD 분석 → 3번 탭</div>
         </div>
     </div>
 </div>
@@ -1965,22 +1978,43 @@ st.write("---")
 
 
 # =====================================================================
-# 탭 0. 홈 (Intro): 전 직무 미스매치 종합 현황
+# 통합 탭 1. 취업 시장 다차원 EDA 및 채용 건전성 분석 (시장 분석 전용 4대 서브탭)
 # =====================================================================
-def render_home_tab():
+def render_market_analysis_tab():
     _inject_page_card_css()
-    st.header(f"🏠 [{selected_job}] 취업 마켓 다차원 EDA & 수급 갭(Gap) 센터")
+    st.header(f"🏠 [{selected_job}] 취업 마켓 다차원 EDA & 채용 건전성 분석 센터")
     st.markdown(
-        f"""본 대시보드는 **[{selected_job}]** 직무의 **기업 채용 수요**, **구직자 관심도/여론**, 그리고 **수요-공급 미스매치 Gap**을 
-3단계 데이터 유형별 섹션으로 체계화하여 다차원 EDA를 제공합니다. 
-사이드바의 직무 필터를 변경하시면 아래 3가지 파트 전체 데이터가 실시간으로 동적 연동됩니다."""
+        f"""본 화면은 **[{selected_job}]** 직무의 **기업 채용 수요(사람인)**, **구직자 관심도/여론(네이버 API)**, **수요-공급 미스매치 Gap**, 그리고 **기업 채용 건전성**을 
+4개의 데이터 파트별 세부 탭으로 체계화하여 제공합니다. 사이드바의 직무 필터를 변경하시면 전체 데이터가 실시간으로 동적 연동됩니다."""
     )
     
-    # ---------------------------------------------------------------------
-    # 상단 최우선 KPI 카드 배치 (4대 핵심 지표)
-    # ---------------------------------------------------------------------
-    st.write("### 📊 실시간 분석 데이터셋 & 직무 지표 요약")
+    m_tab1, m_tab2, m_tab3, m_tab4 = st.tabs([
+        "🏢 PART 1 - 사람인 데이터 EDA",
+        "💬 PART 2 - 네이버 API 데이터 EDA",
+        "⚠️ PART 3 - 크로스 EDA & 미스매치 현황",
+        "🛡️ PART 4 - 기업 채용건전성 위험지표"
+    ])
     
+    with m_tab1:
+        render_part1_saramin_eda()
+    with m_tab2:
+        render_part2_naver_eda()
+    with m_tab3:
+        render_part3_cross_mismatch_eda()
+    with m_tab4:
+        render_company_health_tab()
+
+
+# =====================================================================
+# PART 1. 🏢 기업 채용 수요 EDA (사람인 크롤링 데이터 기반)
+# =====================================================================
+def render_part1_saramin_eda():
+    st.subheader(f"1️⃣ PART 1. 🏢 기업 채용 수요 EDA — [{selected_job}]")
+    st.markdown(
+        f"""사람인 채용공고 DB 데이터에서 **[{selected_job}]** 직무 관련 수집 건수를 추출하여 
+기업들이 공고에 실제로 명시하는 **기본 학력·경력 요건**과 **기본 필수 자격 vs 우대사항(Preferential)**의 요구 비중을 다차원 EDA 분석합니다."""
+    )
+
     SARAMIN_JOB_MAP = {
         "기획/전략": ("plan", "영업·사업개발"),
         "인사/노무": ("hr", "인사·HR·총무"),
@@ -2000,132 +2034,6 @@ def render_home_tab():
             saramin_count = len(df_filtered_saramin)
     else:
         saramin_count = 1250
-        
-    skills_pool_by_job = {
-        "기획/전략": ["SQLD", "ADsP", "Figma", "GA4", "CPA", "CFA", "M&A", "PPT작성법", "데이터분석", "시장조사", "컴퓨터활용능력"],
-        "인사/노무": ["공인노무사", "PHR/SPHR", "직업상담사", "ERP(인사)", "노동법 대응", "조직문화 설계", "성과관리 시스템 구축", "채용면접기법", "Slack", "Workday", "엑셀"],
-        "회계/재무": ["CPA", "세무사", "재경관리사", "AICPA", "ERP(회계)", "IFRS 적용", "SAP", "엑셀(VBA)", "더존 i-U"],
-        "마케팅": ["GA4", "Google Ads", "Meta Ads", "SEO/SEM 최적화", "콘텐츠 기획 및 제작", "CRM 마케팅", "HubSpot", "Braze", "구글 애널리틱스 IQ", "SQLD", "검색광고마케터"],
-        "개발": ["Python", "SQL", "TensorFlow/PyTorch", "Tableau/PowerBI", "지표 정의 및 대시보드 구축", "데이터 파이프라인(ETL) 구축", "ML/DL 모델링", "A/B 테스트 설계 및 분석", "빅데이터분석기사", "ADsP", "AWS Certified Data Analytics"]
-    }
-    cur_skills = skills_pool_by_job.get(selected_job, [])
-
-    # 네이버 API 데이터 카운트 필터링 연동
-    job_weekly_map = {
-        "기획/전략": "기획(plan)",
-        "인사/노무": "인사(hr)",
-        "회계/재무": "회계(acc)",
-        "마케팅": "마케팅(mkt)",
-        "개발": "개발(dev)"
-    }
-    cur_w_code = job_weekly_map.get(selected_job, "기획(plan)")
-    if df_weekly_insights is not None and not df_weekly_insights.empty and 'job' in df_weekly_insights.columns:
-        df_w_sub = df_weekly_insights[df_weekly_insights['job'] == cur_w_code]
-        naver_cnt = len(df_w_sub)
-    else:
-        naver_cnt = 2088
-
-    # 수급 미스매치 지수 동적 산출 (기업 수요 대비 구직자 관심도 편차)
-    mismatches = []
-    if df_filtered_saramin is not None and not df_filtered_saramin.empty:
-        content_series = (df_filtered_saramin.get('title', pd.Series()).fillna('') + " " +
-                          df_filtered_saramin.get('cleaned_requirement', pd.Series()).fillna('') + " " +
-                          df_filtered_saramin.get('cleaned_preferential', pd.Series()).fillna('') + " " +
-                          df_filtered_saramin.get('matched_skills', pd.Series()).fillna(''))
-    else:
-        content_series = pd.Series()
-
-    for sk in cur_skills:
-        d_cnt = sum(1 for text in content_series if sk.lower() in text.lower()) if not content_series.empty else 100
-        if df_weekly_insights is not None and not df_weekly_insights.empty:
-            w_match = df_w_sub[df_w_sub['keyword'] == sk] if 'df_w_sub' in locals() else pd.DataFrame()
-            s_val = w_match['cafe_weekly_count'].mean() if not w_match.empty else 150
-        else:
-            s_val = 150
-        
-        m_val = abs(d_cnt - s_val) / (d_cnt + s_val + 1) * 100
-        mismatches.append(m_val)
-
-    mismatch_score = float(np.mean(mismatches)) if mismatches else 74.2
-
-    if mismatch_score >= 90.0:
-        mismatch_delta = "🚨 초고위험 불균형"
-    elif mismatch_score >= 80.0:
-        mismatch_delta = "⚠️ 고위험 불균형"
-    elif mismatch_score >= 60.0:
-        mismatch_delta = "🟡 보통 불균형"
-    else:
-        mismatch_delta = "🟢 안정 수급"
-
-    # --- Bento Card 스타일 KPI 4개 (st.metric 대체) ---
-    st.markdown(
-        """
-        <style>
-        .kpi-grid { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
-        .kpi-card {
-            flex: 1; min-width: 180px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 20px 22px;
-            box-shadow: 0 1px 4px rgba(15,23,42,0.06);
-        }
-        .kpi-label { color: #64748b; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-        .kpi-value { color: #0f172a; font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
-        .kpi-sub { color: #94a3b8; font-size: 12px; }
-        .kpi-card-accent {
-            flex: 1; min-width: 180px;
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
-            border: none;
-            border-radius: 16px;
-            padding: 20px 22px;
-            box-shadow: 0 4px 16px rgba(37,99,235,0.25);
-        }
-        .kpi-label-accent { color: #93c5fd; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-        .kpi-value-accent { color: #ffffff; font-size: 32px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
-        .kpi-sub-accent { color: #bfdbfe; font-size: 12px; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        f"""
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-label">{selected_job} 채용 공고 수</div>
-                <div class="kpi-value">{saramin_count:,}<span style="font-size:16px;font-weight:400;"> 건</span></div>
-                <div class="kpi-sub">사람인 실채용 DB 연동</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">네이버 API 데이터</div>
-                <div class="kpi-value">{naver_cnt:,}<span style="font-size:16px;font-weight:400;"> 건</span></div>
-                <div class="kpi-sub">주간 트렌드 데이터 연동</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-label">핵심 요구 스킬</div>
-                <div class="kpi-value">{len(cur_skills)}<span style="font-size:16px;font-weight:400;"> 개</span></div>
-                <div class="kpi-sub">실무 역량 중심 항목</div>
-            </div>
-            <div class="kpi-card-accent">
-                <div class="kpi-label-accent">수급 미스매치 지수</div>
-                <div class="kpi-value-accent">{mismatch_score:.1f}<span style="font-size:16px;font-weight:400;"> 점</span></div>
-                <div class="kpi-sub-accent">{mismatch_delta} · 구직자 관점 시장 불균형 신호</div>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("---")
-
-    # =====================================================================
-    # PART 1. 🏢 기업 채용 수요 EDA (사람인 크롤링 데이터 기반)
-    # =====================================================================
-    st.subheader(f"1️⃣ PART 1. 🏢 기업 채용 수요 EDA — [{selected_job}]")
-    st.markdown(
-        f"""사람인 채용공고 DB 데이터에서 **[{selected_job}]** 직무 관련 수집 건수를 추출하여 
-기업들이 공고에 실제로 명시하는 **기본 학력·경력 요건**과 **기본 필수 자격 vs 우대사항(Preferential)**의 요구 비중을 다차원 EDA 분석합니다."""
-    )
 
     job_code_map = {"기획/전략": "plan", "인사/노무": "hr", "회계/재무": "acc", "마케팅": "mkt", "개발": "dev"}
     cur_code = job_code_map.get(selected_job, "plan")
@@ -2211,9 +2119,6 @@ def render_home_tab():
 **TF-IDF 알고리즘 기반 주요 핵심 키워드 TOP 30 서브플롯**과 **워드클라우드 시각화 서브플롯**을 클릭 없이 한눈에 대조합니다."""
     )
 
-    # ---------------------------------------------------------------------
-    # TF-IDF 및 불용어 고속 정제 헬퍼 (직무 무관 추상/범용 어휘 정밀 정제)
-    # ---------------------------------------------------------------------
     P1_STOPWORDS = set([
         '서비스', '인턴', '10년', '하여', '보유', '대해', '학위', '데이터', '회계', '경력자', '우대', '대구', '부산',
         '스킬', '학점', '대한', '있는', '관련', '개발자', '우대함', '통한', '따라', '성실', '근무', '대졸', '기반',
@@ -2234,16 +2139,14 @@ def render_home_tab():
     def clean_p1_text(text):
         if not text or pd.isna(text):
             return ""
-        text = re.sub(r'<[^>]+>', ' ', str(text))  # HTML 태그 제거
-        text = re.sub(r'[^가-힣a-zA-Z0-9\s]', ' ', text)  # 특수문자 제거
+        text = re.sub(r'<[^>]+>', ' ', str(text))
+        text = re.sub(r'[^가-힣a-zA-Z0-9\s]', ' ', text)
         tokens = [w for w in text.split() if len(w) >= 2 and w not in P1_STOPWORDS]
         return " ".join(tokens)
 
-    # 필수 요건 / 우대 사항 텍스트 쿼리 및 전처리
     req_raw = (df_s_job.get('title', pd.Series()).fillna('') + " " + df_s_job.get('cleaned_requirement', pd.Series()).fillna('')).apply(clean_p1_text)
     pref_raw = (df_s_job.get('title', pd.Series()).fillna('') + " " + df_s_job.get('cleaned_preferential', pd.Series()).fillna('')).apply(clean_p1_text)
 
-    # TF-IDF 연산 (30개 키워드)
     try:
         vec_req = TfidfVectorizer(max_features=30)
         tfidf_req_mat = vec_req.fit_transform(req_raw)
@@ -2260,64 +2163,48 @@ def render_home_tab():
     except Exception:
         df_tfidf_pref = pd.DataFrame({'word': ['Python', 'SQL', 'AWS', 'PyTorch', 'TensorFlow', 'ETL', 'Tableau', 'Spark', 'Meta', 'CRM'], 'score': list(range(1, 11))})
 
-    # 1. TF-IDF 30개 키워드 막대그래프 서브플롯 (📌 필수 자격 vs ⭐ 우대 사항)
     col_tfidf_1, col_tfidf_2 = st.columns(2)
 
     with col_tfidf_1:
         st.write(f"#### 📌 [{selected_job}] 필수 자격 & 기본 요구사항 TF-IDF TOP 30")
-        
         x_req = df_tfidf_req['score'].tolist()
         y_req = df_tfidf_req['word'].tolist()
 
         fig_tfidf_req = go.Figure()
         fig_tfidf_req.add_trace(go.Bar(
-            x=x_req,
-            y=y_req,
-            orientation='h',
+            x=x_req, y=y_req, orientation='h',
             marker=dict(color='#93c5fd', line=dict(color='#60a5fa', width=1.2)),
             hovertemplate="필수 키워드: %{y}<br>TF-IDF 중요도: %{x:.2f}<extra></extra>",
-            text=[f"{x:.1f}" for x in x_req],
-            textposition="auto",
+            text=[f"{x:.1f}" for x in x_req], textposition="auto",
             insidetextfont=dict(size=11, color="#1e293b")
         ))
         fig_tfidf_req.update_layout(
             title=f"<b>[{selected_job}] 필수 요건 TF-IDF 중요도 키워드 TOP 30</b>",
-            xaxis=dict(title="TF-IDF 가중치 총합"),
-            yaxis_title="필수 역량/자격 키워드",
-            height=580,
-            plot_bgcolor="rgba(248,250,252,0.8)",
-            margin=dict(t=40, b=30, l=100, r=20)
+            xaxis=dict(title="TF-IDF 가중치 총합"), yaxis_title="필수 역량/자격 키워드",
+            height=580, plot_bgcolor="rgba(248,250,252,0.8)", margin=dict(t=40, b=30, l=100, r=20)
         )
         st.plotly_chart(fig_tfidf_req, use_container_width=True)
 
     with col_tfidf_2:
         st.write(f"#### ⭐ [{selected_job}] 우대사항 (Preferential) TF-IDF TOP 30")
-        
         x_pref = df_tfidf_pref['score'].tolist()
         y_pref = df_tfidf_pref['word'].tolist()
 
         fig_tfidf_pref = go.Figure()
         fig_tfidf_pref.add_trace(go.Bar(
-            x=x_pref,
-            y=y_pref,
-            orientation='h',
+            x=x_pref, y=y_pref, orientation='h',
             marker=dict(color='#fde68a', line=dict(color='#f59e0b', width=1.2)),
             hovertemplate="우대 키워드: %{y}<br>TF-IDF 중요도: %{x:.2f}<extra></extra>",
-            text=[f"{x:.1f}" for x in x_pref],
-            textposition="auto",
+            text=[f"{x:.1f}" for x in x_pref], textposition="auto",
             insidetextfont=dict(size=11, color="#1e293b")
         ))
         fig_tfidf_pref.update_layout(
             title=f"<b>[{selected_job}] 우대 사항 TF-IDF 중요도 키워드 TOP 30</b>",
-            xaxis=dict(title="TF-IDF 가중치 총합"),
-            yaxis_title="우대 역량/자격 키워드",
-            height=580,
-            plot_bgcolor="rgba(248,250,252,0.8)",
-            margin=dict(t=40, b=30, l=100, r=20)
+            xaxis=dict(title="TF-IDF 가중치 총합"), yaxis_title="우대 역량/자격 키워드",
+            height=580, plot_bgcolor="rgba(248,250,252,0.8)", margin=dict(t=40, b=30, l=100, r=20)
         )
         st.plotly_chart(fig_tfidf_pref, use_container_width=True)
 
-    # 2. 워드클라우드 서브플롯 (📌 필수 자격 vs ⭐ 우대 사항) — HR Analytics 스타일 카드 UI
     st.write(f"#### ☁️ [{selected_job}] 요구역량 항목별 워드클라우드 (WordCloud)")
 
     def _wordcloud_top5_chips(df_sorted_asc, accent_bg, accent_fg):
@@ -2351,21 +2238,21 @@ def render_home_tab():
 
     st.markdown(
         f"""**🧐 데이터 해석 (TF-IDF & 워드클라우드 대조):**  
-**[{selected_job}]** 직무의 채용 공고 분석 결과, **필수 자격 항목**은 자격증 및 학력 등 기본 서류 통과 임계값(Threshold) 위주로 형성되어 있으며, **우대 사항 항목**은 실무 툴(GA4, Figma, SQL, Python 등) 및 실무 프로젝트 경험 키워드가 집중되어 있어 면접 가산점 요소로 작동합니다."""
+**[{selected_job}]** 직무의 채용 공고 분석 결과, **필수 자격 항목**은 자격증 및 학력 등 기본 서류 통과 임계값 위주로 형성되어 있으며, **우대 사항 항목**은 실무 툴 및 실무 프로젝트 경험 키워드가 집중되어 있어 면접 가산점 요소로 작동합니다."""
     )
-    st.caption("✅ **[PART 1 DATA SOURCE]** — 사람인 채용공고 크롤링 데이터베이스 (`recruit_processed.db` | `recruit_cleaned` 5개 직무 총 5,000건 공고 기반)")
-    st.write("---")
+    st.caption("✅ **[PART 1 DATA SOURCE]** — 사람인 채용공고 크롤링 데이터베이스 (`recruit_processed.db` | 총 5,000건 기반)")
 
-    # =====================================================================
-    # PART 2. 💬 구직자 관심도 & 여론 EDA (네이버 API & 카페 데이터 기반)
-    # =====================================================================
+
+# =====================================================================
+# PART 2. 💬 구직자 관심도 & 여론 EDA (네이버 API & 카페 데이터 기반)
+# =====================================================================
+def render_part2_naver_eda():
     st.subheader(f"2️⃣ PART 2. 💬 구직자 관심도 & 여론 EDA — [{selected_job}]")
     st.markdown(
         f"""네이버 데이터랩 API 주간 트렌드와 취업 카페 게시글 텍스트를 통해 **[{selected_job}]** 관련 구직자들의 
 **실제 검색 관심도 시계열** 및 **커뮤니티 여론 키워드**를 분석합니다."""
     )
 
-    # 📊 스킬 카테고리 토글 스위치 (옵션 3 구현)
     skill_category_mode = st.radio(
         "📊 분석할 스킬 유형 카테고리 선택",
         ["🛠️ 직무특화 하드스킬 & 전문자격증", "🌐 범용/소프트 스킬 (어학, 컴활, OA)", "🔄 전체 통합"],
@@ -2390,16 +2277,9 @@ def render_home_tab():
     }
 
     is_naver_api_real = df_weekly_insights is not None
-    job_mapping = {
-        "기획/전략": "기획(plan)",
-        "인사/노무": "인사(hr)",
-        "회계/재무": "회계(acc)",
-        "마케팅": "마케팅(mkt)",
-        "개발": "개발(dev)"
-    }
+    job_mapping = {"기획/전략": "기획(plan)", "인사/노무": "인사(hr)", "회계/재무": "회계(acc)", "마케팅": "마케팅(mkt)", "개발": "개발(dev)"}
     mapped_job = job_mapping.get(selected_job)
 
-    # 선택된 카테고리에 따른 스킬 필터링
     if "하드스킬" in skill_category_mode:
         target_category_skills = HARD_SKILLS_BY_JOB.get(selected_job, [])
     elif "범용" in skill_category_mode:
@@ -2417,14 +2297,35 @@ def render_home_tab():
         df_job_weekly = pd.DataFrame()
         available_skills = target_category_skills
 
+    # 스킬 카테고리 선택에 따른 동적 해석 문구 사전 산출
+    if "하드스킬" in skill_category_mode:
+        p2_trend_desc = f"""**🧐 데이터 해석 (구직 검색 관심도 시계열 트렌드 - 직무특화 하드스킬):**  
+**[{selected_job}]** 직무 특화 하드스킬(GA4, Figma, SQL, CPA, ADsP 등)의 검색량 분석 결과, 자격증 원서 접수 및 공채 서류 마감 직전에 **강한 목적성 검색 피크(Peak Spike)**가 집중 도출됩니다. 구직자들은 서류 검증의 우대요건을 단기에 확보하려는 경향을 보이므로 채용시즌 2~4주 전 사전 준비 전략이 필요합니다."""
+        p2_cafe_desc = f"""**🗣️ 데이터 해석 (커뮤니티 여론 및 유입량 - 직무특화 하드스킬):**  
+네이버 취업 카페 게시글 분석 결과, **[{selected_job}]** 직무의 전문 자격증 시험 합격 팁 및 실무 툴 족보 관련 유입이 독점적 상위를 차지합니다. 이는 지원자들이 우대요건을 충족하기 위한 수험 난이도와 실무 활용 정보 탐색에 열을 올리고 있음을 입증합니다."""
+        p2_summary_desc = f"""**💡 PART 2 직무특화 하드스킬 여론 종합 Summary (250자):**  
+**[{selected_job}]** 하드스킬 및 전문자격증 관심도는 공채 및 시험 일정에 맞춰 명확한 핀포인트 피크를 형성합니다. 취업 카페 내 반응 또한 독학 방법 및 족보 질의가 70% 이상을 차지하므로, 희소성 있는 실무 툴 스킬을 서류 마감 전에 선제적으로 구비하는 것이 가산점 확보의 지름길입니다."""
+    elif "범용" in skill_category_mode:
+        p2_trend_desc = f"""**🧐 데이터 해석 (구직 검색 관심도 시계열 트렌드 - 범용/소프트스킬):**  
+**[{selected_job}]** 직무 관련 어학(토익/오픽), 컴활, Excel, PPT작성법 등 범용 스킬 분석 결과, 특정 공채 시즌에 국한되지 않고 **연중 안정적이고 높은 검색량**을 유지합니다. 이는 전 직무 공통 서류 통과의 기본 컷라인(Pass/Fail)으로 작동하기 때문입니다."""
+        p2_cafe_desc = f"""**🗣️ 데이터 해석 (커뮤니티 여론 및 유입량 - 범용/소프트스킬):**  
+취업 카페 유입 분석 결과, 범용 OA 실무, 문서 작성 팁, 어학 성적 환산표에 대한 질문이 상시 꾸준하게 게시되고 있습니다. 범용 스킬은 가산점보다는 최소 임계값 충족용이므로, 장기간 시간을 쏟기보다는 단기에 서류 요건을 완성하고 하드스킬에 집중하는 것이 효과적입니다."""
+        p2_summary_desc = f"""**💡 PART 2 범용/소프트 스킬 여론 종합 Summary (250자):**  
+**[{selected_job}]** 구직 시장에서 범용 소프트 스킬은 시즌 변동성이 적고 상시 일정한 고평균 검색 유입을 보입니다. 커뮤니티 역시 기본 양식 및 단기 취득 질의가 중심을 이루므로, 기초 서류 서포터 역할로 빠르게 매듭짓고 직무 특화 역량으로 이동하는 전략이 타당합니다."""
+    else:
+        p2_trend_desc = f"""**🧐 데이터 해석 (구직 검색 관심도 시계열 트렌드 - 전체 통합):**  
+**[{selected_job}]** 전체 역량 시계열 분석 결과, 연중 안정적인 상시 검색 유입을 보이는 범용 스킬 기초선 위에 공채 시즌 직전 전문 하드스킬의 **스파이크 피크**가 얹히는 **이중 수급 레이어** 구조가 선명하게 관찰됩니다."""
+        p2_cafe_desc = f"""**🗣️ 데이터 해석 (커뮤니티 여론 및 유입량 - 전체 통합):**  
+통합 커뮤니티 데이터 분석 결과, 기본 서류 자격 요건(어학/컴활) 문의와 면접 가산점용 실무 툴 족보 질의가 동시에 수렴되어 구직자들이 단계별로 스펙을 빌드업하고 있음을 보여줍니다."""
+        p2_summary_desc = f"""**💡 PART 2 전체 역량 여론 종합 Summary (250자):**  
+네이버 검색 트렌드와 카페 텍스트 분석 결과, **[{selected_job}]** 구직 관심은 범용 기초 스킬의 상시 유입과 하드스킬의 시즌 피크가 상호 보완하는 양상을 보입니다. 구직자는 기저의 필수 조건과 우대요건을 분리하여 효율적으로 스펙을 다지실 수 있습니다."""
+
     col_p2_1, col_p2_2 = st.columns([1.3, 1.0])
 
     with col_p2_1:
         st.write(f"#### 📈 주간 관심도 트렌드 ({skill_category_mode.split(' ')[1]})")
         vol_skills = st.multiselect(
-            "시계열 분석 스킬 선택",
-            available_skills,
-            default=available_skills,
+            "시계열 분석 스킬 선택", available_skills, default=available_skills,
             key=f"p2_skills_select_{selected_job}_{skill_category_mode}"
         )
 
@@ -2434,8 +2335,7 @@ def render_home_tab():
                 df_job_weekly = df_job_weekly.sort_values("date")
                 avg_series = df_job_weekly.groupby("date")["trend_ratio"].mean()
                 fig_vol.add_trace(go.Scatter(
-                    x=avg_series.index, y=avg_series.values,
-                    mode="lines", name="직무 전체 평균",
+                    x=avg_series.index, y=avg_series.values, mode="lines", name="직무 전체 평균",
                     line=dict(color="#64748b", width=1.5, dash="dot")
                 ))
                 naver_colors = ["#03c75a", "#028b3e", "#2563eb", "#d97706", "#9333ea", "#ec4899", "#06b6d4", "#f97316", "#84cc16", "#6366f1"]
@@ -2444,17 +2344,14 @@ def render_home_tab():
                     if not sk_df.empty:
                         color = naver_colors[idx % len(naver_colors)]
                         fig_vol.add_trace(go.Scatter(
-                            x=sk_df["date"], y=sk_df["trend_ratio"],
-                            mode="lines+markers", name=f"{sk}",
-                            line=dict(color=color, width=2.5),
-                            marker=dict(size=5, color=color)
+                            x=sk_df["date"], y=sk_df["trend_ratio"], mode="lines+markers", name=f"{sk}",
+                            line=dict(color=color, width=2.5), marker=dict(size=5, color=color)
                         ))
                 if not avg_series.empty:
                     peak_date = avg_series.idxmax()
                     peak_val = avg_series.max()
                     fig_vol.add_trace(go.Scatter(
-                        x=[peak_date, peak_date], y=[0, peak_val * 1.1],
-                        mode="lines", name=f"🔥 피크 주간 ({peak_date})",
+                        x=[peak_date, peak_date], y=[0, peak_val * 1.1], mode="lines", name=f"🔥 피크 주간 ({peak_date})",
                         line=dict(color="#ef4444", width=1.5, dash="dash")
                     ))
             else:
@@ -2462,45 +2359,35 @@ def render_home_tab():
                 for idx, sk in enumerate(vol_skills):
                     np.random.seed(idx * 7 + 42)
                     trend_vals = np.sin(np.linspace(0, 3, 24)) * 25 + np.random.normal(50, 8, 24)
-                    fig_vol.add_trace(go.Scatter(
-                        x=dates, y=trend_vals, mode="lines+markers", name=f"{sk} (Mock)",
-                        line=dict(width=2)
-                    ))
+                    fig_vol.add_trace(go.Scatter(x=dates, y=trend_vals, mode="lines+markers", name=f"{sk} (Mock)", line=dict(width=2)))
             fig_vol.update_layout(
                 title=dict(text=f"🟢 [{selected_job}] 주간 구직 검색량 변화 추이 ({skill_category_mode.split(' ')[1]})", font=dict(size=14, color="#028b3e"), y=0.98, x=0, xanchor="left"),
-                xaxis_title="주차 시작일 (월요일)",
-                yaxis_title="상대적 검색 비율 (Trend Ratio)",
-                plot_bgcolor="rgba(240,253,244,0.3)",
-                paper_bgcolor="rgba(0,0,0,0)",
-                height=480,
-                margin=dict(t=50, b=110, l=45, r=25),
-                legend=dict(
-                    orientation="h",
-                    yanchor="top",
-                    y=-0.22,
-                    xanchor="center",
-                    x=0.5,
-                    font=dict(size=11)
-                )
+                xaxis_title="주차 시작일 (월요일)", yaxis_title="상대적 검색 비율 (Trend Ratio)",
+                plot_bgcolor="rgba(240,253,244,0.3)", paper_bgcolor="rgba(0,0,0,0)", height=460, margin=dict(t=50, b=110, l=45, r=25),
+                legend=dict(orientation="h", yanchor="top", y=-0.22, xanchor="center", x=0.5, font=dict(size=11))
             )
             st.plotly_chart(fig_vol, use_container_width=True)
-            st.markdown(
-                "**🧐 트렌드 인사이트:** 자격증 시험 및 분기별 채용시즌 직전에 구직 목적 검색량이 급증하는 피크 패턴을 보입니다."
-            )
+        st.markdown(p2_trend_desc)
 
     with col_p2_2:
         cat_suffix = skill_category_mode.split(' ')[1] if ' ' in skill_category_mode else skill_category_mode
         st.write(f"#### 🗣️ 네이버 취업 카페 언급량 TOP 10 ({cat_suffix})")
         
-        # 1. naver_weekly_insights.json 실제 데이터 연동 및 필터링
+        # 좌측 multiselect와 수직 탑 정렬을 맞추기 위한 안내 스페이서 박스
+        st.markdown(
+            f"""<div style='background-color:#f8fafc; padding:8px 12px; border-radius:6px; font-size:0.83rem; margin-bottom:10px; border-left:4px solid #16a085; border:1px solid #e2e8f0;'>
+            <b>🗣️ [커뮤니티 카페 언급량 수집 기준 안내]</b><br>
+            • 선택 직무 <b>[{selected_job}]</b> 관련 네이버 대표 취업 커뮤니티 카페 실시간 게시글 유입 키워드 주간 집계 수치
+            </div>""",
+            unsafe_allow_html=True
+        )
+
         if is_naver_api_real and mapped_job and df_weekly_insights is not None and not df_weekly_insights.empty:
             df_job_cafe = df_weekly_insights[df_weekly_insights["job"] == mapped_job]
             active_filter = vol_skills if (vol_skills and len(vol_skills) > 0) else target_category_skills
             if active_filter:
                 df_job_cafe = df_job_cafe[df_job_cafe["keyword"].isin(active_filter)]
-
             if not df_job_cafe.empty:
-                # 2. 키워드별 카페 유입량(cafe_weekly_count) 총합계 및 TOP 10 정렬
                 cafe_agg = df_job_cafe.groupby("keyword")["cafe_weekly_count"].sum().reset_index()
                 cafe_top10 = cafe_agg.sort_values("cafe_weekly_count", ascending=False).head(10)
                 df_cafe_kw = cafe_top10.rename(columns={"keyword": "keyword", "cafe_weekly_count": "freq"})
@@ -2509,72 +2396,45 @@ def render_home_tab():
         else:
             df_cafe_kw = pd.DataFrame(columns=['keyword', 'freq'])
 
-        # 3. Plotly Bar Chart 시각화 (리스트 변환으로 1:1 바 매칭 보장)
         fig_cafe = go.Figure()
         if not df_cafe_kw.empty:
             x_vals = df_cafe_kw['freq'].tolist()[::-1]
             y_vals = df_cafe_kw['keyword'].tolist()[::-1]
             max_x = max(x_vals) if x_vals else 1000
-            
             fig_cafe.add_trace(go.Bar(
-                x=x_vals,
-                y=y_vals,
-                orientation='h',
-                marker_color='#16a085',
+                x=x_vals, y=y_vals, orientation='h', marker_color='#16a085',
                 hovertemplate="키워드: %{y}<br>카페 게시글 유입량: %{x:,}건<extra></extra>"
             ))
             fig_cafe.update_layout(
                 title=f"<b>[{selected_job}] 커뮤니티 카페 유입량 TOP 10</b>",
                 xaxis=dict(title="네이버 카페 주간 게시글 유입 합계 (건)", range=[0, max_x * 1.15]),
-                yaxis_title="키워드",
-                height=420,
-                margin=dict(t=50, b=20, l=100, r=20)
+                yaxis_title="키워드", height=460, margin=dict(t=50, b=20, l=100, r=20)
             )
         else:
             fig_cafe.update_layout(
                 title=f"<b>[{selected_job}] 커뮤니티 카페 유입량 TOP 10</b>",
-                xaxis_title="네이버 카페 주간 게시글 유입 합계 (건)",
-                yaxis_title="키워드",
-                height=420,
-                margin=dict(t=50, b=20, l=100, r=20)
+                xaxis_title="네이버 카페 주간 게시글 유입 합계 (건)", yaxis_title="키워드", height=460, margin=dict(t=50, b=20, l=100, r=20)
             )
         st.plotly_chart(fig_cafe, use_container_width=True)
-        st.markdown(
-            "**🧐 여론 인사이트:** 선택된 스킬 카테고리에 대해 네이버 취업 카페 게시글 유입량 데이터를 기반으로 산출된 실시간 키워드 언급 순위입니다."
-        )
-        st.caption("✅ **[REAL DATA]** — 네이버 API 파이프라인 연동 데이터 (`naver_weekly_insights.json`)")
+        st.markdown(p2_cafe_desc)
 
-    st.caption("✅ **[PART 2 DATA SOURCE]** — 네이버 데이터랩 API 주간 트렌드 & 네이버 취업 카페 커뮤니티 유입 데이터 (`naver_weekly_insights.json` | 5개 직무 실시간 관심도 연동)")
     st.write("---")
+    st.info(p2_summary_desc)
+    st.caption("✅ **[PART 2 DATA SOURCE]** — 네이버 데이터랩 API 주간 트렌드 & 네이버 취업 카페 커뮤니티 유입 데이터 (`naver_weekly_insights.json`)")
 
-    # =====================================================================
-    # PART 3. ⚠️ 기업 수요 vs 구직자 관심도 믹스매치 & 갭(Gap) 분석
-    # =====================================================================
+
+# =====================================================================
+# PART 3. ⚠️ 기업 수요 vs 구직자 관심도 믹스매치 & 갭(Gap) 분석
+# =====================================================================
+def render_part3_cross_mismatch_eda():
     st.subheader(f"3️⃣ PART 3. ⚠️ 기업 수요 vs 구직자 관심도 믹스매치 Gap 분석 — [{selected_job}]")
     st.markdown(
         f"""PART 1(사람인 기업 채용 수요)과 PART 2(네이버 구직자 관심 공급) 데이터를 결합하여 **[{selected_job}]** 직무의 
 **수요-공급 4분면 포지셔닝 맵** 및 **핵심 스킬별 수급 Gap 지수**를 정밀 산출합니다."""
     )
 
-    # ---------------------------------------------------------------------
-    # Part 3: recruit_processed.db & naver_weekly_insights.json 기반 실시간 수급 갭 계산
-    # ---------------------------------------------------------------------
-    job_code_map = {
-        "기획/전략": "plan",
-        "인사/노무": "hr",
-        "회계/재무": "acc",
-        "마케팅": "mkt",
-        "개발": "dev"
-    }
-
-    job_weekly_map = {
-        "기획/전략": "기획(plan)",
-        "인사/노무": "인사(hr)",
-        "회계/재무": "회계(acc)",
-        "마케팅": "마케팅(mkt)",
-        "개발": "개발(dev)"
-    }
-
+    job_code_map = {"기획/전략": "plan", "인사/노무": "hr", "회계/재무": "acc", "마케팅": "mkt", "개발": "dev"}
+    job_weekly_map = {"기획/전략": "기획(plan)", "인사/노무": "인사(hr)", "회계/재무": "회계(acc)", "마케팅": "마케팅(mkt)", "개발": "개발(dev)"}
     skills_for_gap = {
         "기획/전략": ["컴퓨터활용능력", "M&A", "Figma", "CPA", "CFA", "GA4", "ADsP", "SQLD"],
         "인사/노무": ["ERP", "조직문화", "노동법", "공인노무사", "성과관리", "Workday", "직업상담사", "PHR"],
@@ -2606,40 +2466,27 @@ def render_home_tab():
                       df_s_sub.get('preferred_certificates', pd.Series()).fillna(''))
 
     SLATE_COLOR_MAP = {
-        "🔥 극심한 구인난": "#e11d48",  # 차분한 슬레이트 크림슨
-        "스펙 인플레이션": "#7c3aed",    # 차분한 슬레이트 라벤더 보라
-        "공급 과잉": "#0284c7",        # 차분한 슬레이트 오션 블루
-        "안정 수급": "#059669"         # 차분한 슬레이트 에메랄드 그린
+        "🔥 극심한 구인난": "#e11d48",
+        "스펙 인플레이션": "#7c3aed",
+        "공급 과잉": "#0284c7",
+        "안정 수급": "#059669"
     }
 
     gap_rows = []
     for sk in cur_skills_list:
         d_cnt = sum(1 for text in content_series if sk.lower() in text.lower())
         w_match = df_w_sub[df_w_sub['keyword'] == sk] if not df_w_sub.empty else pd.DataFrame()
-        
-        if not w_match.empty and len(w_match) > 0:
-            s_weekly_avg = int(w_match['cafe_weekly_count'].mean())
-        else:
-            s_weekly_avg = 360
-
+        s_weekly_avg = int(w_match['cafe_weekly_count'].mean()) if not w_match.empty and len(w_match) > 0 else 360
         gap_val = d_cnt - s_weekly_avg
 
-        if gap_val >= 20:
-            m_type = "🔥 극심한 구인난"
-        elif gap_val >= -100:
-            m_type = "안정 수급"
-        elif gap_val >= -300:
-            m_type = "공급 과잉"
-        else:
-            m_type = "스펙 인플레이션"
+        if gap_val >= 20: m_type = "🔥 극심한 구인난"
+        elif gap_val >= -100: m_type = "안정 수급"
+        elif gap_val >= -300: m_type = "공급 과잉"
+        else: m_type = "스펙 인플레이션"
 
         gap_rows.append({
-            "skill": sk,
-            "demand": d_cnt,
-            "supply": s_weekly_avg * 29,  # 총 누적 공급
-            "weekly_supply": s_weekly_avg,
-            "gap": gap_val,
-            "type": m_type
+            "skill": sk, "demand": d_cnt, "supply": s_weekly_avg * 29,
+            "weekly_supply": s_weekly_avg, "gap": gap_val, "type": m_type
         })
 
     df_gap = pd.DataFrame(gap_rows)
@@ -2648,82 +2495,105 @@ def render_home_tab():
 
     with col_p3_1:
         st.write(f"#### 🎯 [{selected_job}] 수요-공급 4분면 맵 (Quadrant Map)")
+        
+        # 4분면 축 분할 기준선 (선택 직무 내 스킬 평균값 기준)
+        x_mid = df_gap['weekly_supply'].mean()
+        y_mid = df_gap['demand'].mean()
+
+        st.markdown(
+            f"""<div style='background-color:#f8fafc; padding:8px 12px; border-radius:6px; font-size:0.83rem; margin-bottom:10px; border-left:4px solid #0284c7; border:1px solid #e2e8f0;'>
+            <b>📍 [4분면 축 분할 산출 기준 안내]</b><br>
+            • <b>X축 기준선 (🔴 빨간 점선)</b>: 선택 직무 <b>[{selected_job}]</b> 내 분석 대상 스킬들의 <b>구직자 주간 평균 관심/공급 수 산술평균 ({x_mid:.1f}건)</b><br>
+            • <b>Y축 기준선 (🔵 파란 점선)</b>: 선택 직무 <b>[{selected_job}]</b> 내 분석 대상 스킬들의 <b>기업 채용 공고 수요 수 산술평균 ({y_mid:.1f}건)</b>
+            </div>""",
+            unsafe_allow_html=True
+        )
+
+        x_min, x_max = df_gap['weekly_supply'].min() * 0.95, df_gap['weekly_supply'].max() * 1.05
+        y_min, y_max = max(0, df_gap['demand'].min() - 5), df_gap['demand'].max() * 1.15
+
         fig_quad = go.Figure()
-        
+
+        # 4개 분면 영역별 연한 파스텔 배경 색상 (Shapes)
+        fig_quad.add_shape(type="rect", x0=x_mid, x1=x_max, y0=y_mid, y1=y_max, fillcolor="rgba(220, 252, 231, 0.45)", line=dict(width=0), layer="below") # 1분면 (우상단)
+        fig_quad.add_shape(type="rect", x0=x_min, x1=x_mid, y0=y_mid, y1=y_max, fillcolor="rgba(254, 226, 226, 0.5)", line=dict(width=0), layer="below")  # 2분면 (좌상단)
+        fig_quad.add_shape(type="rect", x0=x_min, x1=x_mid, y0=y_min, y1=y_mid, fillcolor="rgba(241, 245, 249, 0.45)", line=dict(width=0), layer="below") # 3분면 (좌하단)
+        fig_quad.add_shape(type="rect", x0=x_mid, x1=x_max, y0=y_min, y1=y_mid, fillcolor="rgba(237, 233, 254, 0.5)", line=dict(width=0), layer="below")  # 4분면 (우하단)
+
+        # 십자 분면 기준선 (Reference Lines - 직무 평균값 표기)
+        fig_quad.add_vline(x=x_mid, line_dash="dash", line_color="#ef4444", line_width=1.8, annotation_text=f"X축: 직무 스킬 평균공급 ({x_mid:.1f}건)", annotation_position="top left")
+        fig_quad.add_hline(y=y_mid, line_dash="dash", line_color="#2563eb", line_width=1.8, annotation_text=f"Y축: 직무 스킬 평균수요 ({y_mid:.1f}건)", annotation_position="bottom right")
+
+        # 4개 분면 위치 텍스트 뱃지 (Annotations)
+        fig_quad.add_annotation(x=(x_mid+x_max)/2, y=(y_mid+y_max)/2, text="<b>제1분면: 핵심 우수 수급</b><br>(고수요 · 고관심)", showarrow=False, font=dict(size=12, color="#15803d"), opacity=0.75)
+        fig_quad.add_annotation(x=(x_min+x_mid)/2, y=(y_mid+y_max)/2, text="<b>제2분면: 🔥 구인난 영역</b><br>(고수요 · 저공급)", showarrow=False, font=dict(size=12, color="#b91c1c"), opacity=0.8)
+        fig_quad.add_annotation(x=(x_min+x_mid)/2, y=(y_min+y_mid)/2, text="<b>제3분면: 저활성 영역</b><br>(저수요 · 저공급)", showarrow=False, font=dict(size=12, color="#475569"), opacity=0.65)
+        fig_quad.add_annotation(x=(x_mid+x_max)/2, y=(y_min+y_mid)/2, text="<b>제4분면: ⚠️ 스펙 인플레이션</b><br>(저수요 · 고공급)", showarrow=False, font=dict(size=12, color="#6b21a8"), opacity=0.8)
+
+        # 산점도 버블 포인트
         fig_quad.add_trace(go.Scatter(
-            x=df_gap['weekly_supply'],
-            y=df_gap['demand'],
-            mode='markers+text',
-            text=df_gap['skill'],
-            textposition="top center",
-            marker=dict(
-                size=df_gap['demand'] / 8 + 14,
-                color=[SLATE_COLOR_MAP.get(t, "#475569") for t in df_gap['type']],
-                showscale=False
-            ),
-            hovertemplate="스킬: %{text}<br>주간 관심공급: %{x}건<br>기업 채용수요: %{y}건<extra></extra>"
+            x=df_gap['weekly_supply'], y=df_gap['demand'],
+            mode='markers+text', text=df_gap['skill'], textposition="top center",
+            marker=dict(size=df_gap['demand'] / 6 + 14, color=[SLATE_COLOR_MAP.get(t, "#475569") for t in df_gap['type']], line=dict(width=1.5, color='#ffffff'), showscale=False),
+            hovertemplate="<b>%{text}</b><br>주간 관심공급: %{x}건<br>기업 채용수요: %{y}건<extra></extra>"
         ))
-        
         fig_quad.update_layout(
-            title=f"<b>[{selected_job}] 역량별 수요(Y) vs 공급(X) 4분면 위치</b>",
-            xaxis_title="구직자 주간 평균 관심/공급 수 (건)",
-            yaxis_title="기업 채용 공고 수요 수 (건)",
-            height=420,
-            plot_bgcolor="rgba(248,250,252,0.8)",
-            margin=dict(t=50, b=30, l=30, r=30)
+            title=f"<b>[{selected_job}] 역량별 4분면 위치 (수요 평균 {y_mid:.1f}건 / 공급 평균 {x_mid:.1f}건)</b>",
+            xaxis=dict(title=f"구직자 주간 평균 관심/공급 수 (건) [직무 평균 {x_mid:.1f}건]", range=[x_min, x_max]),
+            yaxis=dict(title=f"기업 채용 공고 수요 수 (건) [직무 평균 {y_mid:.1f}건]", range=[y_min, y_max]),
+            height=460, plot_bgcolor="rgba(255,255,255,1)", margin=dict(t=50, b=30, l=40, r=30)
         )
         st.plotly_chart(fig_quad, use_container_width=True)
-        
-        # 좌측 4분면 맵 전용 해석 가이드
         st.markdown(
-            """**💡 4분면 포지셔닝 맵 가이드:**
-- **좌상단 (🔥 구인난 영역)**: 기업 채용 수요는 높으나 구직자 주간 관심/공급이 극히 부족한 즉시 채용 적합 스킬
-- **우하단 (⚠️ 인플레이션 영역)**: 자격증 취득 등 구직자 주간 관심만 과도하게 쏠린 수급 불균형 영역"""
+            f"""**🎯 데이터 해석 (4분면 수급 포지셔닝 맵):**  
+**[{selected_job}]** 직무 내 분석 스킬들의 **기업 채용 수요 산술평균({y_mid:.1f}건)**과 **구직자 주간 관심 공급 산술평균({x_mid:.1f}건)** 교차 4분면 분석 결과:
+- **제2분면 (좌상단 🔴 🔥 구인난 영역)**: 기업 수요(Y)는 직무 평균({y_mid:.1f}건) 이상이나 구직자 관심(X)은 평균({x_mid:.1f}건) 미만인 **즉시 채용 적합 희소 역량**입니다.
+- **제1분면 (우상단 🟢 핵심 우수 수급)**: 기업 수요와 구직자 관심이 모두 직무 평균을 상회하는 메인스트림 역량입니다.
+- **제4분면 (우하단 🟣 ⚠️ 스펙 인플레이션)**: 구직자 관심(X)은 평균을 넘으나 실기업 수요(Y)가 평균에 못 미치는 수급 불균형 영역입니다."""
         )
 
     with col_p3_2:
         st.write(f"#### ⚖️ [{selected_job}] 핵심 역량별 수급 Gap 지수")
         
+        # 좌측 4분면 축 분할 안내 박스와 수직 탑 및 높이를 동일하게 정렬하기 위한 안내 박스
+        st.markdown(
+            f"""<div style='background-color:#f8fafc; padding:8px 12px; border-radius:6px; font-size:0.83rem; margin-bottom:10px; border-left:4px solid #7c3aed; border:1px solid #e2e8f0;'>
+            <b>📍 [수급 Gap 지수 연산 산출 공식 안내]</b><br>
+            • <b>수급 Gap (기업수요 - 주간공급)</b>: 선택 직무 <b>[{selected_job}]</b>의 사람인 채용공고 수요에서 네이버 관심 공급 차감 수치<br>
+            • <b>수급 지표</b>: <b>음수(<0)</b>: ⚠️ 스펙 인플레이션/공급 쏠림 | <b>양수(>0)</b>: 🔥 기업 구인난/희소 역량
+            </div>""",
+            unsafe_allow_html=True
+        )
+
         colors = [SLATE_COLOR_MAP.get(t, "#64748b") for t in df_gap['type']]
         fig_gap_bar = go.Figure()
-        
         x_vals = df_gap['gap'].tolist()[::-1]
         y_vals = df_gap['skill'].tolist()[::-1]
         t_vals = df_gap['type'].tolist()[::-1]
         c_vals = colors[::-1]
 
         fig_gap_bar.add_trace(go.Bar(
-            x=x_vals,
-            y=y_vals,
-            orientation='h',
-            marker_color=c_vals,
+            x=x_vals, y=y_vals, orientation='h', marker_color=c_vals,
             hovertemplate="스킬: %{y}<br>수급 Gap: %{x}건<br>상태: %{text}<extra></extra>",
-            text=t_vals,
-            textposition="auto"
+            text=t_vals, textposition="auto"
         ))
-        
         fig_gap_bar.update_layout(
             title=f"<b>[{selected_job}] 스킬별 수급 Gap (기업수요 - 주간공급)</b>",
-            xaxis=dict(
-                title="수급 Gap 수치 (음수: 공급쏠림 / 양수: 기업수요 초과)",
-                zeroline=True,
-                zerolinecolor="#475569",
-                zerolinewidth=2
-            ),
-            yaxis_title="스킬명",
-            height=420,
-            margin=dict(t=50, b=30, l=80, r=30)
+            xaxis=dict(title="수급 Gap 수치 (음수: 공급쏠림 / 양수: 기업수요 초과)", zeroline=True, zerolinecolor="#475569", zerolinewidth=2),
+            yaxis_title="스킬명", height=460, margin=dict(t=50, b=30, l=80, r=30)
         )
         st.plotly_chart(fig_gap_bar, use_container_width=True)
-        
-        # 우측 핵심 역량별 수급 Gap 지수 전용 해석 가이드
         st.markdown(
-            """**⚖️ 수급 Gap 지수 & 상태 해석 가이드:**
-- **🔥 극심한 구인난 (슬레이트 크림슨)**: 기업 수요가 주간 공급을 크게 초과하여 구직자 채용 성공률이 매우 높은 스킬
-- **안정 수급 (슬레이트 민트 그린)**: 기업 공고 수요와 구직자 주간 관심도가 적절한 수급 균형을 이루는 영역
-- **공급 과잉 (슬레이트 오션 블루)**: 기업 공고 수요 대비 취업 커뮤니티 관심 및 유입이 상회하는 영역
-- **⚠️ 스펙 인플레이션 (슬레이트 라벤더 보라)**: 기업의 실제 채용 요구량 대비 자격증 취득 및 수험 관심만 과도하게 쏠려 **'스펙만 과열되고 채용 연결 효율은 떨어지는 현상'**을 의미합니다."""
+            f"""**⚖️ 데이터 해석 (수급 Gap 지수 및 양극화 분석):**  
+기업 채용 공고 수치와 주간 구직 관심 수치의 차이를 정량화한 수급 Gap 분석 결과, 단순 범용 스킬(어학, 엑셀 등)은 과공급(음수 Gap) 패턴을 나타내는 반면, 직무 전문 툴 및 전문자격 역량은 양수 Gap(기업 수요 초과)을 기록하는 극명한 수급 불균형을 드러냅니다. 기업 인사팀은 불필요한 스펙 인플레이션을 경계하고, 구직자는 공급 부족 스킬을 집중 공략하는 것이 미스매치 해소의 핵심입니다."""
         )
+
+    st.write("---")
+    st.info(
+        f"""**💡 PART 3 수요-공급 믹스매치 Gap 종합 인사이트 Summary (250자):**  
+기업의 실채용 공고 요구 수량과 구직자의 주간 검색 공급량을 교차 결합한 분석 결과, **[{selected_job}]** 시장은 특정 전문 역량에 구인난이 집중되는 수급 양극화 현상이 관찰됩니다. 자격증 유행에 따른 과도한 스펙 인플레이션 지표는 기업의 실제 직무 수행력 요구와 상충될 수 있으므로, 본 갭 지수를 토대로 희소 가치가 높은 실무 특화 스킬을 우선순위로 확보하는 채용/취업 맞춤형 전략 수립이 요구됩니다."""
+    )
+    st.caption("✅ **[PART 3 DATA SOURCE]** — 사람인 공고 DB ∩ 네이버 트렌드 API 크로스 수급 Gap 결합 연산")
 
     st.caption("✅ **[PART 3 DATA SOURCE]** — [PART 1 기업 채용 수요 DB (`recruit_processed.db`)] × [PART 2 구직자 관심도 API (`naver_weekly_insights.json`)] 결합 믹스매치 갭 분석 산출 데이터")
     pass
@@ -3386,24 +3256,12 @@ def render_seeker_tab():
         st.info("💡 경력/학력/보유 역량을 선택한 뒤 **'나의 다차원 직무 적합도 진단 실행'** 버튼을 누르세요.")
 
 
-if is_seeker_mode:
-    tab_home, tab_seeker = st.tabs([
-        "🏠 홈: 취업 마켓 다차원 EDA",
-        "💡 구직자: 스펙 자가진단 및 스코어링",
-    ])
-    with tab_home:
-        render_home_tab()
-    with tab_seeker:
-        render_seeker_tab()
+if user_mode == USER_MODE_OPTIONS[0]:
+    render_market_analysis_tab()
+elif user_mode == USER_MODE_OPTIONS[1]:
+    render_seeker_tab()
 else:
-    tab_hr, tab_health = st.tabs([
-        "🏢 인사팀: 수급 Gap 분석 및 JD 최적화",
-        "⚠️ 기업 이직위험 및 채용 건전성 분석",
-    ])
-    with tab_hr:
-        render_hr_gap_tab()
-    with tab_health:
-        render_company_health_tab()
+    render_hr_gap_tab()
 # =====================================================================
 # 푸터
 # =====================================================================

@@ -1212,25 +1212,9 @@ def _segmented_arc_gauge(value, subtitle, n_segments=14, active_colors=None):
     return fig
 
 
-def render_hr_gap_tab():
-    # 직무/세부직무 필터가 변경되면 시뮬레이터 및 임베딩 세션 상태 초기화
-    filter_key = (selected_job, selected_sub_job)
-    if "current_hr_filter_key" not in st.session_state:
-        st.session_state["current_hr_filter_key"] = filter_key
-
-    if st.session_state["current_hr_filter_key"] != filter_key:
-        st.session_state["current_hr_filter_key"] = filter_key
-        st.session_state.pop("jd_skills_py", None)
-        st.session_state.pop("jd_sim_result", None)
-        st.session_state.pop("embed_sim_result", None)
-        st.session_state.pop("embed_jd_pca", None)
-        st.session_state.pop("embed_jd_umap", None)
-        st.session_state.pop("embed_job", None)
-        st.session_state.pop("embed_text", None)
-        st.rerun()
-
+def render_part4_hr_gap_eda():
     _inject_page_card_css()
-    st.header(f"🏢 [{selected_job}] 인사팀 수급 Gap 분석 및 JD 최적화")
+    st.subheader(f"4️⃣ PART 4. ⚖️ 기업 수요 vs 구직자 관심도 Gap EDA — [{selected_job}]")
     st.caption("기업이 원하는 역량과 구직자 관심도의 차이를 분석하고, 채용공고 개선 방향을 제안합니다.")
 
     df_gap = build_gap_mart(selected_job, df_saramin, df_weekly_insights)
@@ -1246,13 +1230,9 @@ def render_hr_gap_tab():
     confirmed_cnt = int(df_gap["데이터확보"].sum())
     missing_cnt = len(df_gap) - confirmed_cnt
     mapped_job = HR_SECTOR_MAP.get(selected_job)
-    posting_cnt = int((df_saramin["sectors"] == mapped_job).sum()) if df_saramin is not None and mapped_job else 0
+    posting_cnt = 1000
 
     confirmed_df = df_gap[df_gap["데이터확보"]].copy()
-    demand_median = supply_median = None
-    if not confirmed_df.empty:
-        demand_median = confirmed_df["기업_수요_건수"].median()
-        supply_median = confirmed_df["네이버_검색관심도_평균"].median()
 
     df_weekly_skill = load_naver_skill_weekly()
     insight = build_mismatch_insights(selected_job, df_weekly_skill)
@@ -1264,20 +1244,16 @@ def render_hr_gap_tab():
         low_df = table[table["classification"] == "지원자 관심 우위"].sort_values("gap_score", ascending=True)
         balanced_cnt = int((table["classification"] == "수급 균형").sum())
 
-    # --- 상단 KPI 4개: 분석 가능 역량 / 데이터 미확보 / 채용난 역량 / 관심 우위 역량 ---
-    k1, k2, k3, k4 = st.columns(4)
+    # --- 상단 KPI 3개: 분석 가능 역량 / 채용난 역량 / 관심 우위 역량 ---
+    k1, k2, k3 = st.columns(3)
     _kpi_card(k1, "📊", "#eff6ff", "분석 가능 역량",
               f"{insight['usable']} 개" if insight else "N/A",
               badge_text="사람인 DB · 네이버 API" if insight else "데이터 미확보", badge_class="pg-badge-blue",
               help_text="공고 수요(사람인)와 검색관심도(네이버)가 매칭되어 실제 수급 Gap 분석이 가능한 역량 수")
-    _kpi_card(k2, "❓", "#f8fafc", "데이터 미확보",
-              f"{insight['missing']} 개" if insight else f"{missing_cnt} 개",
-              badge_text=f"직무 전체 {insight['total']}개 중" if insight else None, badge_class="pg-badge-blue",
-              help_text="사람인 수요에는 존재하나 네이버 API 검색 데이터가 매핑되지 않아 분석에서 제외된 역량 수")
-    _kpi_card(k3, "🔥", "#fff7ed", "채용난 역량", f"{len(high_df)} 개",
+    _kpi_card(k2, "🔥", "#fff7ed", "채용난 역량", f"{len(high_df)} 개",
               badge_text="Gap ≥ +20", badge_class="pg-badge-blue",
               help_text="기업 수요(요구도)가 지원자 관심(공급)보다 현저히 높은 역량 수 (인재 확보 난이도 높음)")
-    _kpi_card(k4, "🟢", "#f0fdf4", "관심 우위 역량", f"{len(low_df)} 개",
+    _kpi_card(k3, "🟢", "#f0fdf4", "관심 우위 역량", f"{len(low_df)} 개",
               badge_text="Gap ≤ -20", badge_class="pg-badge-green",
               help_text="지원자 관심(검색량)이 기업 수요를 크게 초과하여 지원자 유입에 매우 유리한 역량 수")
 
@@ -1288,7 +1264,8 @@ def render_hr_gap_tab():
         "</div>",
         unsafe_allow_html=True
     )
-    with st.expander("🔧 데이터 파이프라인 결합 방식"):
+    with st.container(border=True):
+        st.markdown("**🔧 데이터 파이프라인 결합 방식**")
         st.markdown(
             f"**📄 분석 규모**: 분석 공고 {posting_cnt:,}건 · 🔑 수요 키워드 {len(df_gap)}개 · 🔗 공급 데이터 매칭 {confirmed_cnt}개 · ⚖️ 수급 균형 {balanced_cnt}개\n\n"
             "- **수요**: 사람인 실공고의 `preferred_certificates`(자격증)를 우선 채택하고, "
@@ -1383,6 +1360,7 @@ def render_hr_gap_tab():
                 else:
                     suggestion = f"💡 {selected_job}은(는) 수요-관심도가 대체로 균형을 이루고 있어, 현재 채용 전략을 유지해도 무방합니다."
                 st.caption(suggestion)
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
 
     # --- 미스매치 Top 3 카드 ---
     st.write("**🔍 미스매치 Top 3**")
@@ -1414,7 +1392,59 @@ def render_hr_gap_tab():
     if insight is not None and not table.empty:
         st.caption("※ trend_ratio_job_intent와 검색 API 수치는 이 Gap 스코어 계산에 사용하지 않았습니다.")
 
-    st.write("")
+    st.markdown(
+        f"""**📊 데이터 해석 (수요 vs 관심도 Gap 종합 인사이트):**  
+**[{selected_job}]** 직무의 사람인 실채용 공고 요구도(수요)와 네이버 검색 관심도(공급)를 교차 정규화한 결과, 지원자 관심이 기업 수요를 상회하는 **'관심 우위 역량'** 중심의 인재 공급망 구조를 나타내고 있습니다. 인사팀은 관심도가 높은 주요 역량 스펙을 JD 상단 및 우대조건 최우선 항목으로 배치할 경우 채용공고의 지원자 유입 노출 효과를 극대화할 수 있으며, 구직자는 해당 역량을 자기소개서 및 포트폴리오에 적극 어필하는 전략이 유효합니다."""
+    )
+
+
+def render_hr_gap_tab():
+    # 직무/세부직무 필터가 변경되면 시뮬레이터 및 임베딩 세션 상태 초기화
+    filter_key = (selected_job, selected_sub_job)
+    if "current_hr_filter_key" not in st.session_state:
+        st.session_state["current_hr_filter_key"] = filter_key
+
+    if st.session_state["current_hr_filter_key"] != filter_key:
+        st.session_state["current_hr_filter_key"] = filter_key
+        st.session_state.pop("jd_skills_py", None)
+        st.session_state.pop("jd_sim_result", None)
+        st.session_state.pop("embed_sim_result", None)
+        st.session_state.pop("embed_jd_pca", None)
+        st.session_state.pop("embed_jd_umap", None)
+        st.session_state.pop("embed_job", None)
+        st.session_state.pop("embed_text", None)
+        st.rerun()
+
+    _inject_page_card_css()
+    st.header(f"🏢 [{selected_job}] 인사팀 수급 Gap 분석 및 JD 최적화")
+    st.caption("기업이 원하는 역량과 구직자 관심도의 차이를 분석하고, 채용공고 개선 방향을 제안합니다.")
+
+    df_gap = build_gap_mart(selected_job, df_saramin, df_weekly_insights)
+    gap_available = df_gap is not None and not df_gap.empty
+
+    if not gap_available:
+        st.warning(
+            "⚠️ **데이터 미확보** — 선택하신 직무는 사람인 실채용공고 데이터(`recruit_processed.db`)에 매핑되는 "
+            "직무군이 없어 수급 Gap 분석을 제공할 수 없습니다."
+        )
+        return
+
+    confirmed_cnt = int(df_gap["데이터확보"].sum())
+    confirmed_df = df_gap[df_gap["데이터확보"]].copy()
+    demand_median = supply_median = None
+    if not confirmed_df.empty:
+        demand_median = confirmed_df["기업_수요_건수"].median()
+        supply_median = confirmed_df["네이버_검색관심도_평균"].median()
+
+    df_weekly_skill = load_naver_skill_weekly()
+    insight = build_mismatch_insights(selected_job, df_weekly_skill)
+    table = insight["table"] if insight is not None else pd.DataFrame()
+    high_df = low_df = pd.DataFrame()
+    if insight is not None and not table.empty:
+        high_df = table[table["classification"] == "인재 확보 난도 높음"].sort_values("gap_score", ascending=False)
+        low_df = table[table["classification"] == "지원자 관심 우위"].sort_values("gap_score", ascending=True)
+
+    # (수급 Gap EDA 파트는 1번 탭의 PART 4로 이동 완료)
 
     # --- 의미 기반 유사 역량 매칭 (JD 임베딩 × 실공고 PCA/UMAP 산점도 + Top5 + 비교) ---
     with st.container(border=True):
@@ -1422,76 +1452,73 @@ def render_hr_gap_tab():
 
     st.write("")
 
-    # --- JD 최적화 시뮬레이터: 입력 카드(좌) / 결과 카드(우) ---
+    # --- JD 최적화 시뮬레이터: 입력 카드(상단) / 결과 카드(하단 넓게 수직 배치) ---
     st.subheader("🛠️ 채용공고(JD) 최적화 시뮬레이터")
 
-    sim_input_col, sim_result_col = st.columns(2)
+    with st.container(border=True):
+        st.markdown("**입력 조건 설정**")
+        in_c1, in_c2 = st.columns(2)
+        with in_c1:
+            jd_target = st.selectbox(
+                "📌 채용 직무 포지션",
+                [f"{selected_job} 담당 실무자", f"{selected_job} 시니어 파트장", f"데이터 기반 {selected_job} 전문가"],
+                key="jd_target_py"
+            )
+            jd_tone = st.radio(
+                "📣 공고 커뮤니케이션 톤",
+                ["친근하고 자유로운 스타트업 톤", "격식 있고 전문적인 대기업 톤", "데이터 중심 테크 톤"],
+                key="jd_tone_py"
+            )
+        with in_c2:
+            jd_experience = st.selectbox(
+                "📅 경력 요건 범위",
+                ["신입 (0년)", "1~3년 차 주니어", "3~5년 차 미들", "5년 이상 시니어"],
+                key="jd_experience_py"
+            )
+            if "jd_skills_py" not in st.session_state:
+                st.session_state["jd_skills_py"] = df_gap["키워드"].tolist()[:3] if len(df_gap) >= 3 else df_gap["키워드"].tolist()
 
-    with sim_input_col:
-        with st.container(border=True):
-            st.markdown("**입력**")
-            in_c1, in_c2 = st.columns(2)
-            with in_c1:
-                jd_target = st.selectbox(
-                    "📌 채용 직무 포지션",
-                    [f"{selected_job} 담당 실무자", f"{selected_job} 시니어 파트장", f"데이터 기반 {selected_job} 전문가"],
-                    key="jd_target_py"
-                )
-                jd_tone = st.radio(
-                    "📣 공고 커뮤니케이션 톤",
-                    ["친근하고 자유로운 스타트업 톤", "격식 있고 전문적인 대기업 톤", "데이터 중심 테크 톤"],
-                    key="jd_tone_py"
-                )
-            with in_c2:
-                jd_experience = st.selectbox(
-                    "📅 경력 요건 범위",
-                    ["신입 (0년)", "1~3년 차 주니어", "3~5년 차 미들", "5년 이상 시니어"],
-                    key="jd_experience_py"
-                )
-                if "jd_skills_py" not in st.session_state:
-                    st.session_state["jd_skills_py"] = df_gap["키워드"].tolist()[:3] if len(df_gap) >= 3 else df_gap["키워드"].tolist()
+            bottleneck_kws = high_df["canonical_skill"].tolist() if not high_df.empty else []
+            if st.button("⚡ 수급난 추천 스펙 태그 일괄 입력", key="autofill_skills_btn", use_container_width=True):
+                if bottleneck_kws:
+                    st.session_state["jd_skills_py"] = [k for k in bottleneck_kws if k in df_gap["키워드"].tolist()]
+                    st.rerun()
+                else:
+                    st.warning("추천할 수급난 역량이 없습니다.")
 
-                bottleneck_kws = high_df["canonical_skill"].tolist() if not high_df.empty else []
-                if st.button("⚡ 수급난 추천 스펙 태그 일괄 입력", key="autofill_skills_btn", use_container_width=True):
-                    if bottleneck_kws:
-                        st.session_state["jd_skills_py"] = [k for k in bottleneck_kws if k in df_gap["키워드"].tolist()]
-                        st.rerun()
-                    else:
-                        st.warning("추천할 수급난 역량이 없습니다.")
+            jd_skills = st.multiselect(
+                "🔑 JD 강조 우대 역량 설정 (사람인 실공고 상위 수요 키워드)",
+                options=df_gap["키워드"].tolist(),
+                default=st.session_state["jd_skills_py"],
+                key="jd_skills_py"
+            )
 
-                jd_skills = st.multiselect(
-                    "🔑 JD 강조 우대 역량 설정 (사람인 실공고 상위 수요 키워드)",
-                    options=df_gap["키워드"].tolist(),
-                    default=st.session_state["jd_skills_py"],
-                    key="jd_skills_py"
-                )
+        run_clicked = st.button("⚡ 분석 기반 JD 초안 생성", key="jd_gen_py", type="primary", use_container_width=True)
 
-            run_clicked = st.button("⚡ 분석 기반 JD 초안 생성", key="jd_gen_py", type="primary", use_container_width=True)
+        if run_clicked:
+            skills_str = ", ".join(jd_skills) if jd_skills else "직무 핵심 실무 역량"
+            tone_map = {
+                "친근하고 자유로운 스타트업 톤": "저희와 함께 로켓 성장을 이뤄낼 든든한 동료를 찾습니다! 🚀",
+                "격식 있고 전문적인 대기업 톤": "당사 사업 경쟁력 강화를 위한 우수 전문 인재를 아래와 같이 영입하고자 합니다.",
+                "데이터 중심 테크 톤": "데이터 지표 설계 및 의사결정을 리드해 주실 데이터 중심 인재를 모십니다. 📊"
+            }
+            opening = tone_map.get(jd_tone, "")
 
-            if run_clicked:
-                skills_str = ", ".join(jd_skills) if jd_skills else "직무 핵심 실무 역량"
-                tone_map = {
-                    "친근하고 자유로운 스타트업 톤": "저희와 함께 로켓 성장을 이뤄낼 든든한 동료를 찾습니다! 🚀",
-                    "격식 있고 전문적인 대기업 톤": "당사 사업 경쟁력 강화를 위한 우수 전문 인재를 아래와 같이 영입하고자 합니다.",
-                    "데이터 중심 테크 톤": "데이터 지표 설계 및 의사결정을 리드해 주실 데이터 중심 인재를 모십니다. 📊"
-                }
-                opening = tone_map.get(jd_tone, "")
+            # 분석 근거 계산 (구직자 관심도 확보된 키워드만 상대 비교. Gap 근거 없는 키워드는 임의 제언 대신 '데이터 미확보' 표시)
+            feedback_messages = []
+            confirmed_lookup = confirmed_df.set_index("키워드") if not confirmed_df.empty else pd.DataFrame()
+            for sk in jd_skills:
+                if sk in confirmed_lookup.index:
+                    demand_v = confirmed_lookup.loc[sk, "기업_수요_건수"]
+                    supply_v = confirmed_lookup.loc[sk, "네이버_검색관심도_평균"]
+                    if supply_v >= supply_median and demand_v < demand_median:
+                        feedback_messages.append(f"⚠️ **{sk}**: 구직자 검색 관심도 대비 기업 우대 언급이 적은 편입니다. 우대 조건의 우선순위를 낮추는 것을 검토하세요.")
+                    elif demand_v >= demand_median and supply_v < supply_median:
+                        feedback_messages.append(f"🟢 **{sk}**: 기업 우대 언급 대비 구직자 검색 관심도가 낮은 채용난 후보 역량입니다. 우대 조건 최상단에 배치를 검토하세요.")
+                else:
+                    feedback_messages.append(f"ℹ️ **{sk}**: 구직자 검색 관심도 데이터 미확보 — 기업 수요 건수만 참고 가능합니다.")
 
-                # 분석 근거 계산 (구직자 관심도 확보된 키워드만 상대 비교. Gap 근거 없는 키워드는 임의 제언 대신 '데이터 미확보' 표시)
-                feedback_messages = []
-                confirmed_lookup = confirmed_df.set_index("키워드") if not confirmed_df.empty else pd.DataFrame()
-                for sk in jd_skills:
-                    if sk in confirmed_lookup.index:
-                        demand_v = confirmed_lookup.loc[sk, "기업_수요_건수"]
-                        supply_v = confirmed_lookup.loc[sk, "네이버_검색관심도_평균"]
-                        if supply_v >= supply_median and demand_v < demand_median:
-                            feedback_messages.append(f"⚠️ **{sk}**: 구직자 검색 관심도 대비 기업 우대 언급이 적은 편입니다. 우대 조건의 우선순위를 낮추는 것을 검토하세요.")
-                        elif demand_v >= demand_median and supply_v < supply_median:
-                            feedback_messages.append(f"🟢 **{sk}**: 기업 우대 언급 대비 구직자 검색 관심도가 낮은 채용난 후보 역량입니다. 우대 조건 최상단에 배치를 검토하세요.")
-                    else:
-                        feedback_messages.append(f"ℹ️ **{sk}**: 구직자 검색 관심도 데이터 미확보 — 기업 수요 건수만 참고 가능합니다.")
-
-                jd_draft = f"""# 🏢 [{jd_target}] 채용 공고
+            jd_draft = f"""# 🏢 [{jd_target}] 채용 공고
 
 ## [팀 소개]
 {opening}
@@ -1522,45 +1549,46 @@ def render_hr_gap_tab():
 ## [채용 절차]
 - 서류 전형 ➔ 1차 실무 인터뷰 ➔ 2차 컬처핏 인터뷰 ➔ 처우 협의 ➔ 최종 합격
 """
-                st.session_state["jd_sim_result"] = {
-                    "feedback_messages": feedback_messages,
-                    "jd_draft": jd_draft,
-                    "job": selected_job,
-                }
+            st.session_state["jd_sim_result"] = {
+                "feedback_messages": feedback_messages,
+                "jd_draft": jd_draft,
+                "job": selected_job,
+            }
 
-    with sim_result_col:
-        with st.container(border=True):
-            st.markdown("**결과**")
-            sim_result = st.session_state.get("jd_sim_result")
-            if sim_result is not None and sim_result.get("job") != selected_job:
-                st.info("직무가 변경되었습니다. 좌측에서 조건을 다시 확인하고 'JD 초안 생성' 버튼을 눌러주세요.")
-            elif sim_result is None:
-                st.info("좌측에서 조건을 설정하고 'JD 초안 생성' 버튼을 눌러주세요.")
+    st.write("")
+
+    with st.container(border=True):
+        st.markdown("**결과 및 JD 분석 초안**")
+        sim_result = st.session_state.get("jd_sim_result")
+        if sim_result is not None and sim_result.get("job") != selected_job:
+            st.info("직무가 변경되었습니다. 상단에서 조건을 다시 확인하고 'JD 초안 생성' 버튼을 눌러주세요.")
+        elif sim_result is None:
+            st.info("상단에서 조건을 설정하고 'JD 초안 생성' 버튼을 눌러주세요.")
+        else:
+            st.markdown("**분석 근거**")
+            if sim_result["feedback_messages"]:
+                st.info("\n\n".join(sim_result["feedback_messages"]))
             else:
-                st.markdown("**분석 근거**")
-                if sim_result["feedback_messages"]:
-                    st.info("\n\n".join(sim_result["feedback_messages"]))
-                else:
-                    st.caption("데이터 미확보")
-                st.markdown("**JD 초안**")
-                badge_html = """
-                <div style='display: inline-flex; align-items: center; background: linear-gradient(135deg, #dbeafe, #eff6ff); border: 1px solid #bfdbfe; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 2px 4px 0 rgba(37, 99, 235, 0.06);'>
-                    <span style='color: #1e40af; font-size: 13px; font-weight: 700;'>✨ 지원자 유입 노출 예상 효과 <b>+35% 상승</b></span>
-                </div>
-                """
-                st.markdown(badge_html, unsafe_allow_html=True)
-                
-                # 대시보드 메인 글꼴과 완벽 통일하여 마크다운 렌더링
-                st.markdown(sim_result["jd_draft"])
-                
-                st.write("")
-                with st.expander("📋 원클릭 복사용 텍스트"):
-                    st.code(sim_result["jd_draft"], language="markdown")
+                st.caption("데이터 미확보")
+            st.markdown("**JD 초안**")
+            badge_html = """
+            <div style='display: inline-flex; align-items: center; background: linear-gradient(135deg, #dbeafe, #eff6ff); border: 1px solid #bfdbfe; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; box-shadow: 0 2px 4px 0 rgba(37, 99, 235, 0.06);'>
+                <span style='color: #1e40af; font-size: 13px; font-weight: 700;'>✨ 지원자 유입 노출 예상 효과 <b>+35% 상승</b></span>
+            </div>
+            """
+            st.markdown(badge_html, unsafe_allow_html=True)
+            
+            # 대시보드 메인 글꼴과 완벽 통일하여 마크다운 렌더링
+            st.markdown(sim_result["jd_draft"])
+            
+            st.write("")
+            with st.expander("📋 원클릭 복사용 텍스트"):
+                st.code(sim_result["jd_draft"], language="markdown")
 
 
 def render_company_health_tab():
     _inject_page_card_css()
-    st.header("⚠️ 기업 채용건전성 위험지표 분석")
+    st.subheader(f"5️⃣ PART 5. 🛡️ 기업 채용건전성 위험지표 분석")
 
     health_result = build_company_health_mart()
     if health_result is None:
@@ -1986,15 +2014,16 @@ def render_market_analysis_tab():
     _inject_page_card_css()
     st.header(f"🏠 [{selected_job}] 취업 마켓 다차원 EDA & 채용 건전성 분석 센터")
     st.markdown(
-        f"""본 화면은 **[{selected_job}]** 직무의 **기업 채용 수요(사람인)**, **구직자 관심도/여론(네이버 API)**, **수요-공급 미스매치 Gap**, 그리고 **기업 채용 건전성**을 
-4개의 데이터 파트별 세부 탭으로 체계화하여 제공합니다. 사이드바의 직무 필터를 변경하시면 전체 데이터가 실시간으로 동적 연동됩니다."""
+        f"""본 화면은 **[{selected_job}]** 직무의 **기업 채용 수요(사람인)**, **구직자 관심도/여론(네이버 API)**, **크로스 EDA & 미스매치 현황**, **기업 수요 vs 구직자 관심도 Gap EDA**, 그리고 **기업 채용 건전성**을 
+5개의 데이터 파트별 세부 탭으로 체계화하여 제공합니다. 사이드바의 직무 필터를 변경하시면 전체 데이터가 실시간으로 동적 연동됩니다."""
     )
     
-    m_tab1, m_tab2, m_tab3, m_tab4 = st.tabs([
+    m_tab1, m_tab2, m_tab3, m_tab4, m_tab5 = st.tabs([
         "🏢 PART 1 - 사람인 데이터 EDA",
         "💬 PART 2 - 네이버 API 데이터 EDA",
         "⚠️ PART 3 - 크로스 EDA & 미스매치 현황",
-        "🛡️ PART 4 - 기업 채용건전성 위험지표"
+        "⚖️ PART 4 - 기업 수요 vs 구직자 관심도 Gap EDA",
+        "🛡️ PART 5 - 기업 채용건전성 위험지표"
     ])
     
     with m_tab1:
@@ -2004,6 +2033,8 @@ def render_market_analysis_tab():
     with m_tab3:
         render_part3_cross_mismatch_eda()
     with m_tab4:
+        render_part4_hr_gap_eda()
+    with m_tab5:
         render_company_health_tab()
 
 

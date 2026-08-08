@@ -126,13 +126,10 @@ style: |
   }
   .img-frame img {
     width: 100%;
-    max-height: 290px;
+    max-height: 330px;
     object-fit: cover;
     object-position: top;
     display: block;
-  }
-  .img-frame-sm img {
-    max-height: 240px;
   }
 
   /* ── 그리드 레이아웃 ── */
@@ -575,7 +572,7 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 
 # 5. 대시보드 시각화 공유 — (3) 인사팀 모드 및 유저 예시
 
-## 3D 임베딩 매칭 & AI JD 시뮬레이터 (유저 시나리오 예시: 인사팀장 '이채용' 님)
+## 수급 Gap 분석 & AI JD 시뮬레이터 (유저 시나리오 예시: 인사팀장 '이채용' 님)
 
 <div class="cols-2">
 <div>
@@ -590,7 +587,7 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 </div>
 
 <div class="card card-sky">
-<span class="badge badge-blue">인사팀 모드 2대 핵심 기능</span>
+<span class="badge badge-blue">인사팀 모드 탭 핵심</span>
 <h3>⚖️ 3D 임베딩 매칭 & AI JD 시뮬레이터</h3>
 <ul>
 <li><strong>PCA 3D 의미론적 국소 매칭</strong>: 유사 공고 3D 근접도 포커스 뷰</li>
@@ -601,15 +598,8 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 </div>
 <div>
 
-<div class="cols-2" style="gap:10px;">
-  <div class="img-frame img-frame-sm">
-    <p style="font-size:0.75rem; font-weight:700; color:#3730a3; margin:4px 8px 2px 8px;">① PCA 3D 임베딩 국소 뷰</p>
-    <img src="../images/presentation/03_hr_embedding_3d.png" alt="PCA 3D 임베딩 국소 뷰 스크린샷">
-  </div>
-  <div class="img-frame img-frame-sm">
-    <p style="font-size:0.75rem; font-weight:700; color:#0369a1; margin:4px 8px 2px 8px;">② AI JD 시뮬레이터 & 생성</p>
-    <img src="../images/presentation/04_hr_jd_simulator.png" alt="AI JD 시뮬레이터 뷰 스크린샷">
-  </div>
+<div class="img-frame">
+  <img src="../images/presentation/03_hr_gap.png" alt="인사팀 모드 PCA 3D 임베딩 지도 대시보드 스크린샷">
 </div>
 
 </div>

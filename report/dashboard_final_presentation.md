@@ -132,6 +132,56 @@ style: |
     display: block;
   }
 
+  /* ── 펀널(Funnel / 깔때기) 전용 스타일 ── */
+  .funnel-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .funnel-layer {
+    border-radius: 12px;
+    padding: 14px 28px;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(15,23,42,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .funnel-layer-top {
+    width: 98%;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    border-left: 6px solid #60a5fa;
+  }
+  .funnel-layer-mid {
+    width: 82%;
+    background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+    border-left: 6px solid #c084fc;
+  }
+  .funnel-layer-bot {
+    width: 66%;
+    background: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
+    border-left: 6px solid #34d399;
+  }
+  .funnel-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    margin-bottom: 2px;
+  }
+  .funnel-desc {
+    font-size: 0.84rem;
+    opacity: 0.92;
+  }
+  .funnel-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
   /* ── 그리드 레이아웃 ── */
   .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
@@ -283,7 +333,7 @@ style: |
 ---
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- 1-2. 미스매치 실제 입증 & 착수 동기 (핵심 보완 슬라이드!) -->
+<!-- 1-2. 미스매치 실제 입증 & 착수 동기 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
 # 1-2. 실제 데이터 분석으로 확인된 '수급 미스매치' 현상 & 착수 동기
@@ -603,6 +653,56 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 </div>
 
 </div>
+</div>
+
+---
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 5-5. 대시보드 유저별 가치 수렴 펀널 (Funnel / 깔때기 신설 슬라이드!) -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+# 5-5. 솔루션 핵심 가치 펀널 (Funnel) — 유저별 획득 가치 좁혀들어가기
+
+## "대시보드 관제 ➔ 유저별 맞춤 진단 ➔ 최종 수급 매칭 100% 최적화로 수렴합니다"
+
+<div class="funnel-wrapper">
+
+  <div class="funnel-layer funnel-layer-top">
+    <div>
+      <div class="funnel-title">🌐 1단계 (Top): 다차원 수급 EDA 탐색 & 시장 정보 비대칭 해소</div>
+      <div class="funnel-desc">사람인 5,000건 공고 수요 & 네이버 52주 관심 공급 교차로 시장 객관화</div>
+    </div>
+    <div class="funnel-badge">공통 기반</div>
+  </div>
+
+  <div class="funnel-layer funnel-layer-mid">
+    <div>
+      <div class="funnel-title">🎯 2단계 (Middle): 유저 맞춤 정량 자가진단 & 채용 위험 관제</div>
+      <div class="funnel-desc">
+        • <strong>구직자</strong>: 5대 가중 레이더 진단 ➔ 컴활 등 레드오션 지양 & Figma/GA4 블루오션 스펙 처방<br>
+        • <strong>인사팀</strong>: 4분면 포지셔닝 & 수급난 아치 게이지 ➔ 허수 지원 유발 모호 JD 정량 필터링
+      </div>
+    </div>
+    <div class="funnel-badge">유저별 맞춤 가치</div>
+  </div>
+
+  <div class="funnel-layer funnel-layer-bot">
+    <div>
+      <div class="funnel-title">🚀 3단계 (Bottom - 수렴 결론): 양방향 최적 매칭 & 채용 효율 35% 상승</div>
+      <div class="funnel-desc">
+        • <strong>구직자</strong>: 2-Stage Re-Ranking AI 추천 ➔ <strong>서류 합격률 극대화</strong><br>
+        • <strong>인사팀</strong>: AI JD 시뮬레이터 ➔ <strong>유입 노출 +35% 증가 & 허수 지원 소모전 종식</strong>
+      </div>
+    </div>
+    <div class="funnel-badge">최종 도달 가치</div>
+  </div>
+
+</div>
+
+<div class="card card-dark" style="margin-top:12px; text-align:center; padding:10px 18px;">
+<p style="color:#34d399; font-weight:800; margin:0; font-size:0.92rem;">
+🎯 깔때기 수렴 결론: "대시보드를 통해 구직자의 스펙 낭비를 없애고, 인사팀의 채용 소모전을 종식시켜 수급 미스매치 0%로 도달합니다."
+</p>
 </div>
 
 ---

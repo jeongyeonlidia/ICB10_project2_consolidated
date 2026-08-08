@@ -216,6 +216,224 @@ st.set_page_config(
 )
 
 # =====================================================================
+# ★ 글로벌 Modern SaaS UI/UX CSS 주입 (데이터 로직 100% 불변)
+# =====================================================================
+def _inject_global_saas_css():
+    """Modern B2B SaaS 대시보드 전역 CSS를 주입합니다.
+    데이터 로직은 100% 유지하면서, 비주얼 레이어만 개편합니다."""
+    st.markdown("""
+    <style>
+    /* ── 폰트: Google Inter + Pretendard ─────────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    /* ── 전체 앱 배경 & 기본 폰트 ───────────────────────────────── */
+    .stApp {
+        background: #F4F6F9 !important;
+        font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+    }
+    html, body, [class*="css"] {
+        font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+    }
+
+    /* ── 메인 컨텐츠 영역 패딩 ──────────────────────────────────── */
+    .main .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 2.5rem !important;
+        max-width: 1440px !important;
+    }
+
+    /* ── 사이드바 ────────────────────────────────────────────────── */
+    section[data-testid="stSidebar"] {
+        background: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0 !important;
+        box-shadow: 2px 0 16px rgba(37, 99, 235, 0.06) !important;
+    }
+    section[data-testid="stSidebar"] .stRadio label {
+        font-weight: 500 !important;
+        color: #334155 !important;
+    }
+    section[data-testid="stSidebar"] .stSelectbox label {
+        font-weight: 600 !important;
+        color: #1E3A8A !important;
+    }
+    section[data-testid="stSidebar"] h1 {
+        font-size: 1.1rem !important;
+        color: #1E3A8A !important;
+        font-weight: 800 !important;
+    }
+
+    /* ── 타이틀 및 헤딩 ──────────────────────────────────────────── */
+    h1 {
+        color: #1E3A8A !important;
+        font-size: 1.75rem !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em !important;
+    }
+    h2 {
+        color: #1E3A8A !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.01em !important;
+    }
+    h3 {
+        color: #1E40AF !important;
+        font-weight: 600 !important;
+    }
+
+    /* ── Card Containers (Bento Grid) ────────────────────────────── */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: #FFFFFF !important;
+        border-radius: 18px !important;
+        border: 1px solid #E8EDF5 !important;
+        box-shadow: 0 2px 12px rgba(37, 99, 235, 0.06), 0 1px 3px rgba(0,0,0,0.04) !important;
+        transition: box-shadow 0.25s ease, transform 0.25s ease !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+        box-shadow: 0 6px 24px rgba(37, 99, 235, 0.10), 0 2px 6px rgba(0,0,0,0.05) !important;
+    }
+
+    /* ── Metric 카드 ─────────────────────────────────────────────── */
+    div[data-testid="stMetric"] {
+        background: #FFFFFF !important;
+        border: 1px solid #E8EDF5 !important;
+        border-radius: 14px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06), 0 1px 2px rgba(0,0,0,0.04) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.12) !important;
+    }
+    div[data-testid="stMetricValue"] > div {
+        color: #1E3A8A !important;
+        font-size: 26px !important;
+        font-weight: 800 !important;
+        letter-spacing: -0.02em !important;
+    }
+    div[data-testid="stMetricLabel"] > div {
+        color: #64748B !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+    }
+    div[data-testid="stMetricDelta"] > div {
+        font-weight: 600 !important;
+        font-size: 13px !important;
+    }
+
+    /* ── 탭 네비게이션 ───────────────────────────────────────────── */
+    div[data-testid="stTabs"] [role="tablist"] {
+        background: #FFFFFF !important;
+        border-radius: 12px 12px 0 0 !important;
+        border-bottom: 2px solid #E8EDF5 !important;
+        padding: 0 8px !important;
+        gap: 2px !important;
+    }
+    div[data-testid="stTabs"] button[role="tab"] {
+        font-weight: 600 !important;
+        font-size: 13.5px !important;
+        color: #64748B !important;
+        border-radius: 8px 8px 0 0 !important;
+        padding: 10px 18px !important;
+        transition: color 0.2s ease, background 0.2s ease !important;
+        border: none !important;
+    }
+    div[data-testid="stTabs"] button[role="tab"]:hover {
+        color: #2563EB !important;
+        background: #EFF6FF !important;
+    }
+    div[data-testid="stTabs"] button[role="tab"][aria-selected="true"] {
+        color: #2563EB !important;
+        border-bottom: 2.5px solid #2563EB !important;
+        background: transparent !important;
+    }
+
+    /* ── 버튼 ────────────────────────────────────────────────────── */
+    div[data-testid="stButton"] > button {
+        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        box-shadow: 0 3px 10px rgba(37, 99, 235, 0.28) !important;
+        transition: all 0.22s ease !important;
+    }
+    div[data-testid="stButton"] > button:hover {
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.40) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* ── Link 버튼 ───────────────────────────────────────────────── */
+    a[data-testid="stLinkButton"] {
+        background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%) !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.22) !important;
+    }
+
+    /* ── Expander ────────────────────────────────────────────────── */
+    div[data-testid="stExpander"] {
+        background: #FFFFFF !important;
+        border: 1px solid #E8EDF5 !important;
+        border-radius: 14px !important;
+        box-shadow: 0 1px 4px rgba(37,99,235,0.05) !important;
+    }
+    div[data-testid="stExpander"] summary {
+        font-weight: 600 !important;
+        color: #334155 !important;
+    }
+
+    /* ── 구분선 ──────────────────────────────────────────────────── */
+    hr {
+        border-color: #E8EDF5 !important;
+        margin: 1.2rem 0 !important;
+    }
+
+    /* ── 데이터프레임 테이블 ─────────────────────────────────────── */
+    div[data-testid="stDataFrame"] {
+        border-radius: 12px !important;
+        border: 1px solid #E8EDF5 !important;
+        overflow: hidden !important;
+        box-shadow: 0 1px 4px rgba(37,99,235,0.05) !important;
+    }
+
+    /* ── Alert / Info / Warning 박스 ─────────────────────────────── */
+    div[data-testid="stAlert"] {
+        border-radius: 12px !important;
+        border-left-width: 4px !important;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+    }
+
+    /* ── Text Input / Select ────────────────────────────────────── */
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stSelectbox"] div[data-baseweb="select"] {
+        border-radius: 10px !important;
+        border-color: #E2E8F0 !important;
+    }
+    div[data-testid="stTextInput"] input:focus,
+    div[data-testid="stSelectbox"] div[data-baseweb="select"]:focus-within {
+        border-color: #2563EB !important;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.12) !important;
+    }
+
+    /* ── 기존 pg-kpi-* 오버라이드 ───────────────────────────────── */
+    .pg-kpi-label {
+        color: #64748B !important; font-size: 12px !important;
+        font-weight: 600 !important; letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+    }
+    .pg-kpi-value { color: #1E3A8A !important; font-size: 28px !important; font-weight: 800 !important; }
+    </style>
+    """, unsafe_allow_html=True)
+
+
+# ── 글로벌 SaaS CSS 즉시 적용 ─────────────────────────────────────────
+_inject_global_saas_css()
+
+# =====================================================================
 # 1. 직무별 마스터 데이터 및 자가진단 풀 정의
 # =====================================================================
 JOB_LIST = [
@@ -1117,37 +1335,54 @@ def render_semantic_matching_section():
 # 인사팀 / 채용건전성 페이지 공용 UI 컴포넌트 (Bento KPI 카드, 파란 마디형 반원 아치 게이지)
 # ---------------------------------------------------------------------
 def _inject_page_card_css():
+    """인사팀/채용건전성 페이지에서 호출하는 보조 CSS 주입 함수.
+    글로벌 SaaS CSS (_inject_global_saas_css) 이후 페이지별 추가 스타일을 적용합니다."""
     st.markdown(
         """
         <style>
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            border-radius: 20px !important;
-            border-color: #eef1f6 !important;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-        }
+        /* ── 페이지별 KPI 아이콘 카드 ─────────────────────────────── */
         .pg-kpi-icon {
-            width: 42px; height: 42px; border-radius: 12px; display: flex;
-            align-items: center; justify-content: center; font-size: 20px; margin-bottom: 10px;
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.12);
         }
-        .pg-kpi-label { color: #64748b; font-size: 13px; font-weight: 500; margin-bottom: 2px; }
-        .pg-kpi-value { color: #0f172a; font-size: 26px; font-weight: 700; line-height: 1.25; }
-        .pg-kpi-sub { color: #94a3b8; font-size: 12px; margin-top: 2px; }
+        .pg-kpi-label {
+            color: #64748B; font-size: 11.5px; font-weight: 600;
+            margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .pg-kpi-value {
+            color: #1E3A8A; font-size: 28px; font-weight: 800;
+            line-height: 1.2; letter-spacing: -0.02em;
+        }
+        .pg-kpi-sub { color: #94A3B8; font-size: 12px; margin-top: 4px; }
+
+        /* ── 배지 ──────────────────────────────────────────────────── */
         .pg-badge {
-            display: inline-block; margin-bottom: 10px; padding: 3px 10px; border-radius: 20px;
-            font-size: 11px; font-weight: 600;
+            display: inline-block; margin-bottom: 10px; padding: 3px 11px;
+            border-radius: 20px; font-size: 11px; font-weight: 700;
+            letter-spacing: 0.03em;
         }
-        .pg-badge-blue { background: #eff6ff; color: #1d4ed8; }
-        .pg-badge-green { background: #dcfce7; color: #15803d; }
-        .pg-badge-orange { background: #fff7ed; color: #ea580c; }
+        .pg-badge-blue  { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+        .pg-badge-green { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+        .pg-badge-orange{ background: #FFF7ED; color: #EA580C; border: 1px solid #FED7AA; }
+
+        /* ── 미니 카드 ──────────────────────────────────────────────── */
         .pg-mini-card {
-            background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;
-            padding: 12px 14px; margin-bottom: 8px;
-            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+            background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%);
+            border: 1px solid #BBF7D0; border-radius: 14px;
+            padding: 14px 16px; margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(21,128,61,0.06);
+            transition: box-shadow 0.2s ease;
         }
-        .pg-mini-card-title { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 2px; }
-        .pg-mini-card-sub { font-size: 12px; color: #16a34a; }
+        .pg-mini-card:hover { box-shadow: 0 4px 14px rgba(21,128,61,0.12); }
+        .pg-mini-card-title { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 3px; }
+        .pg-mini-card-sub   { font-size: 12px; color: #16A34A; }
+
+        /* ── 범례 칩 ────────────────────────────────────────────────── */
         .pg-legend-chip { display: inline-flex; align-items: center; margin-right: 14px; font-size: 12px; color: #475569; }
-        .pg-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .pg-legend-dot  { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -1776,67 +2011,23 @@ st.sidebar.subheader("📡 데이터 소스 현황")
 st.sidebar.markdown(
     """
     <style>
-    /* ── [UX/UI Agent 4 개선안] 모던 파스텔 디자인 시스템 & Bento Grid ── */
-    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    
-    html, body, [class*="css"] {
-        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-    }
-    
+    /* ── 사이드바 데이터 소스 배지 (글로벌 CSS에서 폰트/메트릭 전역 처리됨) ── */
     .data-badge {
         display: block;
-        padding: 7px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 500;
+        padding: 8px 13px;
+        border-radius: 22px;
+        font-size: 12.5px;
+        font-weight: 600;
         margin-bottom: 6px;
-        line-height: 1.4;
-        transition: all 0.2s ease-in-out;
+        line-height: 1.45;
+        transition: all 0.2s ease;
     }
-    .badge-green {
-        background: #f0fdf4;
-        color: #166534;
-        border: 1px solid #bbf7d0;
-    }
-    .badge-blue {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #bfdbfe;
-    }
-    .badge-purple {
-        background: #faf5ff;
-        color: #6b21a8;
-        border: 1px solid #e9d5ff;
-    }
-    .badge-amber {
-        background: #fffbeb;
-        color: #b45309;
-        border: 1px solid #fde68a;
-    }
-    .badge-rose {
-        background: #fff1f2;
-        color: #be123c;
-        border: 1px solid #fecdd3;
-    }
-    .badge-gray {
-        background: #f8fafc;
-        color: #64748b;
-        border: 1px solid #e2e8f0;
-    }
-    
-    /* Bento Grid Card & Metric Component Styling */
-    div[data-testid="stMetric"] {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 14px 18px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    div[data-testid="stMetric"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
-    }
+    .badge-green  { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+    .badge-blue   { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+    .badge-purple { background: #FAF5FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+    .badge-amber  { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+    .badge-rose   { background: #FFF1F2; color: #BE123C; border: 1px solid #FECDD3; }
+    .badge-gray   { background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; }
     </style>
     """,
     unsafe_allow_html=True
@@ -1904,74 +2095,105 @@ st.markdown(
 # ---------------------------------------------------------------------
 hero_html = f"""
 <style>
+/* ── 딥 블루 히어로 배너 (Modern SaaS) ─────────────────────────── */
 .hero-outer {{
-    background: linear-gradient(135deg, #f0f4ff 0%, #f8fafc 100%);
-    border-radius: 20px;
-    padding: 28px 32px 20px 32px;
+    background: linear-gradient(135deg, #1E3A8A 0%, #1E40AF 45%, #2563EB 100%);
+    border-radius: 22px;
+    padding: 34px 38px 26px 38px;
     margin-top: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 12px rgba(37,99,235,0.07);
-    border: 1px solid #e0e7ff;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 40px rgba(37,99,235,0.28), 0 3px 10px rgba(30,58,138,0.18);
+    border: 1px solid rgba(255,255,255,0.10);
+    position: relative;
+    overflow: hidden;
+}}
+.hero-outer::before {{
+    content: "";
+    position: absolute; top: -70px; right: -70px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}}
+.hero-outer::after {{
+    content: "";
+    position: absolute; bottom: -50px; left: 32%;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(96,165,250,0.10) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
 }}
 .hero-badge {{
-    display: inline-block;
-    padding: 4px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 16px;
     border-radius: 20px;
-    background: #dcfce7;
-    color: #166534;
-    font-size: 12px;
+    background: rgba(255,255,255,0.12);
+    color: #93C5FD;
+    font-size: 11.5px;
     font-weight: 700;
-    letter-spacing: 0.04em;
-    margin-bottom: 14px;
-    border: 1px solid #bbf7d0;
+    letter-spacing: 0.06em;
+    margin-bottom: 16px;
+    border: 1px solid rgba(147,197,253,0.25);
+    backdrop-filter: blur(4px);
+    position: relative; z-index: 1;
 }}
 .hero-title {{
-    margin: 0 0 8px 0;
-    color: #1e293b;
-    font-size: 1.13rem;
-    font-weight: 700;
-    line-height: 1.5;
+    margin: 0 0 10px 0;
+    color: #FFFFFF;
+    font-size: 1.22rem;
+    font-weight: 800;
+    line-height: 1.55;
+    letter-spacing: -0.01em;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.14);
+    position: relative; z-index: 1;
 }}
 .hero-desc {{
     margin-bottom: 0;
-    color: #475569;
-    font-size: 0.9rem;
-    line-height: 1.65;
+    color: rgba(255,255,255,0.80);
+    font-size: 0.875rem;
+    line-height: 1.75;
+    position: relative; z-index: 1;
 }}
 .chip-row {{
     display: flex;
-    gap: 10px;
-    margin-top: 18px;
+    gap: 12px;
+    margin-top: 22px;
     flex-wrap: wrap;
+    position: relative; z-index: 1;
 }}
 .chip-card {{
     flex: 1;
-    min-width: 160px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    min-width: 165px;
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.16);
     border-radius: 14px;
-    padding: 14px 18px;
-    transition: box-shadow 0.18s ease;
+    padding: 15px 19px;
+    transition: all 0.22s ease;
     cursor: default;
+    backdrop-filter: blur(6px);
 }}
 .chip-card:hover {{
-    box-shadow: 0 4px 16px rgba(37,99,235,0.10);
-    border-color: #93c5fd;
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.32);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
 }}
 .chip-icon {{
-    font-size: 18px;
-    margin-bottom: 6px;
+    font-size: 20px;
+    margin-bottom: 8px;
     display: block;
 }}
 .chip-title {{
     font-size: 14px;
     font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 3px;
+    color: #FFFFFF;
+    margin-bottom: 4px;
 }}
 .chip-sub {{
     font-size: 12px;
-    color: #64748b;
+    color: rgba(255,255,255,0.68);
     line-height: 1.4;
 }}
 </style>
@@ -1981,7 +2203,7 @@ hero_html = f"""
         나의 역량은 어느 수준인지, 기업이 원하는 스킬은 무엇인지, 어디가 위험한 채용시장인지 — 한 화면에서 확인하세요.
     </p>
     <p class="hero-desc">
-        <b>사람인 5,000건 실채용 DB</b>와 <b>네이버 API 관심도 데이터</b>를 결합한 데이터 기반 취업 시장 인사이트 대시보드입니다.
+        <b style="color:#93C5FD;">사람인 5,000건 실채용 DB</b>와 <b style="color:#93C5FD;">네이버 API 관심도 데이터</b>를 결합한 데이터 기반 취업 시장 인사이트 대시보드입니다.
     </p>
     <div class="chip-row">
         <div class="chip-card">
@@ -1991,13 +2213,13 @@ hero_html = f"""
         </div>
         <div class="chip-card">
             <span class="chip-icon">💡</span>
-            <div class="chip-title">내 스펙 점검 & 추천</div>
+            <div class="chip-title">내 스펙 점검 &amp; 추천</div>
             <div class="chip-sub">자가진단·비선형 스코어링·2-Stage 추천 → 2번 탭</div>
         </div>
         <div class="chip-card">
             <span class="chip-icon">🏢</span>
-            <div class="chip-title">기업 수급 Gap & JD 최적화</div>
-            <div class="chip-sub">채용 수요-공급 미스매치 & JD 분석 → 3번 탭</div>
+            <div class="chip-title">기업 수급 Gap &amp; JD 최적화</div>
+            <div class="chip-sub">채용 수요-공급 미스매치 &amp; JD 분석 → 3번 탭</div>
         </div>
     </div>
 </div>

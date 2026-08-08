@@ -301,7 +301,7 @@ with tab1:
     licenses_pool = ["SQLD", "ADsP", "정보처리기사", "CFA", "CPA", "컴퓨터활용능력"]
     tools_pool = ["Figma", "GA4", "Slack", "Jira", "Git", "ERP (더존/SAP)", "Tableau"]
     experiences_pool = ["역기획", "프로토타이핑", "서비스로그 분석",
-                        "M&A 검토", "시장조사 및 리서치", "사업타당성 분석", "예산 및 결산 관리"]
+                        "M&A 검토", "시장조사 및 리서치", "사업타당성 분석", "사업계획 수립 및 예산/손익 관리"]
 
     col_sel1, col_sel2, col_sel3 = st.columns(3)
     with col_sel1:
@@ -327,7 +327,7 @@ with tab1:
         "M&A 검토": ["m&a", "인수합병", "투자심사"],
         "시장조사 및 리서치": ["시장조사", "리서치", "research"],
         "사업타당성 분석": ["타당성분석", "타당성 분석", "feasibility"],
-        "예산 및 결산 관리": ["예산", "결산", "세무", "회계"]
+        "사업계획 수립 및 예산/손익 관리": ["예산", "손익", "사업계획", "재무", "회계"]
     }
 
     def parse_career_years(s):

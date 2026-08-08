@@ -227,7 +227,7 @@ JOB_SPECS_POOL = {
     "기획/전략": {
         "licenses": ["SQLD", "ADsP", "정보처리기사", "CFA", "CPA", "컴퓨터활용능력"],
         "tools": ["Figma", "GA4", "Slack", "Jira", "Git", "ERP (더존/SAP)", "Tableau"],
-        "experiences": ["역기획", "프로토타이핑", "서비스로그 분석", "M&A 검토", "시장조사 및 리서치", "사업타당성 분석", "예산 및 결산 관리"],
+        "experiences": ["역기획", "프로토타이핑", "서비스로그 분석", "M&A 검토", "시장조사 및 리서치", "사업타당성 분석", "사업계획 수립 및 예산/손익 관리"],
         "synonyms": {
             "SQLD": ["sqld", "sql개발자"], "ADsP": ["adsp", "데이터분석준전문가"],
             "정보처리기사": ["정보처리기사", "정처기"], "CFA": ["cfa", "재무분석사"],
@@ -241,7 +241,7 @@ JOB_SPECS_POOL = {
             "M&A 검토": ["m&a", "인수합병", "투자심사"],
             "시장조사 및 리서치": ["시장조사", "리서치", "research"],
             "사업타당성 분석": ["타당성분석", "타당성 분석", "feasibility"],
-            "예산 및 결산 관리": ["예산", "결산", "세무", "회계"]
+            "사업계획 수립 및 예산/손익 관리": ["예산", "손익", "사업계획", "재무", "회계"]
         }
     },
     "인사/노무": {
@@ -1583,9 +1583,10 @@ def render_company_health_tab():
     k1, k2, k3, k4 = st.columns(4)
     _kpi_card(k1, "📄", "#eff6ff", "분석 대상 공고 수", f"{len(df_t):,} 건", badge_text="사람인 DB", badge_class="pg-badge-blue")
     _kpi_card(k2, "🏢", "#f0fdf4", "분석 대상 기업 수", f"{len(df_company):,} 개사", badge_text="사람인 DB", badge_class="pg-badge-green")
-    _kpi_card(k3, "🔁", "#fff7ed", "상시채용/채용시 비율", f"{df_t['is_always_hiring'].mean()*100:.1f} %")
+    _kpi_card(k3, "🔁", "#fff7ed", "상시공고(상시/채용시) 비율", f"{df_t['is_always_hiring'].mean()*100:.1f} %")
     _kpi_card(k4, "📋", "#fef2f2", "비정규직 비율", f"{(1-df_t['is_regular'].mean())*100:.1f} %")
 
+    st.caption("💡 *주석: 본 지표의 '상시공고'는 마감일이 없는 상시모집/채용시 마감 형태를 의미하며, 건별 공채/수시 채용(Spot Hiring)과는 구분되는 개념입니다.")
     st.write("")
 
     repeat_companies = df_company[df_company["posting_count"] >= 2]
@@ -1630,11 +1631,11 @@ def render_company_health_tab():
                     height=430, margin=dict(t=10, b=10, l=10, r=10)
                 )
                 st.plotly_chart(fig_t2, use_container_width=True)
-            st.caption("💡 상시채용·비정규직·경력자전용·반복공고 강도를 결합한 프록시 지표 상위 기업입니다. 점수가 높을수록 참고 관찰이 필요합니다.")
+            st.caption("💡 상시공고·비정규직·경력자전용·반복공고 강도를 결합한 프록시 지표 상위 기업입니다. 점수가 높을수록 참고 관찰이 필요합니다.")
 
     st.markdown(
         f"""**📊 데이터 해석 (반복 공고 강도 및 채용 건전성 위험지표 Top 15):**  
-사람인 실채용 공고 {len(df_t):,}건 기반 위험지표 분석 결과, 동일 기업의 단기 잦은 채용공고 반복 게시 및 상시 채용 비중은 해당 기업의 조기 이직률이나 잦은 결원 발생 신호로 작용할 수 있습니다. 상위 위험지표 기업일수록 경력자 전용 공고 및 비정규직 비중이 높게 형성되는 상관관계를 보이며, 구직자는 지원 전 해당 기업의 잦은 공고 발행 사유와 근속 환경을 사전 점검할 필요가 있습니다."""
+사람인 실채용 공고 {len(df_t):,}건 기반 위험지표 분석 결과, 동일 기업의 단기 잦은 채용공고 반복 게시 및 상시공고 비중은 해당 기업의 조기 이직률이나 잦은 결원 발생 신호로 작용할 수 있습니다. 상위 위험지표 기업일수록 경력자 전용 공고 및 비정규직 비중이 높게 형성되는 상관관계를 보이며, 구직자는 지원 전 해당 기업의 잦은 공고 발행 사유와 근속 환경을 사전 점검할 필요가 있습니다."""
     )
 
     st.write("")
@@ -1644,7 +1645,7 @@ def render_company_health_tab():
     with col_t_g3:
         with st.container(border=True):
             st.markdown("**③ 채용 형태(고용형태) 분포**")
-            jt_dist = df_t["job_type"].replace("", "미기재").value_counts().head(10).sort_values()
+            jt_dist = df_t["job_type"].replace("", "미기재").value_counts().head(8).sort_values()
             fig_t3 = go.Figure(go.Bar(
                 x=jt_dist.values, y=jt_dist.index, orientation="h", marker_color="#2563eb",
                 hovertemplate="고용형태: %{y}<br>공고 수: %{x}건<extra></extra>"
@@ -1652,7 +1653,7 @@ def render_company_health_tab():
             fig_t3.update_layout(
                 xaxis_title="공고 수 (건)",
                 plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                height=400, margin=dict(t=10, b=10, l=10, r=10)
+                height=320, margin=dict(t=10, b=10, l=10, r=10)
             )
             st.plotly_chart(fig_t3, use_container_width=True)
             st.caption("💡 정규직 외 계약직·파견직·인턴 등 비정규직 형태가 섞여 있으면 고용 안정성 측면의 참고 신호로 활용할 수 있습니다.")
@@ -1661,17 +1662,17 @@ def render_company_health_tab():
         with st.container(border=True):
             st.markdown("**④ 마감 유형(공고기간 특성) 분포**")
             deadline_type = df_t["deadline"].apply(
-                lambda d: "상시채용/채용시" if d in ["상시채용", "채용시"]
+                lambda d: "상시공고(상시/채용시)" if d in ["상시채용", "채용시"]
                 else ("미기재" if d == "" else "특정마감일")
             )
             dl_dist = deadline_type.value_counts()
-            always_pct = dl_dist.get("상시채용/채용시", 0) / dl_dist.sum() * 100
+            always_pct = dl_dist.get("상시공고(상시/채용시)", 0) / dl_dist.sum() * 100
             st.plotly_chart(
-                _segmented_arc_gauge(always_pct, "상시채용/채용시 비중",
+                _segmented_arc_gauge(always_pct, "상시공고 비중",
                                       active_colors=["#7c2d12", "#c2410c", "#ea580c", "#f97316", "#fb923c", "#fdba74"]),
                 use_container_width=True,
             )
-            legend_colors = {"상시채용/채용시": "#ea580c", "특정마감일": "#1d4ed8", "미기재": "#94a3b8"}
+            legend_colors = {"상시공고(상시/채용시)": "#ea580c", "특정마감일": "#1d4ed8", "미기재": "#94a3b8"}
             st.markdown(
                 "".join(
                     f"<span class='pg-legend-chip'><span class='pg-legend-dot' style='background:{legend_colors.get(k, '#94a3b8')};'></span>{k} {v}건</span>"
@@ -1679,11 +1680,12 @@ def render_company_health_tab():
                 ),
                 unsafe_allow_html=True,
             )
-            st.caption("💡 마감일을 명시하지 않는 '상시채용/채용시' 비중이 높을수록, 자리가 상시적으로 비거나 채용을 계속 진행 중인 포지션이 많다는 신호입니다.")
+            st.markdown("<div style='height: 38px;'></div>", unsafe_allow_html=True)
+            st.caption("💡 마감일을 명시하지 않는 '상시공고(상시/채용시)' 비중이 높을수록, 자리가 상시적으로 비거나 채용을 계속 진행 중인 포지션이 많다는 신호입니다.")
 
     st.markdown(
         f"""**🏢 데이터 해석 (고용형태 및 마감 유형 건전성 분포):**  
-전체 공고 중 마감일을 명시하지 않는 '상시채용/채용시' 마감 방식과 정규직 외 비정규직(계약/파견/인턴) 비율 분석은 채용의 질적 건전성을 가늠하는 핵심 지표입니다. 상시 채용 비율이 과도하게 높을 경우 정기 채용 프로세스 미비나 상시 결원 가능성을 암시하므로 인사팀은 JD 최적화를, 구직자는 고용 안정성 검증을 병행하는 지혜가 요구됩니다."""
+전체 공고 중 마감일을 명시하지 않는 '상시공고(상시/채용시)' 마감 방식과 정규직 외 비정규직(계약/파견/인턴) 비율 분석은 채용의 질적 건전성을 가늠하는 핵심 지표입니다. 상시 공고 비율이 과도하게 높을 경우 정기 채용 프로세스 미비나 상시 결원 가능성을 암시하므로 인사팀은 JD 최적화를, 구직자는 고용 안정성 검증을 병행하는 지혜가 요구됩니다."""
     )
 
     st.write("")
@@ -2627,7 +2629,7 @@ def render_seeker_tab():
             specs = {
                 "licenses": ["CPA", "CFA", "컴퓨터활용능력"],
                 "tools": ["Slack", "ERP (더존/SAP)", "Tableau"],
-                "experiences": ["M&A 검토", "시장조사 및 리서치", "사업타당성 분석", "예산 및 결산 관리"],
+                "experiences": ["M&A 검토", "시장조사 및 리서치", "사업타당성 분석", "사업계획 수립 및 예산/손익 관리"],
                 "synonyms": specs["synonyms"]
             }
             
@@ -2910,6 +2912,21 @@ def render_seeker_tab():
             key="rec_model_choice_radio",
             help="Agent 2 검증 모델 A(다중가중 앙상블)와 모델 B(단일 코사인) 중 실시간 추천 결과 차이를 직접 테스트 및 검증할 수 있습니다."
         )
+
+        # 💡 유저 관점의 알기 쉬운 추천 알고리즘 비교 안내 카드
+        st.markdown(
+            f"""<div style='background-color:#f8fafc; padding:12px 16px; border-radius:8px; margin-top:6px; margin-bottom:12px; border-left:4px solid #2563eb; border:1px solid #e2e8f0; font-size:0.86rem; line-height:1.55;'>
+            <b>💡 [추천 알고리즘 모델별 차이점 & 유저 활용 가이드]</b><br>
+            • <b>Model A (2단계 스마트 재정렬) [💡 추천]</b>: 구직자님의 <b>텍스트 유사도(TF-IDF 40%)</b>와 <b>실무 툴/자격증의 정확한 보유 매칭률(Jaccard 40%)</b>, 그리고 <b>취업 시장 희소 역량 가산점(Naver 20%)</b>을 정밀 앙상블하여 추천합니다. 단순 키워드 겹침을 넘어 <b>시장 가치와 우대 자격이 입체적으로 검증된 맞춤 공고</b>를 원할 때 가장 추천합니다.<br>
+            • <b>Model B (단일 코사인 유사도)</b>: 구직자님의 입력 프로필과 채용 공고 본문 텍스트 전체의 <b>단순 어휘 겹침 유사도(Cosine Similarity 100%)</b>만으로 정렬합니다. 희소성 가산점 없이 <b>내 이력서 텍스트와 단어 문맥이 가장 흡사한 공고</b>를 직관적으로 비교 탐색하고 싶을 때 선택하십시오.
+            </div>""",
+            unsafe_allow_html=True
+        )
+
+        if "Model A" in rec_model_choice:
+            st.info("💡 **[적용 중] Model A (입체형 재정렬)** — 텍스트 문맥 + 툴/자격증 정밀 매칭 + 희소 가치 20% 가산점이 결합된 최적 맞춤 알고리즘입니다.")
+        else:
+            st.warning("💡 **[적용 중] Model B (순수 코사인 유사도)** — 구직자 프로필 텍스트와 공고 본문의 순수 단어 유사도 100% 모드입니다.")
 
         # 1. Mermaid Flowchart (2단계 Re-Ranking 파이프라인) - 참고용 expander 접기
         _threshold_default = st.session_state.get("rec_threshold_slider", 50)

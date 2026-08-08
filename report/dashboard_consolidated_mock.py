@@ -1132,6 +1132,49 @@ def _build_projection_scatter(coords_job, method, top5_ids, jd_point):
                 text=["입력 JD"], hoverinfo="text", customdata=jd_customdata,
             ))
 
+    # --- 유사 공고 및 입력 JD 주변 영역 포커스 줌인(Zoom-In) 연산 ---
+    target_sub = coords_job[coords_job["job_id"].isin(top5_ids)]
+    if is_3d:
+        xs = list(target_sub["pca_x"])
+        ys = list(target_sub["pca_y"])
+        zs = list(target_sub["pca_z"])
+        if jd_point is not None:
+            xs.append(jd_point[0])
+            ys.append(jd_point[1])
+            zs.append(jd_point[2])
+        
+        if xs and ys and zs:
+            min_x, max_x = min(xs), max(xs)
+            min_y, max_y = min(ys), max(ys)
+            min_z, max_z = min(zs), max(zs)
+            dx = max(max_x - min_x, 0.8)
+            dy = max(max_y - min_y, 0.8)
+            dz = max(max_z - min_z, 0.8)
+            pad_x, pad_y, pad_z = dx * 0.45, dy * 0.45, dz * 0.45
+            fig.update_layout(
+                scene=dict(
+                    xaxis=dict(range=[min_x - pad_x, max_x + pad_x]),
+                    yaxis=dict(range=[min_y - pad_y, max_y + pad_y]),
+                    zaxis=dict(range=[min_z - pad_z, max_z + pad_z])
+                )
+            )
+    else:
+        xs = list(target_sub["umap_x"])
+        ys = list(target_sub["umap_y"])
+        if jd_point is not None:
+            xs.append(jd_point[0])
+            ys.append(jd_point[1])
+        
+        if xs and ys:
+            min_x, max_x = min(xs), max(xs)
+            min_y, max_y = min(ys), max(ys)
+            dx = max(max_x - min_x, 0.8)
+            dy = max(max_y - min_y, 0.8)
+            pad_x = dx * 0.45
+            pad_y = dy * 0.45
+            fig.update_xaxes(range=[min_x - pad_x, max_x + pad_x])
+            fig.update_yaxes(range=[min_y - pad_y, max_y + pad_y])
+
     fig.update_layout(
         height=520,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),

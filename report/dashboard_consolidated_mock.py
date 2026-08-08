@@ -1138,13 +1138,14 @@ def _build_projection_scatter(coords_job, method, top5_ids, jd_point):
         if jd_point is not None and not target_sub.empty:
             j_x, j_y, j_z = jd_point[0], jd_point[1], jd_point[2]
             dists = np.sqrt((target_sub["pca_x"] - j_x)**2 + (target_sub["pca_y"] - j_y)**2 + (target_sub["pca_z"] - j_z)**2)
-            r_limit = np.percentile(dists, 80) if len(dists) >= 3 else np.max(dists)
-            r_margin = max(float(r_limit) * 1.25, 0.5)
+            r_limit = np.percentile(dists, 75) if len(dists) >= 3 else np.max(dists)
+            r_margin = max(float(r_limit) * 1.1, 0.35)
             fig.update_layout(
                 scene=dict(
-                    xaxis=dict(range=[j_x - r_margin, j_x + r_margin]),
-                    yaxis=dict(range=[j_y - r_margin, j_y + r_margin]),
-                    zaxis=dict(range=[j_z - r_margin, j_z + r_margin])
+                    xaxis=dict(range=[j_x - r_margin, j_x + r_margin], autorange=False),
+                    yaxis=dict(range=[j_y - r_margin, j_y + r_margin], autorange=False),
+                    zaxis=dict(range=[j_z - r_margin, j_z + r_margin], autorange=False),
+                    aspectmode="cube"
                 )
             )
         else:
@@ -1155,31 +1156,32 @@ def _build_projection_scatter(coords_job, method, top5_ids, jd_point):
                 min_x, max_x = min(xs), max(xs)
                 min_y, max_y = min(ys), max(ys)
                 min_z, max_z = min(zs), max(zs)
-                dx, dy, dz = max(max_x - min_x, 0.5), max(max_y - min_y, 0.5), max(max_z - min_z, 0.5)
+                dx, dy, dz = max(max_x - min_x, 0.4), max(max_y - min_y, 0.4), max(max_z - min_z, 0.4)
                 fig.update_layout(
                     scene=dict(
-                        xaxis=dict(range=[min_x - dx*0.15, max_x + dx*0.15]),
-                        yaxis=dict(range=[min_y - dy*0.15, max_y + dy*0.15]),
-                        zaxis=dict(range=[min_z - dz*0.15, max_z + dz*0.15])
+                        xaxis=dict(range=[min_x - dx*0.1, max_x + dx*0.1], autorange=False),
+                        yaxis=dict(range=[min_y - dy*0.1, max_y + dy*0.1], autorange=False),
+                        zaxis=dict(range=[min_z - dz*0.1, max_z + dz*0.1], autorange=False),
+                        aspectmode="cube"
                     )
                 )
     else:
         if jd_point is not None and not target_sub.empty:
             j_x, j_y = jd_point[0], jd_point[1]
             dists = np.sqrt((target_sub["umap_x"] - j_x)**2 + (target_sub["umap_y"] - j_y)**2)
-            r_limit = np.percentile(dists, 80) if len(dists) >= 3 else np.max(dists)
-            r_margin = max(float(r_limit) * 1.25, 0.4)
-            fig.update_xaxes(range=[j_x - r_margin, j_x + r_margin])
-            fig.update_yaxes(range=[j_y - r_margin, j_y + r_margin])
+            r_limit = np.percentile(dists, 75) if len(dists) >= 3 else np.max(dists)
+            r_margin = max(float(r_limit) * 1.1, 0.3)
+            fig.update_xaxes(range=[j_x - r_margin, j_x + r_margin], autorange=False)
+            fig.update_yaxes(range=[j_y - r_margin, j_y + r_margin], autorange=False)
         else:
             xs = list(target_sub["umap_x"])
             ys = list(target_sub["umap_y"])
             if xs and ys:
                 min_x, max_x = min(xs), max(xs)
                 min_y, max_y = min(ys), max(ys)
-                dx, dy = max(max_x - min_x, 0.5), max(max_y - min_y, 0.5)
-                fig.update_xaxes(range=[min_x - dx*0.15, max_x + dx*0.15])
-                fig.update_yaxes(range=[min_y - dy*0.15, max_y + dy*0.15])
+                dx, dy = max(max_x - min_x, 0.4), max(max_y - min_y, 0.4)
+                fig.update_xaxes(range=[min_x - dx*0.1, max_x + dx*0.1], autorange=False)
+                fig.update_yaxes(range=[min_y - dy*0.1, max_y + dy*0.1], autorange=False)
 
     fig.update_layout(
         height=520,
@@ -1233,9 +1235,9 @@ def render_semantic_matching_section():
         method = "pca"
     else:
         method_label = st.radio(
-            "좌표 방식", ["UMAP 2D (기본)", "PCA 3D"], index=0, horizontal=True, key="embed_proj_method"
+            "좌표 방식", ["PCA 3D (기본 - 국소 포커스 뷰)", "UMAP 2D"], index=0, horizontal=True, key="embed_proj_method"
         )
-        method = "umap" if method_label.startswith("UMAP") else "pca"
+        method = "pca" if method_label.startswith("PCA") else "umap"
 
     if st.button("🔍 유사 공고 분석 및 지도 표시", key="embed_analyze_btn"):
         if not jd_text.strip():

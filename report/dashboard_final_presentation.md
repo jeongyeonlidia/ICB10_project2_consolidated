@@ -689,9 +689,9 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
   <div class="funnel-layer funnel-layer-bot">
     <div>
       <div class="funnel-title">🚀 3단계 (Bottom): 1:1 수급 최적 매칭 — AI 기반 합격률 극대화 & 채용 유입 +35% 창출</div>
-      <div class="funnel-desc">
-        • <strong>구직자</strong>: 2-Stage Re-Ranking AI 추천 모델 ➔ <strong>서류 합격률 극대화</strong><br>
-        • <strong>인사팀</strong>: AI JD 시뮬레이터 ➔ <strong>유입 노출 +35% 증가 & 채용 소모전 종식</strong>
+      <div class="funnel-desc" style="color: #f0fdf4;">
+        • <strong>구직자</strong>: 2-Stage Re-Ranking AI 추천 모델 ➔ <span style="color:#fef08a; font-weight:700;">서류 합격률 극대화</span><br>
+        • <strong>인사팀</strong>: AI JD 시뮬레이터 ➔ <span style="color:#fef08a; font-weight:700;">유입 노출 +35% 증가 & 채용 소모전 종식</span>
       </div>
     </div>
     <div class="funnel-badge">최종 도달 가치</div>
@@ -699,8 +699,13 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 
 </div>
 
-<div class="card card-dark" style="margin-top:24px; text-align:center; padding:13px 22px;">
-<p style="color:#34d399; font-weight:800; margin:0; font-size:0.92rem;">
+<!-- ⬇️ 화살표 커넥터 디바이더 ⬇️ -->
+<div style="text-align: center; margin: 12px 0 10px 0; color: #10b981; font-weight: 800; font-size: 1.15rem; letter-spacing: 2px;">
+  ▼ &ensp; <span style="font-size:0.76rem; background:#dcfce7; color:#166534; padding:3px 14px; border-radius:12px; border:1px solid #86efac; vertical-align:middle;">수급 최적화 가치 수렴</span> &ensp; ▼
+</div>
+
+<div class="card card-dark" style="text-align:center; padding:14px 22px; border-left:5px solid #10b981; margin-top:0;">
+<p style="color:#34d399; font-weight:800; margin:0; font-size:0.92rem; line-height:1.5;">
 🎯 최종 가치 제언 (Ultimate Value Proposition): "본 대시보드는 정보 비대칭 해소를 시작으로, 구직자의 정량적 스펙 낭비를 최소화하고 인사팀의 채용 소모전을 종식시켜 수급 미스매치 Zero화에 도달합니다."
 </p>
 </div>

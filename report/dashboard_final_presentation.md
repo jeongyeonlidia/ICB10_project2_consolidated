@@ -658,29 +658,29 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 ---
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- 5-5. 대시보드 유저별 가치 수렴 펀널 (Funnel / 깔때기 신설 슬라이드!) -->
+<!-- 5-5. 대시보드 유저별 가치 수렴 펀널 (Funnel) -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 5-5. 솔루션 핵심 가치 펀널 (Funnel) — 유저별 획득 가치 좁혀들어가기
+# 5-5. 솔루션 핵심 가치 펀널 (Funnel) — 단계별 유저 가치 획득 체계
 
-## "대시보드 관제 ➔ 유저별 맞춤 진단 ➔ 최종 수급 매칭 100% 최적화로 수렴합니다"
+## "시장 관제 ➔ 맞춤 진단 ➔ 최종 수급 최적화로 수렴하는 3단계 펀널 구조"
 
 <div class="funnel-wrapper">
 
   <div class="funnel-layer funnel-layer-top">
     <div>
-      <div class="funnel-title">🌐 1단계 (Top): 다차원 수급 EDA 탐색 & 시장 정보 비대칭 해소</div>
-      <div class="funnel-desc">사람인 5,000건 공고 수요 & 네이버 52주 관심 공급 교차로 시장 객관화</div>
+      <div class="funnel-title">🌐 1단계 (Top): 시장 다차원 EDA 관제 — 채용 현장 정보 비대칭 완전 해소</div>
+      <div class="funnel-desc">사람인 5,000건 채용 수요 & 네이버 52주 검색 트렌드 공급 교차 분석을 통한 취업 시장 객관화</div>
     </div>
     <div class="funnel-badge">공통 기반</div>
   </div>
 
   <div class="funnel-layer funnel-layer-mid">
     <div>
-      <div class="funnel-title">🎯 2단계 (Middle): 유저 맞춤 정량 자가진단 & 채용 위험 관제</div>
+      <div class="funnel-title">🎯 2단계 (Middle): 페르소나별 정량 진단 — 구직자 스펙 처방 & 인사팀 위험 필터링</div>
       <div class="funnel-desc">
-        • <strong>구직자</strong>: 5대 가중 레이더 진단 ➔ 컴활 등 레드오션 지양 & Figma/GA4 블루오션 스펙 처방<br>
-        • <strong>인사팀</strong>: 4분면 포지셔닝 & 수급난 아치 게이지 ➔ 허수 지원 유발 모호 JD 정량 필터링
+        • <strong>구직자</strong>: 5대 가중 레이더 진단 ➔ 레드오션 자격증 지양 & Figma/GA4/SQL 블루오션 스펙 집중 처방<br>
+        • <strong>인사팀</strong>: 4분면 포지셔닝 & 수급난 아치 게이지 ➔ 허수 지원 유발 모호 JD 정량 사전 필터링
       </div>
     </div>
     <div class="funnel-badge">유저별 맞춤 가치</div>
@@ -688,10 +688,10 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 
   <div class="funnel-layer funnel-layer-bot">
     <div>
-      <div class="funnel-title">🚀 3단계 (Bottom - 수렴 결론): 양방향 최적 매칭 & 채용 효율 35% 상승</div>
+      <div class="funnel-title">🚀 3단계 (Bottom): 1:1 수급 최적 매칭 — AI 기반 합격률 극대화 & 채용 유입 +35% 창출</div>
       <div class="funnel-desc">
-        • <strong>구직자</strong>: 2-Stage Re-Ranking AI 추천 ➔ <strong>서류 합격률 극대화</strong><br>
-        • <strong>인사팀</strong>: AI JD 시뮬레이터 ➔ <strong>유입 노출 +35% 증가 & 허수 지원 소모전 종식</strong>
+        • <strong>구직자</strong>: 2-Stage Re-Ranking AI 추천 모델 ➔ <strong>서류 합격률 극대화</strong><br>
+        • <strong>인사팀</strong>: AI JD 시뮬레이터 ➔ <strong>유입 노출 +35% 증가 & 채용 소모전 종식</strong>
       </div>
     </div>
     <div class="funnel-badge">최종 도달 가치</div>
@@ -699,9 +699,9 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 
 </div>
 
-<div class="card card-dark" style="margin-top:12px; text-align:center; padding:10px 18px;">
+<div class="card card-dark" style="margin-top:24px; text-align:center; padding:13px 22px;">
 <p style="color:#34d399; font-weight:800; margin:0; font-size:0.92rem;">
-🎯 깔때기 수렴 결론: "대시보드를 통해 구직자의 스펙 낭비를 없애고, 인사팀의 채용 소모전을 종식시켜 수급 미스매치 0%로 도달합니다."
+🎯 최종 가치 제언 (Ultimate Value Proposition): "본 대시보드는 정보 비대칭 해소를 시작으로, 구직자의 정량적 스펙 낭비를 최소화하고 인사팀의 채용 소모전을 종식시켜 수급 미스매치 Zero화에 도달합니다."
 </p>
 </div>
 

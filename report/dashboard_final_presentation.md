@@ -450,9 +450,10 @@ style: |
 <h3>B2B SaaS 대시보드 공유</h3>
 <ul>
 <li>5-1. 메인 관제 홈 & 5대 EDA 차트</li>
-<li>5-2. 구직자 자가진단 (페르소나 김전략)</li>
-<li>5-3. 인사팀 AI JD 최적화 (페르소나 이채용)</li>
-<li>5-4. PCA 3D 의미 공간 국소 매칭</li>
+<li>5-2(a). 구직자 모드 ① 입력 조건 설정</li>
+<li>5-2(b). 구직자 모드 ② 적합도 & AI 추천</li>
+<li>5-3(a). 인사팀 모드 ① 공고 작성 설정</li>
+<li>5-3(b). 인사팀 모드 ② 3D & AI JD 리모델링</li>
 <li>5-5. 핵심 가치 펀널(Funnel) 수렴</li>
 </ul>
 </div>
@@ -804,46 +805,38 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 ---
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- 5. 대시보드 시각화 공유 — (2) 구직자 모드 및 유저 시나리오 -->
+<!-- 5-2(a). 대시보드 시각화 공유 — 구직자 모드 : 입력 조건 선택지 명세 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 5. 대시보드 시각화 공유 — (2) 구직자 모드 (전략/기획 포지션 예시)
+# 5-2(a). 대시보드 시각화 공유 — 구직자 모드 ① 입력 조건 설정
 
-## 항목별 입력 선택지(Input) & 5대 가중 레이더 AI 분석 최종 결과물(Output)
+## 페르소나 '김전략' 님의 전략/기획 직무 입력 조건 & 자가진단 폼 명세
 
 <div class="cols-2">
 <div>
 
-<div class="card card-indigo" style="margin-bottom:10px;">
+<div class="card card-indigo" style="height:360px; box-sizing:border-box;">
 <span class="badge badge-indigo">📝 구직자 입력 선택지 (Input Options)</span>
-<h3>전략/기획 자가진단 선택 항목</h3>
+<h3>전략/기획 자가진단 항목별 선택 설정</h3>
 <ul>
-<li><strong>지원 직무</strong>: <code>기획·전략 (경영기획/PM/서비스기획)</code></li>
-<li><strong>경력 / 학력</strong>: <code>경력 3년 (주니어~중급)</code> &ensp;|&ensp; <code>대졸 (4년)</code></li>
-<li><strong>보유 자격증</strong>: <code>컴퓨터활용능력 1급</code>, <code>ADsP</code> (선택)</li>
-<li><strong>보유 툴 / 스킬</strong>: <code>Figma (화면설계)</code>, <code>SQL (기본)</code>, <code>GA4 (미보유)</code></li>
-<li><strong>실무 프로젝트</strong>: <code>신규 서비스 기획서 작성</code>, <code>시장조사</code></li>
+<li><strong>지원 직무 1차/2차</strong>: <code>기획·전략</code> ➔ <code>경영기획 / PM / 서비스기획</code></li>
+<li><strong>목표 연차 / 학력</strong>: <code>신입 ~ 3년차 (주니어)</code> &ensp;|&ensp; <code>대졸 (4년)</code></li>
+<li><strong>보유 정량 자격증 (Multi)</strong>: <code>컴퓨터활용능력 1급</code>, <code>ADsP</code> (체크)</li>
+<li><strong>보유 실무 툴/스킬 (Multi)</strong>: <code>Figma (화면설계 중급)</code>, <code>SQL (기본)</code></li>
+<li><strong>보유 실무 경험 (Multi)</strong>: <code>신규 서비스 기획서 작성</code>, <code>시장조사</code></li>
 </ul>
+<div style="background:#fff; border-radius:8px; padding:10px 14px; margin-top:12px; border-left:4px solid #4f46e5;">
+<p style="margin:0; font-size:0.82rem; color:#3730a3; font-weight:700;">
+💡 팁: 단순 자격증 나열을 넘어 실제 업무에서 활용 가능한 툴 및 프로젝트 경험을 세분화하여 정밀 진단 폼을 구성했습니다.
+</p>
 </div>
-
-<div class="card card-purple">
-<span class="badge badge-purple">🎯 최종 구현 결과물 (Output Result)</span>
-<h3>5대 가중 레이더 & 2-Stage AI 추천</h3>
-<ul>
-<li><strong>5대 범주 레이더 차트</strong>: 자격증(100점) 대비 <code>GA4/데이터분석 (25점 Low)</code> 취약 영역 즉시 진단</li>
-<li><strong>2-Stage AI 추천결과</strong>: <code>Figma + SQL</code> 우대 전략기획 공고 Top 5 추천 및 <strong>서류 합격 적합도 88.5점</strong> 도출</li>
-</ul>
 </div>
 
 </div>
 <div>
 
-<div class="img-frame" style="margin-bottom:8px;">
-  <img src="../images/presentation/02_seeker_res1.png" alt="구직자 모드 결과 캡처 1 - 다차원 직무 적합도 진단 결과 및 세부 점수" style="max-height:165px; object-fit:cover;">
-</div>
-
-<div class="img-frame">
-  <img src="../images/presentation/02_seeker_res2.png" alt="구직자 모드 결과 캡처 2 - Top 5 맞춤 채용공고 AI 추천 결과 카탈로그" style="max-height:165px; object-fit:cover;">
+<div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+  <img src="../images/presentation/02_seeker_tab.png" alt="구직자 모드 입력화면 스크린샷" style="max-height:350px; width:100%; object-fit:contain; display:block;">
 </div>
 
 </div>
@@ -852,45 +845,108 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 ---
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- 5. 대시보드 시각화 공유 — (3) 인사팀 모드 및 유저 시나리오 -->
+<!-- 5-2(b). 대시보드 시각화 공유 — 구직자 모드 : 적합도 진단 및 AI 추천 결과 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 5. 대시보드 시각화 공유 — (3) 인사팀 모드 (전략/기획 포지션 예시)
+# 5-2(b). 대시보드 시각화 공유 — 구직자 모드 ② 진단 및 AI 추천 결과
 
-## 항목별 입력 선택지(Input) & PCA 3D 매칭 및 AI JD 리모델링 최종 결과물(Output)
+## 5대 가중 레이더 정량 진단 분석 & 2-Stage 맞춤 채용공고 추천 결과물
 
 <div class="cols-2">
 <div>
 
-<div class="card card-sky" style="margin-bottom:10px;">
-<span class="badge badge-blue">⚙️ 인사팀 입력 선택지 (Input Options)</span>
-<h3>전략/기획 채용 공고 작성 및 설정 항목</h3>
+<div class="card card-purple" style="height:360px; box-sizing:border-box;">
+<span class="badge badge-purple">🎯 최종 구현 결과물 (Output Result)</span>
+<h3>5대 가중 레이더 진단 & AI 공고 추천</h3>
 <ul>
-<li><strong>타겟 직무</strong>: <code>기획·전략 (경영기획/PM)</code></li>
-<li><strong>자사 공고 입력</strong>: <code>"신규 사업 전략 수립자 채용 (우대: 컴활 우수자)"</code></li>
-<li><strong>스펙 가중치 조절</strong>: 자격증(10%), 실무 툴(40%), 경험(35%), 경력(15%)</li>
-<li><strong>AI 수급난 추천 스펙</strong>: <code>Figma</code>, <code>GA4</code>, <code>SQL</code> 스킬 태그 선택</li>
-</ul>
-</div>
-
-<div class="card card-emerald">
-<span class="badge badge-green">🚀 최종 구현 결과물 (Output Result)</span>
-<h3>PCA 3D 공간 매칭 & AI JD 시뮬레이터</h3>
-<ul>
-<li><strong>PCA 3D 의미론적 국소 매칭</strong>: 타사 전략기획 공고 대비 3D 공간 프로젝션 & <strong>유사 공고 82.4% 포커스 매칭</strong></li>
-<li><strong>AI JD 최적화 생성 문구</strong>: <code>"Figma 화면설계 및 GA4 데이터 분석 우수자"</code> 리모델링 ➔ <strong>지원자 유입 노출 +35% 상승 예후</strong></li>
+<li><strong>다차원 적합도 점수</strong>: 종합 <code>50.8점</code> (신입 평균 52.5점 대비 상위 68% 수준, 스펙 보완 필요권 🔴)</li>
+<li><strong>우선순위 처방 스펙 Top 3</strong>: <code>1순위: SQLD (자격증)</code>, <code>2순위: 정보처리기사</code>, <code>3순위: CFA</code> 정량 도출</li>
+<li><strong>직무별 차등 가중치 세부 점수</strong>: 우대 자격증 85점, 실무 툴 85점, 직무 경험 30점, 경력 40점, 학력 80점</li>
+<li><strong>2-Stage AI 추천 카탈로그</strong>: <code>(주)코어로보틱스</code>, <code>(주)하이컨시</code> 등 매칭 유사도 53.5% 이상 최적 공고 Top 5 추천</li>
 </ul>
 </div>
 
 </div>
 <div>
 
-<div class="img-frame" style="margin-bottom:8px;">
-  <img src="../images/presentation/03_hr_res1.png" alt="인사팀 모드 결과 캡처 1 - PCA 3D 의미 공간 국소 매칭 및 유사 공고 테이블" style="max-height:165px; object-fit:cover;">
+<div class="img-frame" style="margin-bottom:8px; height:174px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+  <img src="../images/presentation/02_seeker_res1.png" alt="구직자 모드 결과 캡처 1 - 진단결과" style="max-height:166px; width:100%; object-fit:contain; display:block;">
 </div>
 
-<div class="img-frame">
-  <img src="../images/presentation/03_hr_res2.png" alt="인사팀 모드 결과 캡처 2 - 수급난 스펙 태그 일괄 입력 및 AI JD 시뮬레이터 리모델링 초안" style="max-height:165px; object-fit:cover;">
+<div class="img-frame" style="height:174px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+  <img src="../images/presentation/02_seeker_res2.png" alt="구직자 모드 결과 캡처 2 - Top 5 추천 카탈로그" style="max-height:166px; width:100%; object-fit:contain; display:block;">
+</div>
+
+</div>
+</div>
+
+---
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 5-3(a). 대시보드 시각화 공유 — 인사팀 모드 : 채용 공고 작성 및 설정 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+# 5-3(a). 대시보드 시각화 공유 — 인사팀 모드 ① 공고 작성 및 설정
+
+## 페르소나 '이채용' 님의 전략/기획 JD 텍스트 입력 & 4대 역량 가중치 설정
+
+<div class="cols-2">
+<div>
+
+<div class="card card-sky" style="height:360px; box-sizing:border-box;">
+<span class="badge badge-blue">⚙️ 인사팀 입력 선택지 (Input Options)</span>
+<h3>전략/기획 공고 조건 및 시뮬레이터 설정</h3>
+<ul>
+<li><strong>채용 타겟 직무</strong>: <code>기획/전략 담당 실무자 (신입~경력)</code></li>
+<li><strong>공고 톤 앤 매너</strong>: <code>데이터 중심 테크 톤</code> (선택)</li>
+<li><strong>자사 JD 텍스트 입력</strong>: <code>"신규 사업 전략 수립자 채용 (우대: 컴활 우수자)"</code> 원본 공고문 작성</li>
+<li><strong>스펙 가중치 슬라이더 조절</strong>: 자격증(10%), 실무 툴(40%), 직무 경험(35%), 경력 연차(15%) 맞춤 비중 산정</li>
+<li><strong>AI 수급난 추천 스펙 선택</strong>: <code>Figma</code>, <code>GA4</code>, <code>SQL</code> 스킬 태그 일괄 연동</li>
+</ul>
+</div>
+
+</div>
+<div>
+
+<div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+  <img src="../images/presentation/03_hr_gap.png" alt="인사팀 모드 입력화면 스크린샷" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+</div>
+
+</div>
+</div>
+
+---
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- 5-3(b). 대시보드 시각화 공유 — 인사팀 모드 : 3D 공간 매칭 & AI JD 리모델링 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+
+# 5-3(b). 대시보드 시각화 공유 — 인사팀 모드 ② 3D 매칭 및 AI JD 생성 결과
+
+## PCA 3D 의미론적 국소 매칭 분석 & 지원자 유입 +35% 예측 AI JD 최적화 결과물
+
+<div class="cols-2">
+<div>
+
+<div class="card card-emerald" style="height:360px; box-sizing:border-box;">
+<span class="badge badge-green">🚀 최종 구현 결과물 (Output Result)</span>
+<h3>PCA 3D 공간 매칭 & AI JD 리모델링</h3>
+<ul>
+<li><strong>PCA 3D 의미론적 국소 매칭 지도</strong>: 타사 전략기획 공고 대비 자사 JD 벡터 3D 포커스 프로젝션 & <strong>유사도 0.8902 경쟁 공고 Top 5 자동 매칭</strong></li>
+<li><strong>JD 보안 검토안 자동 제안</strong>: 자사 JD 누락 역량(영업/세일즈, 커뮤니케이션) 자동 감지 및 보완 지침 표출</li>
+<li><strong>AI JD 최적화 시뮬레이터 생성 문구</strong>: <code>[팀소개/주요업무/지원자격]</code> 구조화 ➔ <strong>지원자 유입 노출 예상 효과 +35% 상승 초안 자동 생성</strong></li>
+</ul>
+</div>
+
+</div>
+<div>
+
+<div class="img-frame" style="margin-bottom:8px; height:174px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+  <img src="../images/presentation/03_hr_res1.png" alt="인사팀 모드 결과 캡처 1 - PCA 3D 공간 지도 및 유사 공고" style="max-height:166px; width:100%; object-fit:contain; display:block;">
+</div>
+
+<div class="img-frame" style="height:174px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
+  <img src="../images/presentation/03_hr_res2.png" alt="인사팀 모드 결과 캡처 2 - AI JD 시뮬레이터 리모델링 생성 결과물" style="max-height:166px; width:100%; object-fit:contain; display:block;">
 </div>
 
 </div>

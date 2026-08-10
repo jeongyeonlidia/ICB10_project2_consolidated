@@ -632,29 +632,40 @@ style: |
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- 2. 데이터 수집 스펙 & 전처리 정합성 파이프라인 -->
 <!-- ═══════════════════════════════════════════════════════ -->
+<!-- 2. 데이터 수집 스펙 & 전처리 정합성 파이프라인 -->
+<!-- ═══════════════════════════════════════════════════════ -->
 
 # 2. 데이터 수집 스펙 & 전처리 정합성 파이프라인
 
-## 수집 기간 · 데이터 크기 · 전처리 정합성 (Data Quality Check)
+## 사람인 웹 크롤링 · 네이버 DataLab API 동기화 수집 · 3단계 전처리 파이프라인
 
 <div class="cols-2">
 <div>
 
-<div class="card card-sky" style="margin-bottom:10px;">
-<span class="badge badge-blue">데이터 수집 스펙 & 전처리</span>
-<h3>수집 기간, 크기 및 정규식 수치 척도화</h3>
+<div class="card card-sky" style="margin-bottom:8px; padding:10px 14px;">
+<span class="badge badge-blue">수집 ① 사람인 5,000건 웹 크롤링</span>
+<h3>BeautifulSoup4/Selenium 듀얼 파서 (2025.07~2026.07)</h3>
 <ul>
-<li><strong>수집 기간 & 크기</strong>: 2025.07 ~ 2026.07 (52주) 사람인 공고 5,000건 × 24열</li>
-<li><strong>이상치 필터링</strong>: IQR 박스플롯 분석 및 10일 이내 상시 재게재 반복 공고 탐지</li>
+<li><strong>수집 범위</strong>: 5대 직무 5,000건 채용 공고 (52주 동기화 시계열)</li>
+<li><strong>수집 항목</strong>: 우대사항, 자격요건, 경력/학력, 지역 등 10개 원본 텍스트</li>
 </ul>
 </div>
 
-<div class="card card-emerald">
-<span class="badge badge-green">품질 정합성 검증</span>
-<h3>Data Quality (DQ) Check 100% 통과</h3>
+<div class="card card-amber" style="margin-bottom:8px; padding:10px 14px;">
+<span class="badge badge-amber">수집 ② 네이버 DataLab OpenAPI</span>
+<h3>52주 검색 트렌드 주간 관심 지수 (2025.07~2026.07)</h3>
 <ul>
-<li><strong>결측치 및 스케일링</strong>: 주요 텍스트 100% 정제 및 Min-Max 정규화 스케일링</li>
-<li><strong>무결성 검증</strong>: <code>check_data_quality()</code> 파이프라인 자동 검증 무결성 확보</li>
+<li><strong>수집 범위</strong>: Figma, GA4, SQL 툴 vs 컴활, ADsP 자격증 키워드</li>
+<li><strong>수집 연산</strong>: 상대적 검색 지수(0~100) 쿼리 ➔ <strong>공급 희소성 가중치 산출</strong></li>
+</ul>
+</div>
+
+<div class="card card-emerald" style="padding:10px 14px;">
+<span class="badge badge-green">전처리 3단계 & DQ Check</span>
+<h3>정규식 척도화 · 80+ Stopwords · 이상치 탐지</h3>
+<ul>
+<li><strong>정규식 척도화 & 정제</strong>: 경력/학력 수치 변환 및 80개 불용어/동의어 정제</li>
+<li><strong>이상치 탐지 & DQ</strong>: 10일 이내 상시 재게재(7.4%) 필터링 및 DQ 100% 통과</li>
 </ul>
 </div>
 

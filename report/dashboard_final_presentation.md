@@ -807,29 +807,31 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 <!-- 5. 대시보드 시각화 공유 — (2) 구직자 모드 및 유저 시나리오 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 5. 대시보드 시각화 공유 — (2) 구직자 모드 및 유저 예시
+# 5. 대시보드 시각화 공유 — (2) 구직자 모드 (전략/기획 포지션 예시)
 
-## 스펙 자가진단 & 2-Stage AI 추천 (유저 시나리오 예시: 취준생 '김전략' 님)
+## 항목별 입력 선택지(Input) & 5대 가중 레이더 AI 분석 최종 결과물(Output)
 
 <div class="cols-2">
 <div>
 
-<div class="card card-purple" style="margin-bottom:10px;">
-<span class="badge badge-purple">유저 시나리오 예시</span>
-<h3>👤 취준생 '김전략' 님의 고민</h3>
+<div class="card card-indigo" style="margin-bottom:10px;">
+<span class="badge badge-indigo">📝 구직자 입력 선택지 (Input Options)</span>
+<h3>전략/기획 자가진단 선택 항목</h3>
 <ul>
-<li>"남들이 다 따는 컴활/ADsP 자격증을 얻었으나 <strong>서류 합격률이 10% 미만</strong>입니다."</li>
-<li>"어떤 실무 툴을 준비해야 할지 <strong>우선순위를 정하지 못해 불안</strong>합니다."</li>
+<li><strong>지원 직무</strong>: <code>기획·전략 (경영기획/PM/서비스기획)</code></li>
+<li><strong>경력 / 학력</strong>: <code>경력 3년 (주니어~중급)</code> &ensp;|&ensp; <code>대졸 (4년)</code></li>
+<li><strong>보유 자격증</strong>: <code>컴퓨터활용능력 1급</code>, <code>ADsP</code> (선택)</li>
+<li><strong>보유 툴 / 스킬</strong>: <code>Figma (화면설계)</code>, <code>SQL (기본)</code>, <code>GA4 (미보유)</code></li>
+<li><strong>실무 프로젝트</strong>: <code>신규 서비스 기획서 작성</code>, <code>시장조사</code></li>
 </ul>
 </div>
 
-<div class="card card-indigo">
-<span class="badge badge-indigo">구직자 모드 탭 핵심</span>
-<h3>📝 자가진단 & 2-Stage AI 추천</h3>
+<div class="card card-purple">
+<span class="badge badge-purple">🎯 최종 구현 결과물 (Output Result)</span>
+<h3>5대 가중 레이더 & 2-Stage AI 추천</h3>
 <ul>
-<li>경력·학력·자격증·툴·경험 5대 영역 가중 스코어링</li>
-<li><strong>5대 범주 오각형 레이더 차트 (`fig_radar`)</strong></li>
-<li><strong>Model A vs B 추천 알고리즘 A/B 테스트</strong></li>
+<li><strong>5대 범주 레이더 차트</strong>: 자격증(100점) 대비 <code>GA4/데이터분석 (25점 Low)</code> 취약 영역 즉시 진단</li>
+<li><strong>2-Stage AI 추천결과</strong>: <code>Figma + SQL</code> 우대 전략기획 공고 Top 5 추천 및 <strong>서류 합격 적합도 88.5점</strong> 도출</li>
 </ul>
 </div>
 
@@ -849,28 +851,30 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 <!-- 5. 대시보드 시각화 공유 — (3) 인사팀 모드 및 유저 시나리오 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 5. 대시보드 시각화 공유 — (3) 인사팀 모드 및 유저 예시
+# 5. 대시보드 시각화 공유 — (3) 인사팀 모드 (전략/기획 포지션 예시)
 
-## 수급 Gap 분석 & AI JD 시뮬레이터 (유저 시나리오 예시: 인사팀장 '이채용' 님)
+## 항목별 입력 선택지(Input) & PCA 3D 매칭 및 AI JD 리모델링 최종 결과물(Output)
 
 <div class="cols-2">
 <div>
 
-<div class="card card-rose" style="margin-bottom:10px;">
-<span class="badge badge-red">유저 시나리오 예시</span>
-<h3>👤 인사팀장 '이채용' 님의 고민</h3>
+<div class="card card-sky" style="margin-bottom:10px;">
+<span class="badge badge-blue">⚙️ 인사팀 입력 선택지 (Input Options)</span>
+<h3>전략/기획 채용 공고 작성 및 설정 항목</h3>
 <ul>
-<li>"공고를 올려도 모호한 우대조건으로 <strong>허수 지원자만 많고 실무형 인재가 안 옵니다.</strong>"</li>
-<li>"어느 조건을 교체해야 유입이 늘어나는지 <strong>지표가 없습니다.</strong>"</li>
+<li><strong>타겟 직무</strong>: <code>기획·전략 (경영기획/PM)</code></li>
+<li><strong>자사 공고 입력</strong>: <code>"신규 사업 전략 수립자 채용 (우대: 컴활 우수자)"</code></li>
+<li><strong>스펙 가중치 조절</strong>: 자격증(10%), 실무 툴(40%), 경험(35%), 경력(15%)</li>
+<li><strong>AI 수급난 추천 스펙</strong>: <code>Figma</code>, <code>GA4</code>, <code>SQL</code> 스킬 태그 선택</li>
 </ul>
 </div>
 
-<div class="card card-sky">
-<span class="badge badge-blue">인사팀 모드 탭 핵심</span>
-<h3>⚖️ 3D 임베딩 매칭 & AI JD 시뮬레이터</h3>
+<div class="card card-emerald">
+<span class="badge badge-green">🚀 최종 구현 결과물 (Output Result)</span>
+<h3>PCA 3D 공간 매칭 & AI JD 시뮬레이터</h3>
 <ul>
-<li><strong>PCA 3D 의미론적 국소 매칭</strong>: 유사 공고 3D 근접도 포커스 뷰</li>
-<li><strong>수급난 추천 스펙 일괄 연동</strong>: 지원자 유입 노출 <strong>+35% 상승 예측 JD 문구 생성</strong></li>
+<li><strong>PCA 3D 의미론적 국소 매칭</strong>: 타사 전략기획 공고 대비 3D 공간 프로젝션 & <strong>유사 공고 82.4% 포커스 매칭</strong></li>
+<li><strong>AI JD 최적화 생성 문구</strong>: <code>"Figma 화면설계 및 GA4 데이터 분석 우수자"</code> 리모델링 ➔ <strong>지원자 유입 노출 +35% 상승 예후</strong></li>
 </ul>
 </div>
 

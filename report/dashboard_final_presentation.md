@@ -838,8 +838,12 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 </div>
 <div>
 
+<div class="img-frame" style="margin-bottom:8px;">
+  <img src="../images/presentation/02_seeker_res1.png" alt="구직자 모드 결과 캡처 1 - 다차원 직무 적합도 진단 결과 및 세부 점수" style="max-height:165px; object-fit:cover;">
+</div>
+
 <div class="img-frame">
-  <img src="../images/presentation/02_seeker_tab.png" alt="구직자 모드 자가진단 및 AI 추천 대시보드 스크린샷">
+  <img src="../images/presentation/02_seeker_res2.png" alt="구직자 모드 결과 캡처 2 - Top 5 맞춤 채용공고 AI 추천 결과 카탈로그" style="max-height:165px; object-fit:cover;">
 </div>
 
 </div>
@@ -881,8 +885,12 @@ Final Score = (TF-IDF Cosine Sim × 40%) + (Jaccard 스펙 교집합 × 40%) + (
 </div>
 <div>
 
+<div class="img-frame" style="margin-bottom:8px;">
+  <img src="../images/presentation/03_hr_res1.png" alt="인사팀 모드 결과 캡처 1 - PCA 3D 의미 공간 국소 매칭 및 유사 공고 테이블" style="max-height:165px; object-fit:cover;">
+</div>
+
 <div class="img-frame">
-  <img src="../images/presentation/03_hr_gap.png" alt="인사팀 모드 PCA 3D 임베딩 지도 대시보드 스크린샷">
+  <img src="../images/presentation/03_hr_res2.png" alt="인사팀 모드 결과 캡처 2 - 수급난 스펙 태그 일괄 입력 및 AI JD 시뮬레이터 리모델링 초안" style="max-height:165px; object-fit:cover;">
 </div>
 
 </div>

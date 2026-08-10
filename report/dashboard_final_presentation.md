@@ -879,6 +879,8 @@ style: |
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- 5-3(c). 대시보드 시각화 공유 — 인사팀 모드 ③ AI JD 최적화 시뮬레이터 -->
 <!-- ═══════════════════════════════════════════════════════ -->
+<!-- 5-3(c). 대시보드 시각화 공유 — 인사팀 모드 ③ AI JD 최적화 시뮬레이터 -->
+<!-- ═══════════════════════════════════════════════════════ -->
 
 # 5-3(c). 대시보드 시각화 공유 — 인사팀 모드 ③ AI JD 최적화 생성
 
@@ -912,6 +914,8 @@ style: |
 </div>
 </div>
 
+---
+
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- 5-5. 대시보드 유저별 가치 수렴 펀널 (Funnel) -->
 <!-- ═══════════════════════════════════════════════════════ -->
@@ -920,49 +924,42 @@ style: |
 
 ## "시장 관제 ➔ 맞춤 진단 ➔ 최종 수급 최적화로 수렴하는 3단계 펀널 구조"
 
-<div class="funnel-wrapper">
+<div style="max-width:980px; margin:0 auto;">
 
-  <div class="funnel-layer funnel-layer-top">
+<div class="card" style="background:linear-gradient(135deg, #1d4ed8, #2563eb); border:none; color:#ffffff; padding:14px 20px; border-radius:12px; margin-bottom:6px; box-shadow:0 4px 12px rgba(37,99,235,0.2);">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
     <div>
-      <div class="funnel-title">🌐 1단계 (Top): 시장 다차원 EDA 관제 — 채용 현장 정보 비대칭 완전 해소</div>
-      <div class="funnel-desc">사람인 5,000건 채용 수요 & 네이버 52주 검색 트렌드 공급 교차 분석을 통한 취업 시장 객관화</div>
+      <h3 style="color:#ffffff; margin:0 0 4px 0; font-size:1.02rem;">🌐 1단계 (Top): 시장 다차원 EDA 관제 — 채용 현장 정보 비대칭 완전 해소</h3>
+      <p style="color:#bfdbfe; margin:0; font-size:0.82rem;">사람인 5,000건 채용 수요 & 네이버 52주 검색 트렌드 공급 교차 분석을 통한 취업 시장 객관화</p>
     </div>
-    <div class="funnel-badge">공통 기반</div>
+    <span style="background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700;">공통 기반</span>
   </div>
-
-  <div class="funnel-layer funnel-layer-mid">
-    <div>
-      <div class="funnel-title">🎯 2단계 (Middle): 페르소나별 정량 진단 — 구직자 스펙 처방 & 인사팀 위험 필터링</div>
-      <div class="funnel-desc">
-        • <strong>구직자</strong>: 5대 가중 레이더 진단 ➔ 레드오션 자격증 지양 & Figma/GA4/SQL 블루오션 스펙 집중 처방<br>
-        • <strong>인사팀</strong>: 4분면 포지셔닝 & 수급난 아치 게이지 ➔ 허수 지원 유발 모호 JD 정량 사전 필터링
-      </div>
-    </div>
-    <div class="funnel-badge">유저별 맞춤 가치</div>
-  </div>
-
-  <div class="funnel-layer funnel-layer-bot">
-    <div>
-      <div class="funnel-title">🚀 3단계 (Bottom): 1:1 수급 최적 매칭 — AI 기반 합격률 극대화 & 채용 유입 +35% 창출</div>
-      <div class="funnel-desc" style="color: #f0fdf4;">
-        • <strong>구직자</strong>: 2-Stage Re-Ranking AI 추천 모델 ➔ <span style="color:#fef08a; font-weight:700;">서류 합격률 극대화</span><br>
-        • <strong>인사팀</strong>: AI JD 시뮬레이터 ➔ <span style="color:#fef08a; font-weight:700;">유입 노출 +35% 증가 & 채용 소모전 종식</span>
-      </div>
-    </div>
-    <div class="funnel-badge">최종 도달 가치</div>
-  </div>
-
 </div>
 
-<!-- ⬇️ 화살표 커넥터 디바이더 ⬇️ -->
-<div style="text-align: center; margin: 12px 0 10px 0; color: #10b981; font-weight: 800; font-size: 1.15rem; letter-spacing: 2px;">
-  ▼ &ensp; <span style="font-size:0.76rem; background:#dcfce7; color:#166534; padding:3px 14px; border-radius:12px; border:1px solid #86efac; vertical-align:middle;">수급 최적화 가치 수렴</span> &ensp; ▼
+<div style="text-align:center; color:#94a3b8; font-size:1.1rem; font-weight:900; margin:-2px 0;">▼</div>
+
+<div class="card" style="background:linear-gradient(135deg, #7c3aed, #9333ea); border:none; color:#ffffff; padding:14px 20px; border-radius:12px; margin-bottom:6px; box-shadow:0 4px 12px rgba(124,58,237,0.2);">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <h3 style="color:#ffffff; margin:0 0 4px 0; font-size:1.02rem;">🎯 2단계 (Middle): 페르소나별 정량 진단 — 구직자 스펙 처방 & 인사팀 위험 필터링</h3>
+      <p style="color:#e9d5ff; margin:0; font-size:0.82rem;">• <strong>구직자</strong>: 5대 가중 레이더 진단 ➔ 레드오션 자격증 지양 & Figma/GA4/SQL 블루오션 스펙 집중 처방<br>• <strong>인사팀</strong>: PCA 3D 공간 매칭 ➔ 잦은 이탈 10일 재게재 악성 위험 공고 필터링 & 경쟁 JD 벤치마킹</p>
+    </div>
+    <span style="background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700;">유저별 맞춤 가치</span>
+  </div>
 </div>
 
-<div class="card card-dark" style="text-align:center; padding:14px 22px; border-left:5px solid #10b981; margin-top:0;">
-<p style="color:#34d399; font-weight:800; margin:0; font-size:0.92rem; line-height:1.5;">
-🎯 최종 가치 제언 (Ultimate Value Proposition): "본 대시보드는 정보 비대칭 해소를 시작으로, 구직자의 정량적 스펙 낭비를 최소화하고 인사팀의 채용 소모전을 종식시켜 수급 미스매치 Zero화에 도달합니다."
-</p>
+<div style="text-align:center; color:#94a3b8; font-size:1.1rem; font-weight:900; margin:-2px 0;">▼</div>
+
+<div class="card" style="background:linear-gradient(135deg, #059669, #10b981); border:none; color:#ffffff; padding:14px 20px; border-radius:12px; box-shadow:0 4px 12px rgba(16,185,129,0.2);">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <h3 style="color:#ffffff; margin:0 0 4px 0; font-size:1.02rem;">🚀 3단계 (Bottom): 1:1 수급 최적화 ➔ 최종 채용 성과 실현</h3>
+      <p style="color:#a7f3d0; margin:0; font-size:0.82rem;">• <strong>구직자</strong>: 2-Stage 맞춤 추천 ➔ 서류 합격률 최상위 공고 매칭 (서류 합격률 상승)<br>• <strong>인사팀</strong>: AI JD 시뮬레이터 ➔ 실무 툴 중심 JD 리모델링 (지원자 유입 노출 예상 효과 +35% 상승)</p>
+    </div>
+    <span style="background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:700;">최종 임팩트</span>
+  </div>
+</div>
+
 </div>
 
 ---

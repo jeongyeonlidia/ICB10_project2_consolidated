@@ -256,6 +256,67 @@ style: |
     line-height: 1.35;
   }
 
+  /* ── 렌더링 호환형 서브그래프 다이어그램 스타일 ── */
+  .subgraph-diagram-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 14px;
+    margin-bottom: 10px;
+  }
+  .subgraph-box {
+    flex: 1;
+    border-radius: 14px;
+    padding: 12px 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  }
+  .subgraph-box-blue { background: #eff6ff; border: 2px solid #bfdbfe; }
+  .subgraph-box-purple { background: #faf5ff; border: 2px solid #e9d5ff; }
+  .subgraph-box-green { background: #f0fdf4; border: 2px solid #bbf7d0; }
+
+  .subgraph-header {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: #1e40af;
+    background: #dbeafe;
+    padding: 3px 10px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .subgraph-box-purple .subgraph-header { color: #6b21a8; background: #f3e8ff; }
+  .subgraph-box-green .subgraph-header { color: #166534; background: #dcfce7; }
+
+  .subgraph-nodes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .node-pill {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: #0f172a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    text-align: center;
+    flex: 1;
+  }
+  .node-connector {
+    color: #94a3b8;
+    font-weight: 800;
+    font-size: 0.85rem;
+  }
+  .group-connector {
+    color: #2563eb;
+    font-weight: 900;
+    font-size: 1.2rem;
+  }
+
   /* ── 그리드 레이아웃 ── */
   .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
@@ -511,25 +572,38 @@ style: |
 
 ## 문제 정의부터 수집, 전처리, 모델링, 대시보드 구축 및 배포까지 6단계 파이프라인 시각화
 
-```mermaid
-flowchart LR
-    subgraph P1 ["PART 1: 문제 정의 및 듀얼 데이터 수집"]
-        direction LR
-        S1["1단계: 5대 직무 미스매치 정의"] --> S2["2단계: 5,000건 공고 및 52주 수집"]
-    end
+<div class="subgraph-diagram-container">
+  <div class="subgraph-box subgraph-box-blue">
+    <div class="subgraph-header">PART 1: 문제 정의 & 듀얼 데이터 수집</div>
+    <div class="subgraph-nodes">
+      <div class="node-pill">1단계: 5대 직무 미스매치 정의</div>
+      <div class="node-connector">➔</div>
+      <div class="node-pill">2단계: 5,000건 공고 & 52주 수집</div>
+    </div>
+  </div>
 
-    subgraph P2 ["PART 2: NLP 정제 및 AI 모델링"]
-        direction LR
-        S3["3단계: 80 Stopwords 정제 및 DQ Check"] --> S4["4단계: PCA 3D 및 2-Stage 추천 모델"]
-    end
+  <div class="group-connector">➔</div>
 
-    subgraph P3 ["PART 3: SaaS 대시보드 및 Live Cloud 배포"]
-        direction LR
-        S5["5단계: B2B SaaS 대시보드 구축"] --> S6["6단계: Live 배포 및 자동 관제"]
-    end
+  <div class="subgraph-box subgraph-box-purple">
+    <div class="subgraph-header">PART 2: NLP 정제 & AI 모델링</div>
+    <div class="subgraph-nodes">
+      <div class="node-pill">3단계: 80+ Stopwords & DQ Check</div>
+      <div class="node-connector">➔</div>
+      <div class="node-pill">4단계: PCA 3D & 2-Stage 추천 모델</div>
+    </div>
+  </div>
 
-    P1 --> P2 --> P3
-```
+  <div class="group-connector">➔</div>
+
+  <div class="subgraph-box subgraph-box-green">
+    <div class="subgraph-header">PART 3: SaaS 대시보드 & Cloud 배포</div>
+    <div class="subgraph-nodes">
+      <div class="node-pill">5단계: B2B SaaS 대시보드 구축</div>
+      <div class="node-connector">➔</div>
+      <div class="node-pill">6단계: Live 배포 & 실시간 관제</div>
+    </div>
+  </div>
+</div>
 
 <div class="cols-3" style="margin-top:16px;">
 <div class="card" style="text-align:center;">

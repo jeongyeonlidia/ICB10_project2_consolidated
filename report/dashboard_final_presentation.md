@@ -3,7 +3,7 @@ marp: true
 theme: default
 size: 16:9
 paginate: true
-header: '취업 시장 다차원 EDA & 직무 적합도 진단 솔루션'
+header: 'IT·데이터·마케팅 5대 직무 실무 툴 수급 미스매치 진단 & AI JD 시뮬레이터 SaaS'
 footer: '2026.08 · AI Data Analysis Team'
 style: |
   @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
@@ -33,14 +33,14 @@ style: |
     justify-content: center;
   }
   section.cover h1 {
-    font-size: 2.8rem;
+    font-size: 2.5rem;
     font-weight: 800;
     color: #ffffff;
     line-height: 1.25;
     margin: 0 0 16px 0;
   }
   section.cover h2 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
     font-weight: 400;
     color: #93c5fd;
     margin: 0 0 40px 0;
@@ -82,14 +82,14 @@ style: |
     width: fit-content;
   }
   section.divider-slide h1 {
-    font-size: 2.4rem;
+    font-size: 2.3rem;
     font-weight: 800;
     color: #ffffff;
     margin-bottom: 12px;
     line-height: 1.3;
   }
   section.divider-slide p {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     color: #cbd5e1;
     margin: 0;
   }
@@ -217,6 +217,45 @@ style: |
     white-space: nowrap;
   }
 
+  /* ── 프로세스 카드 전용 스타일 ── */
+  .process-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .process-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-top: 4px solid #2563eb;
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  .process-num {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #2563eb;
+    background: #dbeafe;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+  .process-card h4 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+  }
+  .process-card p {
+    font-size: 0.74rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.35;
+  }
+
   /* ── 그리드 레이아웃 ── */
   .cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
@@ -313,12 +352,12 @@ style: |
 
 <div class="divider"></div>
 
-# 취업 시장 다차원 EDA &<br>직무 적합도 진단 솔루션
+# IT·데이터·마케팅 5대 직무 실무 툴 수급 미스매치 진단 &<br>AI JD 시뮬레이터 B2B SaaS 대시보드
 
-## B2B SaaS 대시보드 — 채용 수급 미스매치 해소 프로젝트
+## 사람인 5,000건 공고 & 네이버 52주 관심도 데이터 기반 양방향 역량 최적화 솔루션
 
 <div class="meta">
-  📅 2026.08 &ensp;|&ensp; 👥 AI Data Analysis Team &ensp;|&ensp; 🛠️ Streamlit · Python · Plotly · SQLite
+  📅 2026.08 &ensp;|&ensp; 👥 AI Data Analysis Team &ensp;|&ensp; 🛠️ Streamlit · Python · Plotly · SQLite · TF-IDF
 </div>
 
 ---
@@ -329,19 +368,19 @@ style: |
 
 # AGENDA — 전체 발표 목차
 
-## 프로젝트 기획부터 대시보드 구현 및 검증까지 3개 파트로 발표를 진행합니다.
+## 5대 핵심 직무 실무 역량 수급 분석부터 AI 대시보드 구축 및 정밀 검증까지 3개 파트로 발표합니다.
 
 <div class="cols-3" style="margin-top:20px;">
 <div class="card card-indigo">
 <span class="badge badge-indigo">PART 1</span>
 <h3>프로젝트 개요 & 데이터 구조</h3>
 <ul>
-<li>1. 문제정의 & 뉴스 보도 입증</li>
-<li>1-2. 미스매치 실제 수치 검증</li>
-<li>1-3. 엔드투엔드 Mermaid 파이프라인</li>
-<li>2. 수집 스펙 (5,000건 × 24열)</li>
-<li>3. NLP 정제 및 TF-IDF 파이프라인</li>
-<li>4. PCA 3D & 2-Stage 추천 모델링</li>
+<li>1. 5대 직무 실무 스펙 미스매치 정의</li>
+<li>1-2. 뉴스 기사 & 5,000건 수치 입증</li>
+<li>1-3. 엔드투엔드 파이프라인 시각화</li>
+<li>2. 수집 스펙 (5,000건 × 24개 특성)</li>
+<li>3. NLP 80+ 불용어 정제 & TF-IDF</li>
+<li>4. PCA 3D 공간화 & 2-Stage 추천</li>
 </ul>
 </div>
 
@@ -350,9 +389,9 @@ style: |
 <h3>B2B SaaS 대시보드 공유</h3>
 <ul>
 <li>5-1. 메인 관제 홈 & 5대 EDA 차트</li>
-<li>5-2. 구직자 모드 (페르소나 김전략)</li>
-<li>5-3. 인사팀 모드 (페르소나 이채용)</li>
-<li>5-4. PCA 3D 공간 임베딩 시각화</li>
+<li>5-2. 구직자 자가진단 (페르소나 김전략)</li>
+<li>5-3. 인사팀 AI JD 최적화 (페르소나 이채용)</li>
+<li>5-4. PCA 3D 의미 공간 국소 매칭</li>
 <li>5-5. 핵심 가치 펀널(Funnel) 수렴</li>
 </ul>
 </div>
@@ -361,8 +400,8 @@ style: |
 <span class="badge badge-green">PART 3</span>
 <h3>비즈니스 인사이트 & 검증</h3>
 <ul>
-<li>6-1. 5대 핵심 비즈니스 인사이트</li>
-<li>6-2. 데이터 & AI 시각화 검증 근거</li>
+<li>6-1. 5대 핵심 구조적 비즈니스 인사이트</li>
+<li>6-2. DQ Check & A/B 모델 정밀 검증</li>
 <li>7. 구직자/인사팀 양방향 액션플랜</li>
 <li>8. 기술 회고 및 실시간 라이브 배포</li>
 </ul>
@@ -378,9 +417,9 @@ style: |
 
 <div class="part-tag">PART 1</div>
 
-# 프로젝트 개요, 데이터 구조 & 문제 검증
+# 프로젝트 개요, 데이터 구조 & 실무 스펙 검증
 
-<p>채용 수급 불균형 문제정의, 언론 보도 및 실데이터 검증, 데이터 스펙(5,000건)과 전처리 파이프라인</p>
+<p>기획·인사·재무·마케팅·개발 5대 직무 수급 미스매치 문제정의, 5,000건 DB 파이프라인 & 2-Stage 추천 모델링</p>
 
 ---
 
@@ -388,28 +427,28 @@ style: |
 <!-- 1. 문제정의 & 초기 가설 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 1. 문제정의 & 초기 가설
+# 1. 5대 직무 수급 미스매치 문제정의 & 초기 가설
 
-## 채용 시장의 영원한 역설: "기업은 공고를 올리지만, 쓸 사람이 없다"
+## 채용 시장의 영원한 역설: "기업은 공고를 올리지만, 툴을 다룰 실무 인재가 없다"
 
-<div class="callout"><p>채용 시장 양측 모두 수많은 채용 정보와 이력서를 축적하고 있으나, <strong>[구직자 보유 스펙] vs [기업 요구 역량]</strong> 간의 정량적 격차가 심화되는 <strong>정보 비대칭 문제</strong>를 해결하고자 했습니다.</p></div>
+<div class="callout"><p>기획/전략, 인사/노무, 회계/재무, 마케팅, 개발 등 5대 지원 직무 현장에서 <strong>[구직자의 단순 정량 자격증] vs [기업의 실무 분석 툴 요구]</strong> 간의 정량적 격차가 심화되는 <strong>실무 스펙 비대칭 문제</strong>를 정밀 해결하고자 했습니다.</p></div>
 
 <div class="cols-2">
 <div class="card card-rose">
 <span class="badge badge-red">구직자 관점</span>
-<h3>스펙을 갖춰도 서류 합격이 어려운 이유</h3>
+<h3>정량 자격증을 갖춰도 서류 합격이 어려운 이유</h3>
 <ul>
-<li>자격증 및 어학 성적을 올려도 <strong>서류 합격률 둔화</strong></li>
-<li>정확히 어떤 실무 툴을 익혀야 하는지 <strong>객관적 기준 부재</strong></li>
-<li>직무별 요구 스킬 우선순위 판단의 어려움</li>
+<li>컴활/ADsP 등 정량 자격증 취득에도 <strong>서류 합격률 둔화</strong></li>
+<li>실무에 필요한 <strong>Figma, GA4, SQL, 파이썬</strong> 객관적 학습 기준 부재</li>
+<li>직무별 요구 실무 스킬 우선순위 판단의 어려움</li>
 </ul>
 </div>
 <div class="card card-sky">
 <span class="badge badge-blue">기업 / 인사팀 관점</span>
-<h3>지원자는 많은데 직무 적합자가 없다</h3>
+<h3>지원자는 폭주하나 실무 분석 툴 적합자가 없다</h3>
 <ul>
 <li>JD에 모호한 우대사항 나열 → <strong>허수 지원자 쏠림</strong></li>
-<li>실무에 필요한 핵심 분석 역량자는 <strong>정작 부족</strong></li>
+<li>Figma 설계 및 GA4/SQL 분석 인재는 <strong>정작 부족</strong></li>
 <li>반복 채용 공고 게재로 채용 소모전 및 시간/비용 낭비 발생</li>
 </ul>
 </div>
@@ -422,7 +461,7 @@ style: |
 </div>
 <div class="card card-emerald">
 <span class="badge badge-green">초기 가설 H2 (블루오션 기회)</span>
-<p>기업이 실제로 요구하는 툴/경험(Figma, SQL, GA4 등)은 구직자 공급이 <strong>희소할 것이다</strong></p>
+<p>기업이 요구하는 실무 분석 툴(Figma, SQL, GA4 등)은 구직자 공급이 <strong>희소할 것이다</strong></p>
 </div>
 </div>
 
@@ -432,14 +471,14 @@ style: |
 <!-- 1-2. 언론 보도 & 실데이터 기반 미스매치 입증 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 1-2. 데이터 분석 & 언론 보도로 확인된 '수급 미스매치' 현상
+# 1-2. 데이터 분석 & 언론 보도로 확인된 '실무 툴 수급 미스매치'
 
-## "실제 언론 보도 사례와 5,000건 데이터 교차 검증으로 착수 동기를 입증했습니다"
+## "언론 보도 지표와 사람인 5,000건 데이터 교차 검증으로 착수 동기를 입증했습니다"
 
 <div class="cols-2" style="margin-bottom:12px;">
 <div class="card card-dark">
 <span class="badge badge-blue">📰 언론 보도 & 시장 통계 인용</span>
-<h3>채용 시장의 심각한 정보 비대칭 뉴스</h3>
+<h3>채용 현장의 심각한 실무 역량 비대칭 뉴스</h3>
 <ul>
 <li><strong>"신입 서류 합격률 8.4% 추락"</strong> (정량 자격증 인플레이션으로 서류 통과율 역대 최저 기록)</li>
 <li><strong>"기업 78.3% 인력난 고충"</strong> (지원자는 폭주하나 실무 분석 툴 다룰 수 있는 적합 인재 부족)</li>
@@ -458,28 +497,52 @@ style: |
 
 <div class="card card-indigo" style="text-align:center; padding:10px 20px;">
 <p style="color:#1e3a8a; font-weight:800; margin:0; font-size:0.92rem;">
-🚀 결론: "언론 보도와 실데이터 분석으로 수급 불균형이 명확히 확인되었으므로, 양측을 정량 관제하고 최적화하는 B2B SaaS 대시보드를 구축하게 되었습니다."
+🚀 결론: "언론 보도와 실데이터 분석으로 실무 툴 수급 불균형이 입증되었으므로, 양측을 정량 관제하고 최적화하는 B2B SaaS 대시보드를 구축하게 되었습니다."
 </p>
 </div>
 
 ---
 
 <!-- ═══════════════════════════════════════════════════════ -->
-<!-- 1-3. Mermaid 차트 프로세스 시각화 -->
+<!-- 1-3. 엔드투엔드 프로젝트 추진 프로세스 시각화 -->
 <!-- ═══════════════════════════════════════════════════════ -->
 
-# 1-3. 엔드투엔드 프로젝트 추진 프로세스 (Mermaid 차트)
+# 1-3. 엔드투엔드 프로젝트 추진 프로세스 파이프라인
 
-## 문제 정의부터 수집, 전처리, 모델링, 대시보드 구축 및 배포까지 파이프라인 시각화
+## 문제 정의부터 수집, 전처리, 모델링, 대시보드 구축 및 배포까지 6단계 파이프라인 시각화
 
-```mermaid
-flowchart LR
-    A["① 문제 정의 & H1/H2 수립<br>(언론보도 & 미스매치 동기)"] --> B["② 듀얼 파이프라인 수집<br>(사람인 5,000건 + 네이버 52주)"]
-    B --> C["③ 정제 & DQ Check<br>(정규식, 80+ Stopwords, IQR)"]
-    C --> D["④ 차원축소 & 추천 모델링<br>(PCA/UMAP 3D + 2-Stage 앙상블)"]
-    D --> E["⑤ B2B SaaS 대시보드 구축<br>(메인관제 + 구직자 + 인사팀)"]
-    E --> F["⑥ Live Cloud 배포<br>(Streamlit 배포 & 고도화)"]
-```
+<div class="process-grid">
+  <div class="process-card">
+    <span class="process-num">1단계</span>
+    <h4>문제 정의</h4>
+    <p>5대 직무 실무 툴 미스매치 & H1/H2 가설 수립</p>
+  </div>
+  <div class="process-card">
+    <span class="process-num">2단계</span>
+    <h4>듀얼 수집</h4>
+    <p>사람인 5,000건 공고 + 네이버 52주 검색량 파싱</p>
+  </div>
+  <div class="process-card">
+    <span class="process-num">3단계</span>
+    <h4>NLP & DQ 정제</h4>
+    <p>80+ Stopwords 정제, 정규식, IQR 이상치 검증</p>
+  </div>
+  <div class="process-card">
+    <span class="process-num">4단계</span>
+    <h4>AI 모델링</h4>
+    <p>PCA 3D 공간화 + 2-Stage Re-Ranking 앙상블</p>
+  </div>
+  <div class="process-card">
+    <span class="process-num">5단계</span>
+    <h4>SaaS 대시보드</h4>
+    <p>메인관제 EDA + 구직자 탭 + 인사팀 탭 구축</p>
+  </div>
+  <div class="process-card">
+    <span class="process-num">6단계</span>
+    <h4>Live 배포</h4>
+    <p>Streamlit Cloud 배포 & DQ Check 실시간 탑재</p>
+  </div>
+</div>
 
 <div class="cols-3" style="margin-top:16px;">
 <div class="card" style="text-align:center;">

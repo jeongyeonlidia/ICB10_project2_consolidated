@@ -522,7 +522,7 @@ style: |
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/eda_part1_jobs.png" alt="EDA Part 1: 5대 직무별 채용 공고 분포" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/eda_part1_jobs.png" alt="EDA Part 1: 5대 직무별 채용 공고 분포" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -563,7 +563,7 @@ style: |
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/eda_part2_matrix.png" alt="EDA Part 2: 4대 실무 툴 vs 정량 자격증 수요-공급 4분면 맵" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/eda_part2_matrix.png" alt="EDA Part 2: 4대 실무 툴 vs 정량 자격증 수요-공급 4분면 맵" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -662,7 +662,7 @@ style: |
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/eda_part5_quality.png" alt="EDA Part 5: 5,000건 공고 게시 패턴 & 악성 공고 비율" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/eda_part5_quality.png" alt="EDA Part 5: 5,000건 공고 게시 패턴 & 악성 공고 비율" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -702,7 +702,7 @@ style: |
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/eda_part3_tools.png" alt="EDA Part 3: 주요 실무 역량 필수 요건 vs 우대 사항 빈도" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/eda_part3_tools.png" alt="EDA Part 3: 주요 실무 역량 필수 요건 vs 우대 사항 빈도" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -740,7 +740,7 @@ Final Score = (TF-IDF 40%) + (Jaccard 40%) + (Naver 20%)
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/eda_part4_difficulty.png" alt="EDA Part 4: 5대 주요 직무별 실무 인재 수급 난이도 Index" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/eda_part4_difficulty.png" alt="EDA Part 4: 5대 주요 직무별 실무 인재 수급 난이도 Index" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -832,7 +832,7 @@ Final Score = (TF-IDF 40%) + (Jaccard 40%) + (Naver 20%)
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/02_seeker_tab.png" alt="구직자 모드 입력화면 스크린샷" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/02_seeker_tab.png" alt="구직자 모드 입력화면 스크린샷" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -870,7 +870,7 @@ Final Score = (TF-IDF 40%) + (Jaccard 40%) + (Naver 20%)
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/02_seeker_res1.png" alt="구직자 모드 결과 캡처 1 - 다차원 진단 결과" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/02_seeker_res1.png" alt="구직자 모드 결과 캡처 1 - 다차원 진단 결과" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -908,7 +908,7 @@ Final Score = (TF-IDF 40%) + (Jaccard 40%) + (Naver 20%)
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/02_seeker_res2.png" alt="구직자 모드 결과 캡처 2 - Top 5 AI 추천 카탈로그" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/02_seeker_res2.png" alt="구직자 모드 결과 캡처 2 - Top 5 AI 추천 카탈로그" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -943,7 +943,7 @@ Final Score = (TF-IDF 40%) + (Jaccard 40%) + (Naver 20%)
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/03_hr_gap.png" alt="인사팀 모드 입력화면 스크린샷" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/03_hr_gap.png" alt="인사팀 모드 입력화면 스크린샷" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -981,7 +981,7 @@ Final Score = (TF-IDF 40%) + (Jaccard 40%) + (Naver 20%)
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/03_hr_res1.png" alt="인사팀 모드 결과 캡처 1 - PCA 3D 공간 지도" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/03_hr_res1.png" alt="인사팀 모드 결과 캡처 1 - PCA 3D 공간 지도" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>
@@ -1021,7 +1021,7 @@ Final Score = (TF-IDF 40%) + (Jaccard 40%) + (Naver 20%)
 <div>
 
 <div class="img-frame" style="height:360px; display:flex; align-items:center; justify-content:center; background:#ffffff;">
-  <img src="../images/presentation/03_hr_res2.png" alt="인사팀 모드 결과 캡처 2 - AI JD 생성 결과물" style="max-height:350px; width:100%; object-fit:contain; display:block;">
+  <img src="../images/presentation/03_hr_res2.png" alt="인사팀 모드 결과 캡처 2 - AI JD 생성 결과물" style="max-height:330px; width:100%; object-fit:contain; padding:6px; box-sizing:border-box; display:block;">
 </div>
 
 </div>

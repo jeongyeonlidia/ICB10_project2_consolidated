@@ -511,47 +511,34 @@ style: |
 
 ## 문제 정의부터 수집, 전처리, 모델링, 대시보드 구축 및 배포까지 6단계 파이프라인 시각화
 
-<div class="process-grid">
-  <div class="process-card">
-    <span class="process-num">1단계</span>
-    <h4>문제 정의</h4>
-    <p>5대 직무 실무 툴 미스매치 & H1/H2 가설 수립</p>
-  </div>
-  <div class="process-card">
-    <span class="process-num">2단계</span>
-    <h4>듀얼 수집</h4>
-    <p>사람인 5,000건 공고 + 네이버 52주 검색량 파싱</p>
-  </div>
-  <div class="process-card">
-    <span class="process-num">3단계</span>
-    <h4>NLP & DQ 정제</h4>
-    <p>80+ Stopwords 정제, 정규식, IQR 이상치 검증</p>
-  </div>
-  <div class="process-card">
-    <span class="process-num">4단계</span>
-    <h4>AI 모델링</h4>
-    <p>PCA 3D 공간화 + 2-Stage Re-Ranking 앙상블</p>
-  </div>
-  <div class="process-card">
-    <span class="process-num">5단계</span>
-    <h4>SaaS 대시보드</h4>
-    <p>메인관제 EDA + 구직자 탭 + 인사팀 탭 구축</p>
-  </div>
-  <div class="process-card">
-    <span class="process-num">6단계</span>
-    <h4>Live 배포</h4>
-    <p>Streamlit Cloud 배포 & DQ Check 실시간 탑재</p>
-  </div>
-</div>
+```mermaid
+flowchart LR
+    subgraph P1 ["PART 1: 문제 정의 및 듀얼 데이터 수집"]
+        direction LR
+        S1["1단계: 5대 직무 미스매치 정의"] --> S2["2단계: 5,000건 공고 및 52주 수집"]
+    end
+
+    subgraph P2 ["PART 2: NLP 정제 및 AI 모델링"]
+        direction LR
+        S3["3단계: 80 Stopwords 정제 및 DQ Check"] --> S4["4단계: PCA 3D 및 2-Stage 추천 모델"]
+    end
+
+    subgraph P3 ["PART 3: SaaS 대시보드 및 Live Cloud 배포"]
+        direction LR
+        S5["5단계: B2B SaaS 대시보드 구축"] --> S6["6단계: Live 배포 및 자동 관제"]
+    end
+
+    P1 --> P2 --> P3
+```
 
 <div class="cols-3" style="margin-top:16px;">
 <div class="card" style="text-align:center;">
-<span class="badge badge-indigo">기획 & 데이터 수집</span>
+<span class="badge badge-indigo">기획 및 데이터 수집</span>
 <p>기획/인사/재무/마케팅/개발 5대 직무 실채용공고 DB화</p>
 </div>
 <div class="card" style="text-align:center;">
-<span class="badge badge-purple">NLP & ML 모델링</span>
-<p>TF-IDF, Jaccard, Naver Trend 앙상블 & PCA 3D 공간화</p>
+<span class="badge badge-purple">NLP 및 ML 모델링</span>
+<p>TF-IDF, Jaccard, Naver Trend 앙상블 및 PCA 3D 공간화</p>
 </div>
 <div class="card" style="text-align:center;">
 <span class="badge badge-green">웹 서비스 배포</span>
